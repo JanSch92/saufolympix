@@ -58,7 +58,7 @@ class PlayerInterfaceController extends AbstractController
 
         // Joker-Status
         $canUseDoubleJoker = $player->hasJokerDoubleAvailable() && $currentGame && $currentGame->getStatus() === 'active';
-        $canUseSwapJoker = $player->hasJokerSwapAvailable() && $currentGame && $currentGame->getStatus() === 'completed';
+$canUseSwapJoker = $player->hasJokerSwapAvailable() && $currentGame && $currentGame->getStatus() === 'active'; // GEÄNDERT: auch VOR dem Spiel
 
         return $this->render('player_interface/dashboard.html.twig', [
             'olympix' => $olympix,

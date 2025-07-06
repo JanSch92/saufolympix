@@ -40,41 +40,41 @@ class TournamentService
         return $tournament;
     }
 
-    private function createTeamParticipants(Game $game): array
-    {
-        $players = $game->getOlympix()->getPlayers()->toArray();
-        $teamSize = $game->getTeamSize() ?? 2;
+private function createTeamParticipants(Game $game): array
+{
+    $players = $game->getOlympix()->getPlayers()->toArray();
+    $teamSize = $game->getTeamSize() ?? 2;
+    
+    shuffle($players);
+    
+    $teams = [];
+    $teamId = 1;
+    
+    for ($i = 0; $i < count($players); $i += $teamSize) {
+        $teamPlayers = array_slice($players, $i, $teamSize);
         
-        // Shuffle players for random team assignment
-        shuffle($players);
-        
-        $teams = [];
-        $teamId = 1;
-        
-        for ($i = 0; $i < count($players); $i += $teamSize) {
-            $teamPlayers = array_slice($players, $i, $teamSize);
+        if (count($teamPlayers) === $teamSize) {
+            // Team-Name aus Spielernamen erstellen
+            $teamName = implode(' + ', array_map(fn($p) => $p->getName(), $teamPlayers));
             
-            if (count($teamPlayers) === $teamSize) {
-                $teamTotalPoints = array_sum(array_map(fn($p) => $p->getTotalPoints(), $teamPlayers));
-                
-                $teams[] = [
-                    'id' => $teamId,
-                    'name' => 'Team ' . $teamId,
-                    'players' => array_map(fn($p) => [
-                        'id' => $p->getId(),
-                        'name' => $p->getName(),
-                        'total_points' => $p->getTotalPoints()
-                    ], $teamPlayers),
-                    'total_points' => $teamTotalPoints,
-                    'type' => 'team'
-                ];
-                
-                $teamId++;
-            }
+            $teams[] = [
+                'id' => $teamId,
+                'name' => $teamName, // GEÄNDERT: Namen statt "Team X"
+                'players' => array_map(fn($p) => [
+                    'id' => $p->getId(),
+                    'name' => $p->getName(),
+                    'total_points' => $p->getTotalPoints()
+                ], $teamPlayers),
+                'total_points' => array_sum(array_map(fn($p) => $p->getTotalPoints(), $teamPlayers)),
+                'type' => 'team'
+            ];
+            
+            $teamId++;
         }
-        
-        return $teams;
     }
+    
+    return $teams;
+}
 
     private function createSingleParticipants(Game $game): array
     {

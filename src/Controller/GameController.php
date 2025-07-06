@@ -355,40 +355,39 @@ foreach ($game->getOlympix()->getPlayers() as $player) {
 $this->entityManager->flush();
     }
 
-    private function processTournamentResults(Game $game, Request $request): void
-    {
-        $tournament = $game->getTournament();
-        if (!$tournament) {
-            return;
-        }
-
-        $results = $tournament->getTournamentResults();
-        $pointsDistribution = $game->getDefaultPointsDistribution();
-
-        // Clear existing results
-        foreach ($game->getGameResults() as $result) {
-            $this->entityManager->remove($result);
-        }
-
-        foreach ($results as $position => $playerData) {
-            $player = $this->playerRepository->find($playerData['id']);
-            if ($player) {
-                $result = new GameResult();
-                $result->setGame($game);
-                $result->setPlayer($player);
-                $result->setPosition($position);
-                
-                $points = $pointsDistribution[$position - 1] ?? 0;
-                $result->setPoints($points);
-
-                $this->entityManager->persist($result);
-            }
-        }
-
-        $tournament->setIsCompleted(true);
-        $this->entityManager->flush();
-        $this->addFlash('success', 'Turnier-Ergebnisse wurden gespeichert');
+private function processTournamentResults(Game $game, Request $request): void
+{
+    $tournament = $game->getTournament();
+    if (!$tournament || !$tournament->isIsCompleted()) {
+        $this->addFlash('error', 'Turnier ist noch nicht abgeschlossen');
+        return;
     }
+
+    $results = $tournament->getTournamentResults();
+    $pointsDistribution = $game->getDefaultPointsDistribution();
+
+    // Clear existing results
+    foreach ($game->getGameResults() as $result) {
+        $this->entityManager->remove($result);
+    }
+
+    foreach ($results as $position => $playerData) {
+        $player = $this->playerRepository->find($playerData['id']);
+        if ($player) {
+            $result = new GameResult();
+            $result->setGame($game);
+            $result->setPlayer($player);
+            $result->setPosition($position);
+            
+            $points = $pointsDistribution[$position - 1] ?? 0;
+            $result->setPoints($points);
+
+            $this->entityManager->persist($result);
+        }
+    }
+
+    $this->entityManager->flush();
+}
 
     private function processSwapJokers(Game $game): void
     {
