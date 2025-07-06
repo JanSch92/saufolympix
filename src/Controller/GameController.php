@@ -243,23 +243,30 @@ class GameController extends AbstractController
 
         return $this->redirectToRoute('app_game_bracket', ['id' => $gameId]);
     }
-    #[Route('/api/games/update-order', name: 'app_api_games_update_order', methods: ['POST'])]
-public function updateGamesOrder(Request $request): Response
+// Controller/ApiController.php
+#[Route('/api/games/update-order', methods: ['POST'])]
+public function updateGamesOrder(Request $request): JsonResponse
 {
     $data = json_decode($request->getContent(), true);
+    $olympixId = $data['olympix_id'];
+    $games = $data['games'];
     
-    foreach ($data['games'] as $gameData) {
-        $game = $this->gameRepository->find($gameData['id']);
-        if ($game) {
-            $game->setOrderPosition($gameData['order']);
+    try {
+        foreach ($games as $gameData) {
+            $game = $this->gameRepository->find($gameData['id']);
+            if ($game) {
+                $game->setOrderPosition($gameData['order']);
+                $this->entityManager->persist($game);
+            }
         }
+        
+        $this->entityManager->flush();
+        
+        return new JsonResponse(['success' => true]);
+    } catch (\Exception $e) {
+        return new JsonResponse(['success' => false, 'error' => $e->getMessage()]);
     }
-    
-    $this->entityManager->flush();
-    
-    return $this->json(['success' => true]);
-}
-    #[Route('/game/complete/{id}', name: 'app_game_complete')]
+}  #[Route('/game/complete/{id}', name: 'app_game_complete')]
     public function complete(int $id): Response
     {
         $game = $this->gameRepository->find($id);
