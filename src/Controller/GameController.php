@@ -230,6 +230,10 @@ class GameController extends AbstractController
                     ];
                     
                     $tournament->updateMatchResult($matchId, $winnerData);
+                    if ($this->tournamentService->isTournamentComplete($tournament)) {
+                        $tournament->setIsCompleted(true);
+                    }
+
                     $this->entityManager->flush();
                     
                     $this->addFlash('success', 'Match-Ergebnis wurde gespeichert');
