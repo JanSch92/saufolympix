@@ -325,7 +325,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Global function für Button
     window.saveGamesOrder = function() {
-        if (!hasChanges) return;
+        if (!hasChanges) {
+            console.log('Keine Änderungen zu speichern');
+            return;
+        }
         
         const items = document.querySelectorAll('.game-item');
         const orderData = [];
@@ -337,40 +340,74 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
+        console.log('Speichere Reihenfolge:', orderData);
+        
+        const requestData = {
+            olympix_id: {{ olympix.id }},
+            games: orderData
+        };
+        
+        console.log('Request Data:', requestData);
+        
         fetch('/api/games/update-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                olympix_id: {{ olympix.id }},
-                games: orderData
-            })
+            body: JSON.stringify(requestData)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response Status:', response.status);
+            console.log('Response URL:', response.url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Prüfe Content-Type
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            if (!contentType || !contentType.includes('application/json')) {
+                // Zeige HTML-Antwort für Debug
+                return response.text().then(text => {
+                    console.error('Server gab HTML statt JSON zurück:', text.substring(0, 500));
+                    throw new Error('Server gab HTML statt JSON zurück - API-Route existiert nicht');
+                });
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log('Response Data:', data);
+            
             if (data.success) {
                 hasChanges = false;
                 document.getElementById('saveOrderBtn').style.display = 'none';
                 
                 // Success feedback
                 const btn = document.getElementById('saveOrderBtn');
+                const originalText = btn.textContent;
                 btn.textContent = '✅ Gespeichert';
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-secondary');
                 
                 setTimeout(() => {
-                    btn.textContent = '💾 Reihenfolge speichern';
+                    btn.textContent = originalText;
                     btn.classList.remove('btn-secondary');
                     btn.classList.add('btn-success');
                 }, 2000);
+                
+                console.log('Reihenfolge erfolgreich gespeichert');
             } else {
-                alert('Fehler beim Speichern der Reihenfolge');
+                console.error('Server Error:', data.error || 'Unbekannter Fehler');
+                alert('Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'));
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Fehler beim Speichern der Reihenfolge');
+            console.error('Fetch Error:', error);
+            alert('❌ API-Route nicht gefunden!\n\nDu musst einen Controller erstellen:\n/api/games/update-order\n\nFehler: ' + error.message);
         });
     };
 });
