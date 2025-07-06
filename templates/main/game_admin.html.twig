@@ -24,6 +24,41 @@
             </div>
         </div>
     </div>
+
+    <!-- QR-Code für Spieler-Zugang -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">📱 Spieler-Zugang</h2>
+            <button onclick="showQRCode()" class="btn-primary">
+                QR-Code anzeigen
+            </button>
+        </div>
+        
+        <div id="qrCodeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8 max-w-md w-full">
+                <div class="text-center">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Spieler-Zugang QR-Code</h3>
+                    <div id="playerQRCode" class="mb-4"></div>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Spieler können diesen Code scannen um ihre Punkte zu sehen und Joker zu verwenden
+                    </p>
+                    <div class="flex space-x-4">
+                        <button onclick="hideQRCode()" class="btn-secondary flex-1">
+                            Schließen
+                        </button>
+                        <button onclick="copyPlayerLink()" class="btn-primary flex-1">
+                            Link kopieren
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-sm text-gray-600">
+            <strong>Direkt-Link:</strong> 
+            <code class="bg-gray-100 p-1 rounded text-xs">{{ url('app_player_access', {olympixId: olympix.id}) }}</code>
+        </div>
+    </div>
     
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -77,84 +112,90 @@
     </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Games Management -->
+        <!-- Games Management mit Drag & Drop -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">🎮 Spiele</h2>
-                <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
-                   class="btn-primary">
-                    + Spiel erstellen
-                </a>
+                <div class="flex space-x-2">
+                    <button onclick="saveGamesOrder()" class="btn-success" id="saveOrderBtn" style="display: none;">
+                        💾 Reihenfolge speichern
+                    </button>
+                    <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary">
+                        + Spiel erstellen
+                    </a>
+                </div>
             </div>
             
-            <div class="space-y-4">
+            <div id="gamesList" class="space-y-4">
                 {% for game in games %}
-                    <div class="game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
-                                <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
-                                    {% if game.teamSize %}
-                                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                                            {{ game.teamSize }}er Teams
-                                        </span>
-                                    {% endif %}
-                                </div>
+                    <div class="game-item game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg" 
+                         data-game-id="{{ game.id }}" 
+                         data-order="{{ game.orderPosition }}">
+                        <div class="flex items-center">
+                            <!-- Drag Handle -->
+                            <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 mr-4 text-xl">
+                                ⋮⋮
                             </div>
                             
-                            <div class="flex items-center space-x-2">
-                                {% if game.status == 'pending' %}
-                                    <a href="{{ path('app_game_start', {id: game.id}) }}" 
-                                       class="btn-success text-sm">
-                                        ▶️ Start
-                                    </a>
-                                {% elseif game.status == 'active' %}
-                                    <a href="{{ path('app_game_results', {id: game.id}) }}" 
-                                       class="btn-primary text-sm">
-                                        📊 Ergebnisse
-                                    </a>
-                                    {% if game.isQuizGame %}
-                                        <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" 
-                                           class="btn-secondary text-sm">
-                                            📱 QR-Code
-                                        </a>
-                                    {% endif %}
-                                    {% if game.isTournamentGame %}
-                                        <a href="{{ path('app_game_bracket', {id: game.id}) }}" 
-                                           class="btn-secondary text-sm">
-                                            🏆 Bracket
-                                        </a>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="text-sm text-green-600 font-medium">✅ Abgeschlossen</span>
-                                {% endif %}
-                                
-                                <div class="relative">
-                                    <button class="text-gray-400 hover:text-gray-600" onclick="toggleDropdown('game-{{ game.id }}')">
-                                        ⋮
-                                    </button>
-                                    <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                                        <div class="py-1">
-                                            <a href="{{ path('app_game_edit', {id: game.id}) }}" 
-                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                ✏️ Bearbeiten
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
+                                        <div class="flex items-center space-x-2 mt-1">
+                                            <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
+                                            {% if game.gameType == 'tournament_team' and game.teamSize %}
+                                                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                                    {{ game.teamSize }}er Teams
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        {% if game.status == 'pending' %}
+                                            <a href="{{ path('app_game_start', {id: game.id}) }}" class="btn-success text-sm">
+                                                ▶️ Start
+                                            </a>
+                                        {% elseif game.status == 'active' %}
+                                            <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-primary text-sm">
+                                                📊 Ergebnisse
                                             </a>
                                             {% if game.isQuizGame %}
-                                                <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" 
-                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                    ❓ Fragen
+                                                <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" class="btn-secondary text-sm">
+                                                    📱 QR-Code
                                                 </a>
                                             {% endif %}
-                                            <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" 
-                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                🃏 Joker
-                                            </a>
-                                            <a href="{{ path('app_game_delete', {id: game.id}) }}" 
-                                               class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                               onclick="return confirmDelete('Spiel wirklich löschen?')">
-                                                🗑️ Löschen
-                                            </a>
+                                            {% if game.isTournamentGame %}
+                                                <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary text-sm">
+                                                    🏆 Bracket
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-sm text-green-600 font-medium">✅ Abgeschlossen</span>
+                                        {% endif %}
+                                        
+                                        <div class="relative">
+                                            <button class="text-gray-400 hover:text-gray-600" onclick="toggleDropdown('game-{{ game.id }}')">
+                                                ⋮
+                                            </button>
+                                            <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                                <div class="py-1">
+                                                    <a href="{{ path('app_game_edit', {id: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                        ✏️ Bearbeiten
+                                                    </a>
+                                                    {% if game.isQuizGame %}
+                                                        <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            ❓ Fragen
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                        🃏 Joker
+                                                    </a>
+                                                    <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100" onclick="return confirmDelete('Spiel wirklich löschen?')">
+                                                        🗑️ Löschen
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -165,8 +206,7 @@
                     <div class="text-center text-gray-500 py-8">
                         <div class="text-4xl mb-4">🎮</div>
                         <p>Noch keine Spiele erstellt</p>
-                        <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
-                           class="btn-primary mt-4">
+                        <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary mt-4">
                             Erstes Spiel erstellen
                         </a>
                     </div>
@@ -220,7 +260,120 @@
     </div>
 </div>
 
+<!-- External Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
 <script>
+// QR-Code für Spieler-Zugang
+function showQRCode() {
+    const playerUrl = '{{ url('app_player_access', {olympixId: olympix.id}) }}';
+    document.getElementById('playerQRCode').innerHTML = '';
+    
+    new QRCode(document.getElementById('playerQRCode'), {
+        text: playerUrl,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    document.getElementById('qrCodeModal').classList.remove('hidden');
+}
+
+function hideQRCode() {
+    document.getElementById('qrCodeModal').classList.add('hidden');
+}
+
+function copyPlayerLink() {
+    const playerUrl = '{{ url('app_player_access', {olympixId: olympix.id}) }}';
+    navigator.clipboard.writeText(playerUrl).then(() => {
+        alert('Link kopiert!');
+    });
+}
+
+// Drag & Drop für Spiele-Sortierung
+let sortable;
+let hasChanges = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const gamesList = document.getElementById('gamesList');
+    
+    if (gamesList && gamesList.children.length > 0) {
+        sortable = new Sortable(gamesList, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'opacity-50',
+            chosenClass: 'ring-2 ring-blue-500',
+            onEnd: function() {
+                hasChanges = true;
+                document.getElementById('saveOrderBtn').style.display = 'block';
+                updateOrderNumbers();
+            }
+        });
+    }
+});
+
+function updateOrderNumbers() {
+    const items = document.querySelectorAll('.game-item');
+    items.forEach((item, index) => {
+        item.dataset.order = index + 1;
+    });
+}
+
+function saveGamesOrder() {
+    if (!hasChanges) return;
+    
+    const items = document.querySelectorAll('.game-item');
+    const orderData = [];
+    
+    items.forEach((item, index) => {
+        orderData.push({
+            id: parseInt(item.dataset.gameId),
+            order: index + 1
+        });
+    });
+    
+    // AJAX Request zum Speichern
+    fetch('/api/games/update-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            olympix_id: {{ olympix.id }},
+            games: orderData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hasChanges = false;
+            document.getElementById('saveOrderBtn').style.display = 'none';
+            
+            // Success feedback
+            const btn = document.getElementById('saveOrderBtn');
+            btn.textContent = '✅ Gespeichert';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-secondary');
+            
+            setTimeout(() => {
+                btn.textContent = '💾 Reihenfolge speichern';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+            }, 2000);
+        } else {
+            alert('Fehler beim Speichern der Reihenfolge');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Fehler beim Speichern der Reihenfolge');
+    });
+}
+
+// Dropdown functions
 function toggleDropdown(id) {
     const dropdown = document.getElementById(id);
     const isHidden = dropdown.classList.contains('hidden');

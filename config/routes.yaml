@@ -255,3 +255,43 @@ app_api_joker_swap_blocked:
     requirements:
         playerId: '\d+'
         gameId: '\d+'
+# Spieler-Interface Routes
+app_player_access:
+    path: /player-access/{olympixId}
+    controller: App\Controller\PlayerInterfaceController::playerAccess
+    requirements:
+        olympixId: '\d+'
+
+app_player_dashboard:
+    path: /player-dashboard/{olympixId}/{playerId}
+    controller: App\Controller\PlayerInterfaceController::playerDashboard
+    requirements:
+        olympixId: '\d+'
+        playerId: '\d+'
+
+app_player_joker_double:
+    path: /player-joker-double/{olympixId}/{playerId}
+    controller: App\Controller\PlayerInterfaceController::useDoubleJoker
+    requirements:
+        olympixId: '\d+'
+        playerId: '\d+'
+
+app_player_joker_swap:
+    path: /player-joker-swap/{olympixId}/{playerId}
+    controller: App\Controller\PlayerInterfaceController::useSwapJoker
+    requirements:
+        olympixId: '\d+'
+        playerId: '\d+'
+
+app_api_player_status:
+    path: /api/player/{olympixId}/{playerId}/status
+    controller: App\Controller\PlayerInterfaceController::apiPlayerStatus
+    requirements:
+        olympixId: '\d+'
+        playerId: '\d+'
+
+# Games Order API
+app_api_games_update_order:
+    path: /api/games/update-order
+    controller: App\Controller\GameController::updateGamesOrder
+    methods: [POST]

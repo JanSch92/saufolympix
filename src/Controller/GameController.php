@@ -243,7 +243,22 @@ class GameController extends AbstractController
 
         return $this->redirectToRoute('app_game_bracket', ['id' => $gameId]);
     }
-
+    #[Route('/api/games/update-order', name: 'app_api_games_update_order', methods: ['POST'])]
+public function updateGamesOrder(Request $request): Response
+{
+    $data = json_decode($request->getContent(), true);
+    
+    foreach ($data['games'] as $gameData) {
+        $game = $this->gameRepository->find($gameData['id']);
+        if ($game) {
+            $game->setOrderPosition($gameData['order']);
+        }
+    }
+    
+    $this->entityManager->flush();
+    
+    return $this->json(['success' => true]);
+}
     #[Route('/game/complete/{id}', name: 'app_game_complete')]
     public function complete(int $id): Response
     {
