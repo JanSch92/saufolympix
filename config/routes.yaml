@@ -1,5 +1,257 @@
+# config/routes.yaml
+
 controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
+    resource: ../src/Controller/
     type: attribute
+
+# Main routes
+app_index:
+    path: /
+    controller: App\Controller\MainController::index
+    methods: [GET]
+
+app_create_olympix:
+    path: /create
+    controller: App\Controller\MainController::createOlympix
+    methods: [GET, POST]
+
+app_show_olympix:
+    path: /olympix/{id}
+    controller: App\Controller\MainController::showOlympix
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_game_admin:
+    path: /gameadmin/{id}
+    controller: App\Controller\MainController::gameAdmin
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+# API routes
+app_api_olympix_status:
+    path: /api/olympix/{id}/status
+    controller: App\Controller\MainController::apiOlympixStatus
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_api_refresh_scores:
+    path: /api/olympix/{id}/refresh
+    controller: App\Controller\MainController::apiRefreshScores
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
+# Player routes
+app_player_manage:
+    path: /player/manage/{olympixId}
+    controller: App\Controller\PlayerController::manage
+    methods: [GET]
+    requirements:
+        olympixId: '\d+'
+
+app_player_create:
+    path: /player/create/{olympixId}
+    controller: App\Controller\PlayerController::create
+    methods: [POST]
+    requirements:
+        olympixId: '\d+'
+
+app_player_edit:
+    path: /player/edit/{id}
+    controller: App\Controller\PlayerController::edit
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
+app_player_delete:
+    path: /player/delete/{id}
+    controller: App\Controller\PlayerController::delete
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_player_reset_jokers:
+    path: /player/reset-jokers/{id}
+    controller: App\Controller\PlayerController::resetJokers
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_player_reset_points:
+    path: /player/reset-points/{id}
+    controller: App\Controller\PlayerController::resetPoints
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_api_players:
+    path: /api/players/{olympixId}
+    controller: App\Controller\PlayerController::apiPlayers
+    methods: [GET]
+    requirements:
+        olympixId: '\d+'
+
+app_api_player_joker_status:
+    path: /api/player/{id}/joker-status
+    controller: App\Controller\PlayerController::apiPlayerJokerStatus
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+# Game routes
+app_game_create:
+    path: /game/create/{olympixId}
+    controller: App\Controller\GameController::create
+    methods: [GET, POST]
+    requirements:
+        olympixId: '\d+'
+
+app_game_edit:
+    path: /game/edit/{id}
+    controller: App\Controller\GameController::edit
+    methods: [GET, POST]
+    requirements:
+        id: '\d+'
+
+app_game_start:
+    path: /game/start/{id}
+    controller: App\Controller\GameController::start
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_game_results:
+    path: /game/results/{id}
+    controller: App\Controller\GameController::results
+    methods: [GET, POST]
+    requirements:
+        id: '\d+'
+
+app_game_bracket:
+    path: /game/bracket/{id}
+    controller: App\Controller\GameController::bracket
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_game_match_result:
+    path: /game/match-result/{gameId}/{matchId}
+    controller: App\Controller\GameController::matchResult
+    methods: [GET, POST]
+    requirements:
+        gameId: '\d+'
+        matchId: '.+'
+
+app_game_complete:
+    path: /game/complete/{id}
+    controller: App\Controller\GameController::complete
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_game_delete:
+    path: /game/delete/{id}
+    controller: App\Controller\GameController::delete
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+# Quiz routes
+app_quiz_questions:
+    path: /quiz/questions/{gameId}
+    controller: App\Controller\QuizController::questions
+    methods: [GET, POST]
+    requirements:
+        gameId: '\d+'
+
+app_quiz_question_delete:
+    path: /quiz/question/delete/{id}
+    controller: App\Controller\QuizController::deleteQuestion
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_quiz_qr:
+    path: /quiz/{gameId}
+    controller: App\Controller\QuizController::showQR
+    methods: [GET]
+    requirements:
+        gameId: '\d+'
+
+app_quiz_mobile:
+    path: /quiz/mobile/{gameId}
+    controller: App\Controller\QuizController::mobile
+    methods: [GET, POST]
+    requirements:
+        gameId: '\d+'
+
+app_quiz_results:
+    path: /quiz/results/{gameId}
+    controller: App\Controller\QuizController::results
+    methods: [GET]
+    requirements:
+        gameId: '\d+'
+
+app_quiz_calculate:
+    path: /quiz/calculate/{gameId}
+    controller: App\Controller\QuizController::calculate
+    methods: [GET]
+    requirements:
+        gameId: '\d+'
+
+app_api_quiz_status:
+    path: /api/quiz/{gameId}/status
+    controller: App\Controller\QuizController::apiQuizStatus
+    methods: [GET]
+    requirements:
+        gameId: '\d+'
+
+# Joker routes
+app_joker_double:
+    path: /joker/double/{playerId}/{gameId}
+    controller: App\Controller\JokerController::useDoubleJoker
+    methods: [GET]
+    requirements:
+        playerId: '\d+'
+        gameId: '\d+'
+
+app_joker_swap:
+    path: /joker/swap/{playerId}/{gameId}
+    controller: App\Controller\JokerController::useSwapJoker
+    methods: [GET, POST]
+    requirements:
+        playerId: '\d+'
+        gameId: '\d+'
+
+app_joker_manage:
+    path: /joker/manage/{gameId}
+    controller: App\Controller\JokerController::manage
+    methods: [GET]
+    requirements:
+        gameId: '\d+'
+
+app_joker_cancel:
+    path: /joker/cancel/{id}
+    controller: App\Controller\JokerController::cancel
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+app_api_joker_available:
+    path: /api/joker/available/{playerId}/{gameId}
+    controller: App\Controller\JokerController::apiJokerAvailable
+    methods: [GET]
+    requirements:
+        playerId: '\d+'
+        gameId: '\d+'
+
+app_api_joker_swap_blocked:
+    path: /api/joker/swap/blocked/{playerId}/{gameId}
+    controller: App\Controller\JokerController::apiSwapBlocked
+    methods: [GET]
+    requirements:
+        playerId: '\d+'
+        gameId: '\d+'

@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz QR-Code - {{ game.name }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Quiz QR-Code</h1>
+                <p class="text-gray-600 mt-1">{{ game.name }}</p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="{{ path('app_quiz_results', {gameId: game.id}) }}" 
+                   class="btn-secondary">
+                    📊 Ergebnisse
+                </a>
+                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+                   class="btn-primary">
+                    ← Zurück
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Code Display -->
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                📱 Scannt den QR-Code mit eurem Handy
+            </h2>
+            
+            <div class="qr-code-container mb-6">
+                <div id="qrcode"></div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-semibold text-blue-800 mb-2">So funktioniert's:</h3>
+                <ol class="text-left text-blue-700 space-y-2">
+                    <li>1. QR-Code mit dem Handy scannen</li>
+                    <li>2. Euren Namen auswählen</li>
+                    <li>3. Alle Fragen beantworten</li>
+                    <li>4. Abschicken und warten</li>
+                </ol>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-sm text-gray-600 mb-4">
+                    Direkt-Link zum Quiz:
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg text-sm break-all">
+                    {{ quiz_url }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quiz Status -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Quiz-Status</h3>
+        
+        <div id="quizStatus" class="space-y-4">
+            <!-- Status wird via JavaScript geladen -->
+        </div>
+        
+        <div class="mt-6 flex justify-center">
+            <a href="{{ path('app_quiz_calculate', {gameId: game.id}) }}" 
+               class="btn-success">
+                🧮 Ergebnisse berechnen
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Generate QR Code
+document.addEventListener('DOMContentLoaded', function() {
+    generateQRCode('{{ quiz_url }}', 'qrcode');
+    
+    // Load quiz status
+    loadQuizStatus();
+    
+    // Auto-refresh status every 5 seconds
+    setInterval(loadQuizStatus, 5000);
+});
+
+function loadQuizStatus() {
+    fetch('/api/quiz/{{ game.id }}/status')
+        .then(response => response.json())
+        .then(data => {
+            updateQuizStatus(data);
+        })
+        .catch(error => {
+            console.error('Error loading quiz status:', error);
+        });
+}
+
+function updateQuizStatus(data) {
+    const container = document.getElementById('quizStatus');
+    let html = '';
+    
+    html += `
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+                <div class="font-medium text-gray-800">Gesamt-Teilnehmer</div>
+                <div class="text-sm text-gray-600">${data.total_players} Spieler</div>
+            </div>
+            <div class="text-2xl font-bold text-gray-800">${data.total_players}</div>
+        </div>
+        
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+                <div class="font-medium text-gray-800">Fragen</div>
+                <div class="text-sm text-gray-600">Anzahl Quiz-Fragen</div>
+            </div>
+            <div class="text-2xl font-bold text-gray-800">${data.questions}</div>
+        </div>
+    `;
+    
+    // Show answered players per question
+    if (data.answered_players) {
+        for (const [questionId, answeredCount] of Object.entries(data.answered_players)) {
+            const percentage = Math.round((answeredCount / data.total_players) * 100);
+            html += `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium text-gray-800">Frage ${questionId}</div>
+                        <div class="text-sm text-gray-600">${answeredCount}/${data.total_players} beantwortet</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-gray-800">${percentage}%</div>
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    if (data.all_answered) {
+        html += `
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <div class="text-green-600 mr-3">✅</div>
+                    <div>
+                        <div class="font-medium text-green-800">Alle haben geantwortet!</div>
+                        <div class="text-sm text-green-700">Die Ergebnisse können jetzt berechnet werden.</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+</script>
+{% endblock %}

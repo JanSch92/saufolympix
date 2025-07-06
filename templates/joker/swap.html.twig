@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Punkte tauschen - {{ player.name }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Punkte tauschen</h1>
+                <p class="text-gray-600 mt-1">{{ player.name }} - {{ game.name }}</p>
+            </div>
+            <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" 
+               class="btn-secondary">
+                ← Zurück
+            </a>
+        </div>
+    </div>
+    
+    <!-- Swap Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Mit wem möchtest du die Punkte tauschen?</h2>
+        
+        <form action="{{ path('app_joker_swap', {playerId: player.id, gameId: game.id}) }}" method="POST">
+            <div class="space-y-4">
+                {% for availablePlayer in available_players %}
+                    <label class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" 
+                               name="target_player_id" 
+                               value="{{ availablePlayer.id }}" 
+                               class="mr-4">
+                        <div class="flex-1 flex items-center justify-between">
+                            <div>
+                                <div class="font-medium text-gray-800">{{ availablePlayer.name }}</div>
+                                <div class="text-sm text-gray-600">{{ availablePlayer.totalPoints }} Punkte</div>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {% if availablePlayer.totalPoints > player.totalPoints %}
+                                    📈 Mehr Punkte
+                                {% elseif availablePlayer.totalPoints < player.totalPoints %}
+                                    📉 Weniger Punkte
+                                {% else %}
+                                    📊 Gleiche Punkte
+                                {% endif %}
+                            </div>
+                        </div>
+                    </label>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">⚠️ Wichtig:</h3>
+                <ul class="text-yellow-700 text-sm space-y-1">
+                    <li>• Der Tausch wird erst nach dem Spiel durchgeführt</li>
+                    <li>• Wenn mehrere Spieler den gleichen Spieler als Ziel wählen, wird der Tausch blockiert</li>
+                    <li>• Der Joker kann nur einmal pro Olympix verwendet werden</li>
+                </ul>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-4">
+                <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" 
+                   class="btn-secondary">
+                    Abbrechen
+                </a>
+                <button type="submit" class="btn-primary">
+                    Tausch aktivieren
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

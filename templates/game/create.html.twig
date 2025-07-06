@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Spiel erstellen - {{ olympix.name }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Neues Spiel erstellen</h1>
+                <p class="text-gray-600 mt-1">{{ olympix.name }}</p>
+            </div>
+            <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
+               class="btn-secondary">
+                ← Zurück
+            </a>
+        </div>
+    </div>
+    
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form action="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
+              method="POST" 
+              id="gameForm">
+            
+            <!-- Game Name -->
+            <div class="mb-6">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Spielname *
+                </label>
+                <input type="text" 
+                       id="name" 
+                       name="name" 
+                       required 
+                       placeholder="z.B. Flunky Ball"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Game Type -->
+            <div class="mb-6">
+                <label for="game_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Spieltyp *
+                </label>
+                <select id="game_type" 
+                        name="game_type" 
+                        required 
+                        onchange="updateGameTypeOptions()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Bitte wählen</option>
+                    <option value="free_for_all">Free For All</option>
+                    <option value="tournament_team">Turnier (Team)</option>
+                    <option value="tournament_single">Turnier (Einzel)</option>
+                    <option value="quiz">Quiz</option>
+                </select>
+            </div>
+            
+            <!-- Team Size (for team tournaments) -->
+            <div id="teamSizeContainer" class="mb-6 hidden">
+                <label for="team_size" class="block text-sm font-medium text-gray-700 mb-2">
+                    Team-Größe
+                </label>
+                <select id="team_size" 
+                        name="team_size"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="2">2 Spieler pro Team</option>
+                    <option value="3">3 Spieler pro Team</option>
+                    <option value="4">4 Spieler pro Team</option>
+                </select>
+            </div>
+            
+            <!-- Points Distribution -->
+            <div class="mb-6">
+                <label for="points_distribution" class="block text-sm font-medium text-gray-700 mb-2">
+                    Punkteverteilung (optional)
+                </label>
+                <input type="text" 
+                       id="points_distribution" 
+                       name="points_distribution" 
+                       placeholder="z.B. 8,6,4,2 (von 1. bis letzter Platz)"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="text-sm text-gray-600 mt-1">
+                    Komma-getrennte Werte. Leer lassen für Standard-Verteilung.
+                </div>
+            </div>
+            
+            <!-- Game Type Explanations -->
+            <div class="mb-6">
+                <div id="gameTypeExplanation" class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+                    <h4 class="font-semibold mb-2">Spieltyp-Erklärung:</h4>
+                    <div id="freeForAllExplanation" class="hidden">
+                        <p><strong>Free For All:</strong> Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz). Standardpunkte: 8,7,6,5,4,3,2,1 (bei 8 Spielern).</p>
+                    </div>
+                    <div id="tournamentTeamExplanation" class="hidden">
+                        <p><strong>Turnier (Team):</strong> Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos. Standardpunkte: 6,4,2,0 (1.-4. Platz).</p>
+                    </div>
+                    <div id="tournamentSingleExplanation" class="hidden">
+                        <p><strong>Turnier (Einzel):</strong> Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos. Standardpunkte: 6,4,2,0 (1.-4. Platz).</p>
+                    </div>
+                    <div id="quizExplanation" class="hidden">
+                        <p><strong>Quiz:</strong> Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobile ihre Antworten eingeben können. Bewertung nach Genauigkeit (nächste Antwort = höchste Punkte).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="flex justify-end space-x-4">
+                <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
+                   class="btn-secondary">
+                    Abbrechen
+                </a>
+                <button type="submit" class="btn-primary">
+                    Spiel erstellen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateGameTypeOptions() {
+    const gameType = document.getElementById('game_type').value;
+    const teamSizeContainer = document.getElementById('teamSizeContainer');
+    
+    // Hide all explanations
+    document.querySelectorAll('[id$="Explanation"]').forEach(el => {
+        el.classList.add('hidden');
+    });
+    
+    // Show relevant explanation
+    if (gameType) {
+        const explanationId = gameType.replace('_', '') + 'Explanation';
+        const explanation = document.getElementById(explanationId);
+        if (explanation) {
+            explanation.classList.remove('hidden');
+        }
+    }
+    
+    // Show/hide team size for team tournaments
+    if (gameType === 'tournament_team') {
+        teamSizeContainer.classList.remove('hidden');
+    } else {
+        teamSizeContainer.classList.add('hidden');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateGameTypeOptions();
+});
+</script>
+{% endblock %}

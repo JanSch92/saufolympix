@@ -1,3 +1,5 @@
+# config/services.yaml
+
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
 
@@ -15,6 +17,92 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    
+    # Tournament Service
+    App\Service\TournamentService:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $playerRepository: '@App\Repository\PlayerRepository'
+            
+    # Repository Services
+    App\Repository\OlympixRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\PlayerRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\GameRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\GameResultRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\QuizQuestionRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\QuizAnswerRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\JokerRepository:
+        arguments:
+            $registry: '@doctrine'
+            
+    App\Repository\TournamentRepository:
+        arguments:
+            $registry: '@doctrine'
+
+    # Controllers
+    App\Controller\MainController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $olympixRepository: '@App\Repository\OlympixRepository'
+        tags: ['controller.service_arguments']
+
+    App\Controller\PlayerController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $olympixRepository: '@App\Repository\OlympixRepository'
+            $playerRepository: '@App\Repository\PlayerRepository'
+        tags: ['controller.service_arguments']
+
+    App\Controller\GameController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $olympixRepository: '@App\Repository\OlympixRepository'
+            $gameRepository: '@App\Repository\GameRepository'
+            $playerRepository: '@App\Repository\PlayerRepository'
+            $gameResultRepository: '@App\Repository\GameResultRepository'
+            $jokerRepository: '@App\Repository\JokerRepository'
+            $tournamentService: '@App\Service\TournamentService'
+        tags: ['controller.service_arguments']
+
+    App\Controller\QuizController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $gameRepository: '@App\Repository\GameRepository'
+            $quizQuestionRepository: '@App\Repository\QuizQuestionRepository'
+            $quizAnswerRepository: '@App\Repository\QuizAnswerRepository'
+            $playerRepository: '@App\Repository\PlayerRepository'
+            $gameResultRepository: '@App\Repository\GameResultRepository'
+        tags: ['controller.service_arguments']
+
+    App\Controller\JokerController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $gameRepository: '@App\Repository\GameRepository'
+            $playerRepository: '@App\Repository\PlayerRepository'
+            $jokerRepository: '@App\Repository\JokerRepository'
+        tags: ['controller.service_arguments']

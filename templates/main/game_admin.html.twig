@@ -1,0 +1,248 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ olympix.name }} - Admin{% endblock %}
+
+{% block body %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">{{ olympix.name }}</h1>
+                <p class="text-gray-600 mt-2">Admin-Bereich</p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
+                   class="btn-secondary" 
+                   target="_blank">
+                    📺 Live-Anzeige
+                </a>
+                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                   class="btn-primary">
+                    👥 Spieler verwalten
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="text-2xl text-blue-600 mr-3">👥</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-800">{{ players|length }}</div>
+                    <div class="text-sm text-gray-600">Spieler</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="text-2xl text-green-600 mr-3">🎮</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-800">{{ games|length }}</div>
+                    <div class="text-sm text-gray-600">Spiele</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="text-2xl text-purple-600 mr-3">✅</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-800">
+                        {{ games|filter(game => game.status == 'completed')|length }}
+                    </div>
+                    <div class="text-sm text-gray-600">Abgeschlossen</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="text-2xl text-orange-600 mr-3">🏆</div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-800">
+                        {% if players|length > 0 %}
+                            {{ players|first.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-600">Führender</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Games Management -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">🎮 Spiele</h2>
+                <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
+                   class="btn-primary">
+                    + Spiel erstellen
+                </a>
+            </div>
+            
+            <div class="space-y-4">
+                {% for game in games %}
+                    <div class="game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
+                                    {% if game.teamSize %}
+                                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                            {{ game.teamSize }}er Teams
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                {% if game.status == 'pending' %}
+                                    <a href="{{ path('app_game_start', {id: game.id}) }}" 
+                                       class="btn-success text-sm">
+                                        ▶️ Start
+                                    </a>
+                                {% elseif game.status == 'active' %}
+                                    <a href="{{ path('app_game_results', {id: game.id}) }}" 
+                                       class="btn-primary text-sm">
+                                        📊 Ergebnisse
+                                    </a>
+                                    {% if game.isQuizGame %}
+                                        <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" 
+                                           class="btn-secondary text-sm">
+                                            📱 QR-Code
+                                        </a>
+                                    {% endif %}
+                                    {% if game.isTournamentGame %}
+                                        <a href="{{ path('app_game_bracket', {id: game.id}) }}" 
+                                           class="btn-secondary text-sm">
+                                            🏆 Bracket
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-sm text-green-600 font-medium">✅ Abgeschlossen</span>
+                                {% endif %}
+                                
+                                <div class="relative">
+                                    <button class="text-gray-400 hover:text-gray-600" onclick="toggleDropdown('game-{{ game.id }}')">
+                                        ⋮
+                                    </button>
+                                    <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                        <div class="py-1">
+                                            <a href="{{ path('app_game_edit', {id: game.id}) }}" 
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                ✏️ Bearbeiten
+                                            </a>
+                                            {% if game.isQuizGame %}
+                                                <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" 
+                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                    ❓ Fragen
+                                                </a>
+                                            {% endif %}
+                                            <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" 
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                🃏 Joker
+                                            </a>
+                                            <a href="{{ path('app_game_delete', {id: game.id}) }}" 
+                                               class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                               onclick="return confirmDelete('Spiel wirklich löschen?')">
+                                                🗑️ Löschen
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-4">🎮</div>
+                        <p>Noch keine Spiele erstellt</p>
+                        <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
+                           class="btn-primary mt-4">
+                            Erstes Spiel erstellen
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Player Rankings -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">🏆 Rangliste</h2>
+                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                   class="btn-secondary">
+                    Verwalten
+                </a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for player in players %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
+                                {{ loop.index }}
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-800">{{ player.name }}</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                        2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
+                                    </span>
+                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                        ⇄ {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-lg font-bold text-gray-800">{{ player.totalPoints }}</div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-4">👥</div>
+                        <p>Noch keine Spieler hinzugefügt</p>
+                        <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                           class="btn-primary mt-4">
+                            Spieler hinzufügen
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const isHidden = dropdown.classList.contains('hidden');
+    
+    // Close all dropdowns
+    document.querySelectorAll('[id^="game-"]').forEach(el => {
+        el.classList.add('hidden');
+    });
+    
+    // Toggle current dropdown
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('[onclick*="toggleDropdown"]')) {
+        document.querySelectorAll('[id^="game-"]').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
+});
+</script>
+{% endblock %}

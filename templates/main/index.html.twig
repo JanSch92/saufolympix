@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Saufolympix - Startseite{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            🏆 Willkommen bei Saufolympix
+        </h1>
+        <p class="text-lg text-gray-600 mb-8">
+            Erstelle dein eigenes Olympix-Turnier und lass die Spiele beginnen!
+        </p>
+        
+        <!-- Create New Olympix -->
+        <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Neues Olympix erstellen</h2>
+            
+            <form action="{{ path('app_create_olympix') }}" method="POST" class="max-w-md mx-auto">
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Name des Olympix
+                    </label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           required 
+                           placeholder="z.B. Saufolympix 2024"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <button type="submit" class="btn-primary w-full">
+                    Olympix erstellen
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Recent Olympix -->
+    {% if recent_olympix %}
+        <div class="bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Aktuelle Olympix</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for olympix in recent_olympix %}
+                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">{{ olympix.name }}</h3>
+                            <span class="text-sm text-gray-500">
+                                {{ olympix.createdAt|date('d.m.Y') }}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>
+                                    👥 {{ olympix.players|length }} Spieler
+                                </span>
+                                <span>
+                                    🎮 {{ olympix.games|length }} Spiele
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
+                               class="btn-secondary flex-1 text-center">
+                                Anzeigen
+                            </a>
+                            <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
+                               class="btn-primary flex-1 text-center">
+                                Verwalten
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Features -->
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl mb-4">🎯</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Free For All</h3>
+            <p class="text-sm text-gray-600">Alle Spieler gleichzeitig, Platzierung bestimmt Punkte</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl mb-4">🏆</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Turniere</h3>
+            <p class="text-sm text-gray-600">Einzel oder Team-Turniere mit Bracket-System</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl mb-4">🧠</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Quiz</h3>
+            <p class="text-sm text-gray-600">Schätzfragen mit QR-Code für mobile Teilnahme</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl mb-4">🃏</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Joker</h3>
+            <p class="text-sm text-gray-600">Doppelte Punkte oder Punkte tauschen</p>
+        </div>
+    </div>
+    
+    <!-- How it works -->
+    <div class="mt-12 bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">So funktioniert's</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl font-bold text-blue-600">1</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Olympix erstellen</h3>
+                <p class="text-gray-600">Gib deinem Olympix einen Namen und füge Spieler hinzu</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl font-bold text-green-600">2</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Spiele konfigurieren</h3>
+                <p class="text-gray-600">Erstelle verschiedene Spiele und lege die Punkteverteilung fest</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl font-bold text-purple-600">3</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Spielen & Gewinnen</h3>
+                <p class="text-gray-600">Führe die Spiele durch und verfolge die Ergebnisse live</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

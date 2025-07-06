@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz-Fragen - {{ game.name }}{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Quiz-Fragen</h1>
+                <p class="text-gray-600 mt-1">{{ game.name }}</p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" 
+                   class="btn-secondary">
+                    📱 QR-Code
+                </a>
+                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+                   class="btn-primary">
+                    ← Zurück
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Question Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Neue Frage hinzufügen</h2>
+        
+        <form action="{{ path('app_quiz_questions', {gameId: game.id}) }}" method="POST">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label for="question" class="block text-sm font-medium text-gray-700 mb-2">
+                        Frage
+                    </label>
+                    <textarea id="question" 
+                              name="question" 
+                              required 
+                              rows="3"
+                              placeholder="z.B. Wie viele Einwohner hat Berlin?"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="correct_answer" class="block text-sm font-medium text-gray-700 mb-2">
+                            Korrekte Antwort
+                        </label>
+                        <input type="number" 
+                               id="correct_answer" 
+                               name="correct_answer" 
+                               step="0.01"
+                               required 
+                               placeholder="3.7"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full">
+                        Frage hinzufügen
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Questions List -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-800">Fragen ({{ questions|length }})</h2>
+            {% if questions|length > 0 %}
+                <div class="text-sm text-gray-600">
+                    Alle Fragen sind Schätzfragen mit numerischen Antworten
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if questions|length > 0 %}
+            <div class="space-y-4">
+                {% for question in questions %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-sm font-medium text-gray-500">Frage {{ loop.index }}</span>
+                                    <span class="text-sm text-gray-400">•</span>
+                                    <span class="text-sm text-green-600 font-medium">Korrekte Antwort: {{ question.correctAnswer }}</span>
+                                </div>
+                                <p class="text-gray-800">{{ question.question }}</p>
+                            </div>
+                            
+                            <div class="flex items-center space-x-2 ml-4">
+                                <a href="{{ path('app_quiz_question_delete', {id: question.id}) }}" 
+                                   class="text-red-600 hover:text-red-800 text-sm"
+                                   onclick="return confirmDelete('Frage wirklich löschen?')">
+                                    🗑️ Löschen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center text-gray-500 py-12">
+                <div class="text-4xl mb-4">❓</div>
+                <p class="text-lg">Noch keine Fragen erstellt</p>
+                <p class="text-sm mt-2">Füge oben deine erste Frage hinzu</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,17 +1,532 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Saufolympix{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .tournament-bracket {
+            overflow-x: auto;
+            min-height: 500px;
+        }
+        
+        .bracket-rounds {
+            min-width: 800px;
+        }
+        
+        .match {
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+        
+        .match:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .participant {
+            transition: all 0.3s ease;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .tv-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .game-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .game-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        
+        .game-card.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .game-card.completed {
+            border-color: #6b7280;
+            background: #f9fafb;
+            opacity: 0.8;
+        }
+        
+        .player-card {
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .ranking-badge {
+            min-width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border-radius: 50%;
+        }
+        
+        .ranking-1 { background: #ffd700; color: #92400e; }
+        .ranking-2 { background: #c0c0c0; color: #374151; }
+        .ranking-3 { background: #cd7f32; color: #ffffff; }
+        .ranking-default { background: #e5e7eb; color: #6b7280; }
+        
+        .quiz-mobile {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .quiz-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .flash-message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .flash-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .flash-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .flash-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        .flash-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .auto-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.5rem;
+            color: #166534;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .qr-code-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-hidden {
+                display: none;
+            }
+            
+            .mobile-full {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .mobile-text-sm {
+                font-size: 0.875rem;
+            }
+            
+            .mobile-p-4 {
+                padding: 1rem;
+            }
+            
+            .tournament-bracket {
+                font-size: 0.875rem;
+            }
+            
+            .match {
+                min-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="{{ path('app_index') }}" class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+                        🏆 Saufolympix
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if app.request.attributes.get('_route') == 'app_show_olympix' %}
+                        <div class="auto-refresh">
+                            <div class="loading-spinner"></div>
+                            <span>Live-Update</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if app.request.attributes.get('olympix') is defined and app.request.attributes.get('olympix') is not null %}
+    <a href="{{ path('app_game_admin', {id: app.request.attributes.get('olympix').id}) }}"
+                           class="btn-secondary mobile-hidden">
+                            Admin
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
+    <!-- Flash Messages -->
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="flash-message flash-{{ type }}">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block body %}{% endblock %}
-    </body>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center text-gray-500">
+                <p>&copy; {{ "now"|date("Y") }} Saufolympix - Möge der Beste gewinnen! 🍻</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Auto-refresh for public display
+        {% if app.request.attributes.get('_route') == 'app_show_olympix' %}
+            const olympixId = {{ app.request.attributes.get('id') }};
+            let lastUpdate = 0;
+            
+            function refreshData() {
+                fetch(`/api/olympix/${olympixId}/status`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.timestamp > lastUpdate) {
+                            lastUpdate = data.timestamp;
+                            updateDisplay(data);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+            
+            function updateDisplay(data) {
+                // Update player rankings
+                const playersContainer = document.getElementById('players-ranking');
+                if (playersContainer && data.players) {
+                    updatePlayersRanking(data.players);
+                }
+                
+                // Update current game
+                const currentGameContainer = document.getElementById('current-game');
+                if (currentGameContainer && data.current_game) {
+                    updateCurrentGame(data.current_game);
+                }
+                
+                // Update next game
+                const nextGameContainer = document.getElementById('next-game');
+                if (nextGameContainer && data.next_game) {
+                    updateNextGame(data.next_game);
+                }
+            }
+            
+            function updatePlayersRanking(players) {
+                const container = document.getElementById('players-ranking');
+                let html = '';
+                
+                players.forEach((player, index) => {
+                    const rankingClass = index === 0 ? 'ranking-1' : index === 1 ? 'ranking-2' : index === 2 ? 'ranking-3' : 'ranking-default';
+                    
+                    html += `
+                        <div class="player-card bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="ranking-badge ${rankingClass}">${index + 1}</div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">${player.name}</h3>
+                                    <div class="flex items-center space-x-2 mt-1">
+                                        <span class="text-sm text-gray-600">Joker:</span>
+                                        <span class="text-xs px-2 py-1 rounded-full ${player.joker_double_available ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}">
+                                            2x ${player.joker_double_available ? '✓' : '✗'}
+                                        </span>
+                                        <span class="text-xs px-2 py-1 rounded-full ${player.joker_swap_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}">
+                                            ⇄ ${player.joker_swap_available ? '✓' : '✗'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-gray-800">${player.total_points}</div>
+                                <div class="text-sm text-gray-500">Punkte</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+            
+            function updateCurrentGame(game) {
+                const container = document.getElementById('current-game');
+                if (game) {
+                    container.innerHTML = `
+                        <div class="game-card active bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">${game.name}</h3>
+                                    <span class="text-sm text-gray-600 capitalize">${game.type.replace('_', ' ')}</span>
+                                </div>
+                                <div class="text-green-600 font-semibold">
+                                    <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                                    AKTIV
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="text-center text-gray-500">Kein aktives Spiel</div>';
+                }
+            }
+            
+            function updateNextGame(game) {
+                const container = document.getElementById('next-game');
+                if (game) {
+                    container.innerHTML = `
+                        <div class="game-card bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">${game.name}</h3>
+                                    <span class="text-sm text-gray-600 capitalize">${game.type.replace('_', ' ')}</span>
+                                </div>
+                                <div class="text-blue-600 font-semibold">
+                                    NÄCHSTES SPIEL
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="text-center text-gray-500">Kein nächstes Spiel</div>';
+                }
+            }
+            
+            // Start auto-refresh
+            setInterval(refreshData, 5000);
+            refreshData();
+        {% endif %}
+        
+        // Tournament bracket match result buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const matchResultButtons = document.querySelectorAll('.match-result-btn');
+            
+            matchResultButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const matchId = this.dataset.matchId;
+                    const gameId = window.location.pathname.split('/').pop();
+                    
+                    // Here you would open a modal or redirect to match result form
+                    window.location.href = `/game/match-result/${gameId}/${matchId}`;
+                });
+            });
+        });
+        
+        // QR Code generation
+        function generateQRCode(text, elementId) {
+            const qr = new QRCode(document.getElementById(elementId), {
+                text: text,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Form validation
+        function validateForm(formId) {
+            const form = document.getElementById(formId);
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Confirm deletion
+        function confirmDelete(message) {
+            return confirm(message || 'Sind Sie sicher, dass Sie dieses Element löschen möchten?');
+        }
+        
+        // Close flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            
+            flashMessages.forEach(message => {
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '×';
+                closeBtn.className = 'float-right text-xl font-bold opacity-70 hover:opacity-100';
+                closeBtn.onclick = function() {
+                    message.style.display = 'none';
+                };
+                message.appendChild(closeBtn);
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    message.style.transition = 'opacity 0.5s ease';
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+    
+    {% block javascripts %}{% endblock %}
+</body>
 </html>
