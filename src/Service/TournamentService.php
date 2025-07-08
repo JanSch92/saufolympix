@@ -40,41 +40,41 @@ class TournamentService
         return $tournament;
     }
 
-private function createTeamParticipants(Game $game): array
-{
-    $players = $game->getOlympix()->getPlayers()->toArray();
-    $teamSize = $game->getTeamSize() ?? 2;
-    
-    shuffle($players);
-    
-    $teams = [];
-    $teamId = 1;
-    
-    for ($i = 0; $i < count($players); $i += $teamSize) {
-        $teamPlayers = array_slice($players, $i, $teamSize);
+    private function createTeamParticipants(Game $game): array
+    {
+        $players = $game->getOlympix()->getPlayers()->toArray();
+        $teamSize = $game->getTeamSize() ?? 2;
         
-        if (count($teamPlayers) === $teamSize) {
-            // Team-Name aus Spielernamen erstellen
-            $teamName = implode(' + ', array_map(fn($p) => $p->getName(), $teamPlayers));
+        shuffle($players);
+        
+        $teams = [];
+        $teamId = 1;
+        
+        for ($i = 0; $i < count($players); $i += $teamSize) {
+            $teamPlayers = array_slice($players, $i, $teamSize);
             
-            $teams[] = [
-                'id' => $teamId,
-                'name' => $teamName, // GEÄNDERT: Namen statt "Team X"
-                'players' => array_map(fn($p) => [
-                    'id' => $p->getId(),
-                    'name' => $p->getName(),
-                    'total_points' => $p->getTotalPoints()
-                ], $teamPlayers),
-                'total_points' => array_sum(array_map(fn($p) => $p->getTotalPoints(), $teamPlayers)),
-                'type' => 'team'
-            ];
-            
-            $teamId++;
+            if (count($teamPlayers) === $teamSize) {
+                // Team-Name aus Spielernamen erstellen
+                $teamName = implode(' + ', array_map(fn($p) => $p->getName(), $teamPlayers));
+                
+                $teams[] = [
+                    'id' => $teamId,
+                    'name' => $teamName,
+                    'players' => array_map(fn($p) => [
+                        'id' => $p->getId(),
+                        'name' => $p->getName(),
+                        'total_points' => $p->getTotalPoints()
+                    ], $teamPlayers),
+                    'total_points' => array_sum(array_map(fn($p) => $p->getTotalPoints(), $teamPlayers)),
+                    'type' => 'team'
+                ];
+                
+                $teamId++;
+            }
         }
+        
+        return $teams;
     }
-    
-    return $teams;
-}
 
     private function createSingleParticipants(Game $game): array
     {
@@ -152,9 +152,9 @@ private function createTeamParticipants(Game $game): array
             $html .= '<h3 class="text-lg font-bold mb-4 text-center">';
             
             if ($roundIndex === count($bracketData['rounds']) - 1) {
-                $html .= 'Finale';
+                $html .= '🏆 Finale';
             } elseif ($roundIndex === count($bracketData['rounds']) - 2) {
-                $html .= 'Halbfinale';
+                $html .= '🥇 Halbfinale';
             } else {
                 $html .= 'Runde ' . ($roundIndex + 1);
             }
@@ -173,7 +173,7 @@ private function createTeamParticipants(Game $game): array
         // Add third place match if exists
         if (isset($bracketData['thirdPlaceMatch'])) {
             $html .= '<div class="third-place-match mt-8">';
-            $html .= '<h3 class="text-lg font-bold mb-4 text-center">Spiel um Platz 3</h3>';
+            $html .= '<h3 class="text-lg font-bold mb-4 text-center">🥉 Spiel um Platz 3</h3>';
             $html .= $this->generateMatchHtml($bracketData['thirdPlaceMatch']);
             $html .= '</div>';
         }
@@ -216,17 +216,37 @@ private function createTeamParticipants(Game $game): array
         if ($completed) {
             $html .= '<div class="mt-3 text-center">';
             $html .= '<span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">';
-            $html .= 'Gewinner: ' . $winner['name'];
+            $html .= '🏆 Gewinner: ' . $winner['name'];
             $html .= '</span>';
             $html .= '</div>';
         } elseif ($participant1 && $participant2) {
             $html .= '<div class="mt-3 text-center">';
-            $html .= '<button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 match-result-btn" data-match-id="' . $match['id'] . '">';
-            $html .= 'Ergebnis eingeben';
+            $html .= '<form method="POST" class="space-y-2">';
+            $html .= '<select name="winner_id" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">';
+            $html .= '<option value="">Gewinner wählen</option>';
+            
+            // Handle both team and player selection
+            if ($participant1['type'] === 'team') {
+                $html .= '<option value="' . $participant1['id'] . '" data-type="team">' . $participant1['name'] . '</option>';
+            } else {
+                $html .= '<option value="' . $participant1['id'] . '" data-type="player">' . $participant1['name'] . '</option>';
+            }
+            
+            if ($participant2['type'] === 'team') {
+                $html .= '<option value="' . $participant2['id'] . '" data-type="team">' . $participant2['name'] . '</option>';
+            } else {
+                $html .= '<option value="' . $participant2['id'] . '" data-type="player">' . $participant2['name'] . '</option>';
+            }
+            
+            $html .= '</select>';
+            $html .= '<input type="hidden" name="winner_type" value="' . $participant1['type'] . '">';
+            $html .= '<button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">';
+            $html .= '✅ Ergebnis speichern';
             $html .= '</button>';
+            $html .= '</form>';
             $html .= '</div>';
         } else {
-            $html .= '<div class="mt-3 text-center text-gray-500 text-sm">Warten auf Teilnehmer</div>';
+            $html .= '<div class="mt-3 text-center text-gray-500 text-sm">⏳ Warten auf Teilnehmer</div>';
         }
         
         $html .= '</div>';
@@ -276,5 +296,33 @@ private function createTeamParticipants(Game $game): array
             'current_round' => $tournament->getCurrentRound(),
             'is_completed' => $tournament->isIsCompleted()
         ];
+    }
+
+    public function getParticipantName(array $participant): string
+    {
+        if ($participant['type'] === 'team') {
+            return $participant['name'];
+        }
+        
+        return $participant['name'];
+    }
+
+    public function getParticipantPoints(array $participant): int
+    {
+        return $participant['total_points'];
+    }
+
+    public function isParticipantTeam(array $participant): bool
+    {
+        return $participant['type'] === 'team';
+    }
+
+    public function getTeamMembers(array $participant): array
+    {
+        if ($participant['type'] === 'team') {
+            return $participant['players'];
+        }
+        
+        return [$participant];
     }
 }

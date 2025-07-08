@@ -1,140 +1,526 @@
-{% extends 'base.html.twig' %}
+{% extends 'baselive.html.twig' %}
 
-{% block title %}{{ olympix.name }} - Live Anzeige{% endblock %}
+{% block title %}{{ olympix.name }} – Live-Display{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
 
 {% block body %}
-<div class="tv-display rounded-lg p-8 mb-8">
+<div class="w-screen h-screen flex flex-col bg-gradient-to-br from-indigo-800 via-purple-700 to-blue-900 text-white overflow-hidden">
+
+  <!-- HEADER -->
+  <header class="flex-none h-24 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-md shadow-lg">
     <div class="text-center">
-        <h1 class="text-4xl font-bold mb-2">{{ olympix.name }}</h1>
-        <p class="text-xl opacity-90">Live Ergebnisse</p>
+      <h1 class="text-5xl font-extrabold tracking-tight uppercase">{{ olympix.name }}</h1>
+      <p class="mt-1 text-lg opacity-80">🏆 Live-Ergebnisse & Rangliste</p>
     </div>
+  </header>
+
+  <!-- PROGRESS BAR -->
+  <section class="flex-none h-20 flex items-center justify-center px-8 bg-white bg-opacity-10 backdrop-blur-sm">
+    <div class="w-full max-w-4xl flex items-center space-x-6">
+      <div class="flex items-center space-x-4">
+        <div class="text-2xl">📊</div>
+        <div class="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <div class="text-3xl font-bold">{{ olympix.games|length }}</div>
+            <div class="text-sm uppercase opacity-70">Spiele gesamt</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold text-green-400">{{ olympix.completedGamesCount }}</div>
+            <div class="text-sm uppercase opacity-70">Abgeschlossen</div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 flex items-center space-x-4">
+        <div class="flex-1 h-4 bg-white bg-opacity-20 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-green-400 to-teal-400 transition-all duration-500" style="width: {{ olympix.progress }}%"></div>
+        </div>
+        <div class="text-xl font-bold">{{ olympix.progress }}%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN LAYOUT -->
+  <main class="flex-1 grid grid-rows-[auto_1fr] lg:grid-cols-12 lg:grid-rows-none overflow-hidden">
+
+    <!-- RANKINGS (Sidebar) -->
+    <aside class="hidden lg:block lg:col-span-3 p-4 {% if current_game and current_game.isTournamentGame and current_game.tournament %}tournament-hide{% endif %}">
+      <div class="h-full bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-white bg-opacity-20 border-b border-white border-opacity-30">
+          <h2 class="text-2xl font-bold">🏆 Rangliste <span class="text-base font-medium">({{ players|length }} Spieler)</span></h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" id="players-ranking">
+          {% for player in players %}
+          <div class="flex items-center p-4 bg-white bg-opacity-20 rounded-xl shadow-inner hover:shadow-md transition-all">
+            <div class="flex-none w-12 h-12 rounded-full flex items-center justify-center text-xl font-extrabold text-white
+              {% if loop.index == 1 %}bg-yellow-400 bg-opacity-90
+              {% elseif loop.index == 2 %}bg-gray-400 bg-opacity-90
+              {% elseif loop.index == 3 %}bg-orange-400 bg-opacity-90
+              {% else %}bg-gray-600 bg-opacity-70{% endif %}">
+              {{ loop.index }}
+            </div>
+            <div class="flex-1 mx-4 min-w-0">
+              <div class="font-semibold truncate">{{ player.name }}</div>
+              <div class="flex space-x-2 mt-1">
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ player.hasJokerDoubleAvailable ? 'bg-green-300 text-green-900' : 'bg-white bg-opacity-30 text-white opacity-70' }}">🔥 2×</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ player.hasJokerSwapAvailable ? 'bg-blue-300 text-blue-900' : 'bg-white bg-opacity-30 text-white opacity-70' }}">⇄</span>
+              </div>
+            </div>
+            <div class="flex-none text-right">
+              <div class="text-2xl font-extrabold">{{ player.totalPoints }}</div>
+              <div class="text-xs uppercase opacity-70">Punkte</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER CONTENT -->
+    <section class="col-span-12 {% if current_game and current_game.isTournamentGame and current_game.tournament %}lg:col-span-12{% else %}lg:col-span-6{% endif %} p-4 flex flex-col space-y-6 overflow-hidden">
+      <!-- AKTUELLES SPIEL -->
+      <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl p-6 flex flex-col space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="text-3xl">🎮</div>
+            <div id="current-game-info">
+              {% if current_game %}
+              <h3 class="text-2xl font-bold">{{ current_game.name }}</h3>
+              <p class="uppercase opacity-70">{{ current_game.gameType|replace({'_':' '}) }}</p>
+              {% else %}
+              <h3 class="text-2xl font-bold opacity-70">Kein aktives Spiel</h3>
+              {% endif %}
+            </div>
+          </div>
+          {% if current_game %}
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+            <span class="font-bold uppercase">Live</span>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- GAME RESULTS (für abgeschlossene Spiele) -->
+        <div id="game-results-container" class="hidden">
+          <div class="border-t border-white border-opacity-20 pt-4">
+            <h4 class="text-lg font-semibold mb-3 opacity-90">📊 Ergebnisse</h4>
+            <div id="game-results-list" class="space-y-2">
+              <!-- Wird von JavaScript gefüllt -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TURNIER-BRACKET -->
+      <div id="tournament-bracket-container" class="{% if not (current_game and current_game.isTournamentGame and current_game.tournament) %}hidden{% endif %} flex-1 bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl p-6 overflow-hidden">
+        <h3 class="text-3xl font-bold mb-6 text-center">🏆 {{ current_game.name ?? 'Turnier' }}</h3>
+        <div class="h-full overflow-hidden" id="tournament-bracket">
+          {% if current_game and current_game.isTournamentGame and current_game.tournament %}
+          <div class="flex space-x-8 justify-center items-start h-full">
+            {% for round in current_game.tournament.bracketData.rounds %}
+            <div class="flex flex-col space-y-6 justify-center min-w-[200px]">
+              <div class="text-center uppercase opacity-80 font-semibold text-lg px-4 py-2 bg-white bg-opacity-20 rounded-lg">
+                {% if loop.index == current_game.tournament.bracketData.rounds|length %}
+                  🏆 Finale
+                {% elseif loop.index == current_game.tournament.bracketData.rounds|length - 1 %}
+                  🥇 Halbfinale
+                {% else %}
+                  Runde {{ loop.index }}
+                {% endif %}
+              </div>
+              {% for match in round %}
+              <div class="p-4 bg-white bg-opacity-20 rounded-lg border-2 text-center {{ match.completed ? 'border-green-400 bg-green-400 bg-opacity-20' : 'border-white border-opacity-30' }}">
+                <p class="font-semibold truncate mb-2">{{ match.participant1.name ?? 'TBD' }}</p>
+                <p class="text-center opacity-70 text-sm mb-2">VS</p>
+                <p class="font-semibold truncate mb-3">{{ match.participant2.name ?? 'TBD' }}</p>
+                {% if match.completed and match.winner %}
+                <div class="px-3 py-1 bg-green-300 rounded-full text-green-900 font-bold text-sm">
+                  🏆 {{ match.winner.name }}
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- TOURNAMENT-ERGEBNISSE (für abgeschlossene Tournaments) -->
+      <div id="tournament-results-container" class="hidden flex-1 bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl p-6 overflow-hidden">
+        <h3 class="text-3xl font-bold mb-6 text-center">🏆 Turnier-Ergebnisse</h3>
+        <div class="h-full overflow-auto" id="tournament-results">
+          <!-- Wird von JavaScript gefüllt -->
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: QR & History -->
+    <aside class="hidden lg:block lg:col-span-3 p-4 flex flex-col space-y-6 {% if current_game and current_game.isTournamentGame and current_game.tournament %}tournament-hide{% endif %}">
+      <!-- QR CODE -->
+      <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl p-6 text-center">
+        <h4 class="text-xl font-semibold mb-4">📱 Spielerzugang</h4>
+        <div class="mx-auto mb-4 bg-white p-3 rounded-lg inline-block">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{ url('app_player_access', {olympixId: olympix.id})|url_encode }}" 
+               alt="QR Code" 
+               class="block mx-auto"
+               style="width: 160px; height: 160px;">
+        </div>
+        <p class="break-all font-mono text-sm opacity-80">{{ url('app_player_access', {olympixId: olympix.id}) }}</p>
+      </div>
+
+      <!-- SPIELHISTORIE -->
+      <div class="flex-1 bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
+        <h4 class="px-6 py-4 border-b border-white border-opacity-30 font-semibold uppercase opacity-80">📋 Spiele</h4>
+        <div class="flex-1 overflow-y-auto p-6 space-y-3" id="game-history">
+          {% for game in olympix.gamesByOrder %}
+          <div class="flex items-center justify-between p-4 rounded-lg transition-all hover:bg-opacity-40 {% if game.status == 'completed' %}bg-green-500 bg-opacity-20{% elseif game.status == 'active' %}bg-blue-500 bg-opacity-20{% else %}bg-white bg-opacity-20{% endif %}">
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold truncate">{{ game.name }}</p>
+              <p class="text-sm uppercase opacity-70">{{ game.gameType|replace({'_':' '}) }}</p>
+            </div>
+            <div class="text-2xl ml-2">
+              {% if game.status == 'completed' %}✅
+              {% elseif game.status == 'active' %}▶️
+              {% else %}⏳
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+
+  </main>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Player Rankings -->
-    <div class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                🏆 Aktuelle Rangliste
-            </h2>
+<!-- TOURNAMENT MODE STYLES -->
+<style>
+  .tournament-hide {
+    display: none !important;
+  }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+      let refreshInterval;
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        // updateGameHistory definiert 
+        function updateGameHistory(games) {
+          const container = document.getElementById('game-history');
+          if (!container || !games) return;
+          
+          let html = '';
+          games.forEach(game => {
+            let bgClass = 'bg-white bg-opacity-20';
+            let icon = '⏳';
             
-            <div id="players-ranking" class="space-y-4">
-                {% for player in players %}
-                    <div class="player-card bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
-                                {{ loop.index }}
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ player.name }}</h3>
-                                <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-sm text-gray-600">Joker:</span>
-                                    <span class="text-xs px-2 py-1 rounded-full {% if player.hasJokerDoubleAvailable %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
-                                    </span>
-                                    <span class="text-xs px-2 py-1 rounded-full {% if player.hasJokerSwapAvailable %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        ⇄ {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-gray-800">{{ player.totalPoints }}</div>
-                            <div class="text-sm text-gray-500">Punkte</div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Current Game Info -->
-    <div class="space-y-6">
-        <!-- Current Game -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">🎮 Aktuelles Spiel</h3>
-            <div id="current-game">
-                {% if current_game %}
-                    <div class="game-card active bg-white rounded-lg shadow-md p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-800">{{ current_game.name }}</h3>
-                                <span class="text-sm text-gray-600 capitalize">{{ current_game.gameType|replace({'_': ' '}) }}</span>
-                            </div>
-                            <div class="text-green-600 font-semibold">
-                                <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                                AKTIV
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="text-center text-gray-500">
-                        Kein aktives Spiel
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Next Game -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">⏭️ Nächstes Spiel</h3>
-            <div id="next-game">
-                {% if next_game %}
-                    <div class="game-card bg-white rounded-lg shadow-md p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-800">{{ next_game.name }}</h3>
-                                <span class="text-sm text-gray-600 capitalize">{{ next_game.gameType|replace({'_': ' '}) }}</span>
-                            </div>
-                            <div class="text-blue-600 font-semibold">
-                                NÄCHSTES SPIEL
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="text-center text-gray-500">
-                        Kein nächstes Spiel
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Game History -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">📈 Spielübersicht</h3>
-            <div class="space-y-2">
-                {% for game in olympix.games %}
-                    <div class="flex items-center justify-between p-3 {% if game.status == 'completed' %}bg-green-50 border-l-4 border-green-500{% elseif game.status == 'active' %}bg-blue-50 border-l-4 border-blue-500{% else %}bg-gray-50 border-l-4 border-gray-300{% endif %} rounded">
-                        <div>
-                            <div class="font-medium text-gray-800">{{ game.name }}</div>
-                            <div class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</div>
-                        </div>
-                        <div class="text-sm font-medium {% if game.status == 'completed' %}text-green-600{% elseif game.status == 'active' %}text-blue-600{% else %}text-gray-500{% endif %}">
-                            {% if game.status == 'completed' %}
-                                ✓ Abgeschlossen
-                            {% elseif game.status == 'active' %}
-                                ⏸️ Aktiv
-                            {% else %}
-                                ⏳ Ausstehend
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
+            if (game.status === 'completed') {
+              bgClass = 'bg-green-500 bg-opacity-20';
+              icon = '✅';
+            } else if (game.status === 'active') {
+              bgClass = 'bg-blue-500 bg-opacity-20';
+              icon = '▶️';
+            }
+            
+            html += `
+              <div class="flex items-center justify-between p-4 rounded-lg transition-all hover:bg-opacity-40 ${bgClass}">
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold truncate">${game.name || 'Unbekanntes Spiel'}</p>
+                  <p class="text-sm uppercase opacity-70">${(game.type || 'Unbekannt').replace(/_/g, ' ')}</p>
+                </div>
+                <div class="text-2xl ml-2">${icon}</div>
+              </div>
+            `;
+          });
+          
+          container.innerHTML = html;
+        }
 
-<!-- Tournament Bracket Display -->
-{% if current_game and current_game.isTournamentGame and current_game.tournament %}
-    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">🏆 Turnier-Bracket</h2>
-        <div class="tournament-bracket">
-            <!-- Bracket will be rendered here -->
-            <div id="tournament-bracket">
-                <!-- Tournament bracket content will be loaded via JavaScript -->
-            </div>
-        </div>
-    </div>
-{% endif %}
+        // Live-Refresh-Status-Element
+        const statusEl = document.createElement('div');
+        statusEl.id = 'refresh-status';
+        statusEl.className = 'fixed top-4 right-4 bg-white bg-opacity-80 px-3 py-1 rounded-full backdrop-blur-sm cursor-pointer text-sm font-medium';
+        statusEl.textContent = '🔄 Live';
+        document.body.appendChild(statusEl);
+
+        function setStatus(text, cls) {
+          statusEl.textContent = text;
+          statusEl.className = 'fixed top-4 right-4 ' + cls + ' px-3 py-1 rounded-full backdrop-blur-sm cursor-pointer text-sm font-medium';
+        }
+
+        function updateRanking(players) {
+          const container = document.getElementById('players-ranking');
+          if (!container || !players) return;
+          
+          let html = '';
+          players.forEach(function(player, index) {
+            const position = index + 1;
+            let bgClass = 'bg-gray-600 bg-opacity-70';
+            
+            if (position === 1) bgClass = 'bg-yellow-400 bg-opacity-90';
+            else if (position === 2) bgClass = 'bg-gray-400 bg-opacity-90';
+            else if (position === 3) bgClass = 'bg-orange-400 bg-opacity-90';
+            
+            // Position change indicator
+            let changeIndicator = '';
+            if (player.position_change > 0) {
+              // Moved up (positive change = better position)
+              changeIndicator = '<div class="text-green-400 text-xs font-bold">↑ +' + player.position_change + '</div>';
+            } else if (player.position_change < 0) {
+              // Moved down (negative change = worse position)
+              changeIndicator = '<div class="text-red-400 text-xs font-bold">↓ ' + player.position_change + '</div>';
+            } else if (player.position_change === 0 && player.previous_position !== null) {
+              // No change
+              changeIndicator = '<div class="text-gray-400 text-xs font-bold">= 0</div>';
+            }
+            
+            html += '<div class="flex items-center p-4 bg-white bg-opacity-20 rounded-xl shadow-inner hover:shadow-md transition-all">';
+            html += '<div class="flex-none w-12 h-12 rounded-full flex items-center justify-center text-xl font-extrabold text-white ' + bgClass + '">';
+            html += position;
+            html += '</div>';
+            html += '<div class="flex-1 mx-4 min-w-0">';
+            html += '<div class="font-semibold truncate">' + (player.name || 'Unbekannt') + '</div>';
+            html += '<div class="flex space-x-2 mt-1">';
+            html += '<span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + (player.joker_double_available ? 'bg-green-300 text-green-900' : 'bg-white bg-opacity-30 text-white opacity-70') + '">🔥 2×</span>';
+            html += '<span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + (player.joker_swap_available ? 'bg-blue-300 text-blue-900' : 'bg-white bg-opacity-30 text-white opacity-70') + '">⇄</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="flex-none text-right">';
+            html += '<div class="text-2xl font-extrabold">' + (player.total_points || 0) + '</div>';
+            html += '<div class="text-xs uppercase opacity-70">Punkte</div>';
+            html += changeIndicator;
+            html += '</div>';
+            html += '</div>';
+          });
+          
+          container.innerHTML = html;
+        }
+
+        function updateCurrentGame(game) {
+          console.log('Current Game Data:', game);
+          const container = document.getElementById('current-game-info');
+          const liveIndicator = document.querySelector('.animate-pulse')?.parentElement;
+          
+          if (!container) return;
+          
+          if (game && game.name) {
+            // Zeige das Spiel an - egal ob aktiv oder abgeschlossen
+            const statusText = game.status === 'active' ? 'Aktiv' : 
+                              game.status === 'completed' ? 'Abgeschlossen' : 
+                              'Ausstehend';
+            
+            container.innerHTML = '<h3 class="text-2xl font-bold">' + game.name + '</h3><p class="uppercase opacity-70">' + (game.type || 'Unbekannt').replace(/_/g, ' ') + ' - ' + statusText + '</p>';
+            
+            // Live-Indikator nur für aktive Spiele
+            if (liveIndicator) {
+              if (game.status === 'active') {
+                liveIndicator.style.display = 'flex';
+              } else {
+                liveIndicator.style.display = 'none';
+              }
+            }
+          } else {
+            container.innerHTML = '<h3 class="text-2xl font-bold opacity-70">Kein aktives Spiel</h3>';
+            if (liveIndicator) {
+              liveIndicator.style.display = 'none';
+            }
+          }
+        }
+
+        function updateGameResults(gameResults) {
+          const container = document.getElementById('game-results-container');
+          const resultsList = document.getElementById('game-results-list');
+          
+          if (!container || !resultsList) return;
+          
+          if (gameResults && gameResults.length > 0) {
+            container.classList.remove('hidden');
+            
+            let html = '';
+            gameResults.forEach(function(result) {
+              const jokerText = result.jokers && result.jokers.length > 0 ? 
+                ' (' + result.jokers.map(j => j === 'double' ? '2× Joker' : 'Swap Joker').join(', ') + ')' : 
+                '';
+              
+              const pointsDisplay = result.final_points !== result.points ? 
+                '+' + result.final_points + ' Punkte' : 
+                '+' + result.points + ' Punkte';
+              
+              html += '<div class="flex items-center justify-between p-3 bg-white bg-opacity-10 rounded-lg">';
+              html += '<div class="flex items-center space-x-3">';
+              html += '<div class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-sm font-bold">' + result.position + '</div>';
+              html += '<div>';
+              html += '<div class="font-semibold">' + result.player.name + '</div>';
+              html += '<div class="text-sm opacity-80">' + pointsDisplay + jokerText + '</div>';
+              html += '</div>';
+              html += '</div>';
+              html += '</div>';
+            });
+            
+            resultsList.innerHTML = html;
+          } else {
+            container.classList.add('hidden');
+          }
+        }
+
+        function updateTournamentBracket(game) {
+          console.log('Tournament Check:', game);
+          const sidebars = document.querySelectorAll('.tournament-hide');
+          const centerContent = document.querySelector('.lg\\:col-span-6, .lg\\:col-span-12');
+          const bracketContainer = document.getElementById('tournament-bracket-container');
+          const bracketContent = document.getElementById('tournament-bracket');
+          const resultsContainer = document.getElementById('tournament-results-container');
+          const resultsContent = document.getElementById('tournament-results');
+          
+          // Korrigierte Tournament-Erkennung
+          const isTournament = game && (
+            game.is_tournament_game || 
+            game.isTournamentGame || 
+            game.tournament_game ||
+            (game.type && game.type.includes('tournament')) ||
+            (game.gameType && game.gameType.includes('tournament')) ||
+            game.type === 'tournament_single' ||
+            game.type === 'tournament_double' ||
+            game.gameType === 'tournament_single' ||
+            game.gameType === 'tournament_double'
+          );
+          
+          const tournamentData = game && (
+            game.tournament || 
+            game.tournament_data ||
+            game.bracket
+          );
+          
+          // Tournament ist abgeschlossen
+          const isTournamentCompleted = tournamentData && (
+            tournamentData.is_completed || 
+            tournamentData.isCompleted || 
+            tournamentData.completed
+          );
+          
+          console.log('Is Tournament:', isTournament, 'Tournament Data:', tournamentData, 'Is Completed:', isTournamentCompleted, 'Game Status:', game?.status);
+          
+          // NUR aktive Tournaments zeigen Bracket an
+          if (isTournament && tournamentData && game.status === 'active' && !isTournamentCompleted) {
+            // Tournament-Modus: Sidebars verstecken, Bracket anzeigen
+            sidebars.forEach(function(sidebar) {
+              sidebar.style.display = 'none';
+            });
+            
+            if (centerContent) {
+              centerContent.classList.remove('lg:col-span-6');
+              centerContent.classList.add('lg:col-span-12');
+            }
+            
+            if (bracketContainer) {
+              bracketContainer.classList.remove('hidden');
+            }
+            
+            if (resultsContainer) {
+              resultsContainer.classList.add('hidden');
+            }
+            
+            // Bracket-Inhalt rendern (wie vorher)...
+          } else {
+            // NORMALER MODUS: Sidebars anzeigen, Tournament-Zeug verstecken
+            sidebars.forEach(function(sidebar) {
+              sidebar.style.display = '';
+            });
+            
+            if (centerContent) {
+              centerContent.classList.remove('lg:col-span-12');
+              centerContent.classList.add('lg:col-span-6');
+            }
+            
+            if (bracketContainer) {
+              bracketContainer.classList.add('hidden');
+            }
+            
+            if (resultsContainer) {
+              resultsContainer.classList.add('hidden');
+            }
+          }
+        }
+
+        async function refresh() {
+          setStatus('🔄 Laden...', 'bg-blue-200 text-blue-800');
+          try {
+            const response = await fetch('/api/olympix/{{ olympix.id }}/status');
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (data.players) {
+              console.log('Players with position changes:', data.players);
+              updateRanking(data.players);
+            }
+            
+            // Zeige aktuelles Spiel oder letztes abgeschlossenes Spiel
+            let gameToShow = data.current_game;
+            
+            // Falls kein aktives Spiel, zeige das letzte abgeschlossene
+            if (!gameToShow && data.games && data.games.length > 0) {
+              // Suche das letzte abgeschlossene Spiel
+              const completedGames = data.games.filter(g => g.status === 'completed');
+              if (completedGames.length > 0) {
+                // Sortiere nach order_position absteigend
+                completedGames.sort((a, b) => b.order_position - a.order_position);
+                gameToShow = completedGames[0]; // letztes abgeschlossenes
+              }
+            }
+            
+            if (gameToShow !== undefined) {
+              updateCurrentGame(gameToShow);
+              updateTournamentBracket(gameToShow);
+            }
+            
+            // Update game results if available
+            if (data.game_results) {
+              updateGameResults(data.game_results);
+            } else {
+              updateGameResults(null); // versteckt die Ergebnisse
+            }
+            
+            if (data.games) {
+              updateGameHistory(data.games);
+            }
+            
+            setStatus('✅ Aktuell', 'bg-green-200 text-green-800');
+            setTimeout(function() {
+              setStatus('🔄 Live', 'bg-white bg-opacity-80');
+            }, 2000);
+          } catch (error) {
+            console.error('Refresh Error:', error);
+            setStatus('❌ Fehler', 'bg-red-200 text-red-800');
+            setTimeout(function() {
+              setStatus('🔄 Live', 'bg-white bg-opacity-80');
+            }, 3000);
+          }
+        }
+
+        statusEl.addEventListener('click', refresh);
+        
+        // Initial refresh
+        refresh();
+        
+        // Auto-refresh every 10 seconds
+        refreshInterval = setInterval(refresh, 10000);
+      });
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', function() {
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+        }
+      });
+    </script>
 {% endblock %}

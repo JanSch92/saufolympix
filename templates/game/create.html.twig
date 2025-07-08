@@ -52,6 +52,7 @@
                     <option value="tournament_team">Turnier (Team)</option>
                     <option value="tournament_single">Turnier (Einzel)</option>
                     <option value="quiz">Quiz</option>
+                    <option value="split_or_steal">Split or Steal</option>
                 </select>
             </div>
             
@@ -90,20 +91,61 @@
                     <h4 class="font-semibold mb-2">Spieltyp-Erklärung:</h4>
                     <div id="freeForAllExplanation" class="hidden">
                         <p><strong>Free For All:</strong> Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz). Standardpunkte: 8,7,6,5,4,3,2,1 (bei 8 Spielern).</p>
+                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Bier Pong Turnier, alle spielen gleichzeitig an verschiedenen Tischen</p>
                     </div>
                     <div id="tournamentTeamExplanation" class="hidden">
-                        <p><strong>Turnier (Team):</strong> Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos. Standardpunkte: 6,4,2,0 (1.-4. Platz).</p>
+                        <p><strong>Turnier (Team):</strong> Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos. Standardpunkte: 8,6,4,2 (1.-4. Platz).</p>
+                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Flunky Ball Teams, KO-System</p>
                     </div>
                     <div id="tournamentSingleExplanation" class="hidden">
-                        <p><strong>Turnier (Einzel):</strong> Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos. Standardpunkte: 6,4,2,0 (1.-4. Platz).</p>
+                        <p><strong>Turnier (Einzel):</strong> Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos. Standardpunkte: 8,6,4,2 (1.-4. Platz).</p>
+                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> 1vs1 Dart Turnier, KO-System</p>
                     </div>
                     <div id="quizExplanation" class="hidden">
-                        <p><strong>Quiz:</strong> Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobile ihre Antworten eingeben können. Bewertung nach Genauigkeit (nächste Antwort = höchste Punkte).</p>
+                        <p><strong>Quiz:</strong> Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobil ihre Antworten eingeben können. Standardpunkte: Nach Platzierung der Schätzungen.</p>
+                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> "Wie viele Gummibärchen sind im Glas?"</p>
+                    </div>
+                    <div id="splitOrStealExplanation" class="hidden">
+                        <p><strong>Split or Steal:</strong> Zwei Spieler treten gegeneinander an. Jeder wählt heimlich Split oder Steal. Beide Split = Punkte geteilt, einer Split + einer Steal = Stealer bekommt alles, beide Steal = keiner bekommt Punkte. Standardpunkte: 50 pro Match.</p>
+                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Psychologie-Spiel wie in der TV-Show "Golden Balls"</p>
+                        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div class="bg-green-100 p-2 rounded text-xs">
+                                <strong>🤝 Beide Split:</strong><br>
+                                Jeder bekommt 50%
+                            </div>
+                            <div class="bg-red-100 p-2 rounded text-xs">
+                                <strong>💰 Einer Steal:</strong><br>
+                                Stealer bekommt 100%
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded text-xs">
+                                <strong>🚫 Beide Steal:</strong><br>
+                                Keiner bekommt etwas
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Submit Button -->
+            <!-- Player Requirements -->
+            <div class="mb-6">
+                <div id="playerRequirements" class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                    <h4 class="font-semibold text-blue-800 mb-2">Spieler-Anforderungen:</h4>
+                    <div id="playerRequirementsText" class="text-blue-700">
+                        Wähle einen Spieltyp aus, um die Anforderungen zu sehen.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estimated Duration -->
+            <div class="mb-6">
+                <div id="estimatedDuration" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+                    <h4 class="font-semibold text-yellow-800 mb-2">⏱️ Geschätzte Dauer:</h4>
+                    <div id="estimatedDurationText" class="text-yellow-700">
+                        Wähle einen Spieltyp aus, um die Dauer zu sehen.
+                    </div>
+                </div>
+            </div>
+            
             <div class="flex justify-end space-x-4">
                 <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
                    class="btn-secondary">
@@ -127,26 +169,170 @@ function updateGameTypeOptions() {
         el.classList.add('hidden');
     });
     
-    // Show relevant explanation
-    if (gameType) {
-        const explanationId = gameType.replace('_', '') + 'Explanation';
-        const explanation = document.getElementById(explanationId);
-        if (explanation) {
-            explanation.classList.remove('hidden');
-        }
-    }
-    
-    // Show/hide team size for team tournaments
+    // Show team size for team tournaments
     if (gameType === 'tournament_team') {
         teamSizeContainer.classList.remove('hidden');
     } else {
         teamSizeContainer.classList.add('hidden');
     }
+    
+    // Show relevant explanation
+    if (gameType) {
+        const explanationMap = {
+            'free_for_all': 'freeForAllExplanation',
+            'tournament_team': 'tournamentTeamExplanation',
+            'tournament_single': 'tournamentSingleExplanation',
+            'quiz': 'quizExplanation',
+            'split_or_steal': 'splitOrStealExplanation'
+        };
+        
+        const explanationId = explanationMap[gameType];
+        if (explanationId) {
+            document.getElementById(explanationId).classList.remove('hidden');
+        }
+        
+        // Update player requirements
+        updatePlayerRequirements(gameType);
+        
+        // Update estimated duration
+        updateEstimatedDuration(gameType);
+    }
 }
 
-// Initialize
+function updatePlayerRequirements(gameType) {
+    const requirementsText = document.getElementById('playerRequirementsText');
+    const currentPlayers = {{ olympix.players|length }};
+    
+    const requirements = {
+        'free_for_all': {
+            min: 2,
+            max: null,
+            text: 'Mindestens 2 Spieler erforderlich. Alle Spieler nehmen gleichzeitig teil.'
+        },
+        'tournament_team': {
+            min: 4,
+            max: 16,
+            text: 'Mindestens 4 Spieler (2 Teams) erforderlich. Maximum 16 Spieler.'
+        },
+        'tournament_single': {
+            min: 2,
+            max: 16,
+            text: 'Mindestens 2 Spieler erforderlich. Maximum 16 Spieler.'
+        },
+        'quiz': {
+            min: 1,
+            max: null,
+            text: 'Mindestens 1 Spieler erforderlich. Alle können teilnehmen.'
+        },
+        'split_or_steal': {
+            min: 2,
+            max: null,
+            text: 'Mindestens 2 Spieler erforderlich. Werden in 2er-Paare aufgeteilt.'
+        }
+    };
+    
+    const req = requirements[gameType];
+    if (req) {
+        let text = req.text;
+        let color = 'blue';
+        
+        if (currentPlayers < req.min) {
+            text += ` <strong class="text-red-600">⚠️ Aktuell nur ${currentPlayers} Spieler - ${req.min} erforderlich!</strong>`;
+            color = 'red';
+        } else if (req.max && currentPlayers > req.max) {
+            text += ` <strong class="text-yellow-600">⚠️ Aktuell ${currentPlayers} Spieler - Maximum ${req.max}!</strong>`;
+            color = 'yellow';
+        } else {
+            text += ` <strong class="text-green-600">✅ Aktuell ${currentPlayers} Spieler - Passt perfekt!</strong>`;
+            color = 'green';
+        }
+        
+        requirementsText.innerHTML = text;
+        
+        // Update container color
+        const container = document.getElementById('playerRequirements');
+        container.className = `bg-${color}-50 border border-${color}-200 rounded-lg p-4 text-sm`;
+    }
+}
+
+function updateEstimatedDuration(gameType) {
+    const durationText = document.getElementById('estimatedDurationText');
+    
+    const durations = {
+        'free_for_all': '⏱️ 15-30 Minuten (je nach Spielart)',
+        'tournament_team': '⏱️ 30-60 Minuten (abhängig von Teilnehmerzahl)',
+        'tournament_single': '⏱️ 20-45 Minuten (abhängig von Teilnehmerzahl)',
+        'quiz': '⏱️ 10-20 Minuten (je nach Anzahl Fragen)',
+        'split_or_steal': '⏱️ 5-15 Minuten (sehr schnell)'
+    };
+    
+    durationText.textContent = durations[gameType] || 'Wähle einen Spieltyp aus, um die Dauer zu sehen.';
+}
+
+// Initialize form
 document.addEventListener('DOMContentLoaded', function() {
     updateGameTypeOptions();
+    
+    // Form validation
+    const form = document.getElementById('gameForm');
+    form.addEventListener('submit', function(e) {
+        const gameType = document.getElementById('game_type').value;
+        const gameName = document.getElementById('name').value.trim();
+        const currentPlayers = {{ olympix.players|length }};
+        
+        if (!gameName) {
+            e.preventDefault();
+            alert('Bitte gib einen Spielnamen ein');
+            return;
+        }
+        
+        if (!gameType) {
+            e.preventDefault();
+            alert('Bitte wähle einen Spieltyp aus');
+            return;
+        }
+        
+        // Check player requirements
+        const requirements = {
+            'free_for_all': { min: 2 },
+            'tournament_team': { min: 4, max: 16 },
+            'tournament_single': { min: 2, max: 16 },
+            'quiz': { min: 1 },
+            'split_or_steal': { min: 2 }
+        };
+        
+        const req = requirements[gameType];
+        if (req) {
+            if (currentPlayers < req.min) {
+                e.preventDefault();
+                alert(`Für ${gameType} sind mindestens ${req.min} Spieler erforderlich. Aktuell sind nur ${currentPlayers} Spieler vorhanden.`);
+                return;
+            }
+            
+            if (req.max && currentPlayers > req.max) {
+                const proceed = confirm(`Für ${gameType} sind maximal ${req.max} Spieler empfohlen. Aktuell sind ${currentPlayers} Spieler vorhanden. Trotzdem fortfahren?`);
+                if (!proceed) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }
+        
+        // Special warning for Split or Steal with odd number
+        if (gameType === 'split_or_steal' && currentPlayers % 2 !== 0) {
+            const proceed = confirm(`Bei ${currentPlayers} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`);
+            if (!proceed) {
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        // Submit confirmation
+        const proceed = confirm(`Spiel "${gameName}" vom Typ "${gameType}" erstellen?`);
+        if (!proceed) {
+            e.preventDefault();
+        }
+    });
 });
 </script>
 {% endblock %}

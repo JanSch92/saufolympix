@@ -94,12 +94,13 @@ app_api_players:
     requirements:
         olympixId: '\d+'
 
-app_api_player_joker_status:
-    path: /api/player/{id}/joker-status
-    controller: App\Controller\PlayerController::apiPlayerJokerStatus
+app_api_player_joker_status_new:
+    path: /api/player/{olympixId}/{playerId}/joker-status
+    controller: App\Controller\PlayerInterfaceController::apiPlayerJokerStatus
     methods: [GET]
     requirements:
-        id: '\d+'
+        olympixId: '\d+'
+        playerId: '\d+'
 
 # Game routes
 app_game_create:
@@ -263,7 +264,7 @@ app_player_access:
         olympixId: '\d+'
 
 app_player_dashboard:
-    path: /player-dashboard/{olympixId}/{playerId}
+    path: /player-dashboard/{olympixId}/{playerId}   # ← OHNE ? - IMMER REQUIRED!
     controller: App\Controller\PlayerInterfaceController::playerDashboard
     requirements:
         olympixId: '\d+'

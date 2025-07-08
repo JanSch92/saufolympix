@@ -52,7 +52,6 @@ class Olympix
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -64,7 +63,6 @@ class Olympix
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -76,7 +74,6 @@ class Olympix
     public function setIsActive(bool $isActive): static
     {
         $this->isActive = $isActive;
-
         return $this;
     }
 
@@ -94,7 +91,6 @@ class Olympix
             $this->players->add($player);
             $player->setOlympix($this);
         }
-
         return $this;
     }
 
@@ -106,7 +102,6 @@ class Olympix
                 $player->setOlympix(null);
             }
         }
-
         return $this;
     }
 
@@ -124,7 +119,6 @@ class Olympix
             $this->games->add($game);
             $game->setOlympix($this);
         }
-
         return $this;
     }
 
@@ -136,25 +130,99 @@ class Olympix
                 $game->setOlympix(null);
             }
         }
-
         return $this;
     }
 
     public function getCurrentGame(): ?Game
     {
-        $games = $this->games->filter(function($game) {
-            return $game->getStatus() === 'active';
+        // Get games sorted by orderPosition
+        $games = $this->games->toArray();
+        usort($games, function($a, $b) {
+            return $a->getOrderPosition() - $b->getOrderPosition();
         });
 
-        return $games->first() ?: null;
+        // Find first active game
+        foreach ($games as $game) {
+            if ($game->getStatus() === 'active') {
+                return $game;
+            }
+        }
+
+        return null;
     }
 
     public function getNextGame(): ?Game
     {
-        $games = $this->games->filter(function($game) {
-            return $game->getStatus() === 'pending';
+        // Get games sorted by orderPosition
+        $games = $this->games->toArray();
+        usort($games, function($a, $b) {
+            return $a->getOrderPosition() - $b->getOrderPosition();
         });
 
-        return $games->first() ?: null;
+        // Find first pending game
+        foreach ($games as $game) {
+            if ($game->getStatus() === 'pending') {
+                return $game;
+            }
+        }
+
+        return null;
+    }
+
+    public function getGamesByOrder(): array
+    {
+        $games = $this->games->toArray();
+        usort($games, function($a, $b) {
+            return $a->getOrderPosition() - $b->getOrderPosition();
+        });
+        return $games;
+    }
+
+    public function getCompletedGamesCount(): int
+    {
+        $count = 0;
+        foreach ($this->games as $game) {
+            if ($game->getStatus() === 'completed') {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    public function getTotalGamesCount(): int
+    {
+        return $this->games->count();
+    }
+
+    public function getProgress(): int
+    {
+        $total = $this->getTotalGamesCount();
+        if ($total === 0) {
+            return 0;
+        }
+        return round(($this->getCompletedGamesCount() / $total) * 100);
+    }
+
+    public function isCompleted(): bool
+    {
+        $total = $this->getTotalGamesCount();
+        if ($total === 0) {
+            return false;
+        }
+        return $this->getCompletedGamesCount() === $total;
+    }
+
+    public function getLeadingPlayer(): ?Player
+    {
+        $players = $this->players->toArray();
+        if (empty($players)) {
+            return null;
+        }
+
+        usort($players, function($a, $b) {
+            return $b->getTotalPoints() - $a->getTotalPoints();
+        });
+
+        return $players[0];
     }
 }

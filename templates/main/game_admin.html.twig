@@ -3,7 +3,7 @@
 {% block title %}{{ olympix.name }} - Admin{% endblock %}
 
 {% block body %}
-<div class="max-w-6xl mx-auto">
+<div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
         <div class="flex items-center justify-between">
@@ -60,8 +60,8 @@
         </div>
     </div>
     
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <!-- Enhanced Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center">
                 <div class="text-2xl text-blue-600 mr-3">👥</div>
@@ -111,89 +111,151 @@
         </div>
     </div>
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Games Management mit Drag & Drop -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">🎮 Spiele</h2>
-                <div class="flex space-x-2">
-                    <button onclick="saveGamesOrder()" class="btn-success" id="saveOrderBtn" style="display: none;">
-                        💾 Reihenfolge speichern
-                    </button>
-                    <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary">
-                        + Spiel erstellen
-                    </a>
-                </div>
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">📊 Fortschritt</h2>
+            <div class="text-sm text-gray-600">
+                {{ games|filter(game => game.status == 'completed')|length }} von {{ games|length }} Spielen
             </div>
-            
-            <div id="gamesList" class="space-y-4">
-                {% for game in games %}
-                    <div class="game-item game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg" 
-                         data-game-id="{{ game.id }}" 
-                         data-order="{{ game.orderPosition }}">
-                        <div class="flex items-center">
-                            <!-- Drag Handle -->
-                            <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 mr-4 text-xl">
-                                ⋮⋮
-                            </div>
-                            
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
-                                        <div class="flex items-center space-x-2 mt-1">
-                                            <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
-                                            {% if game.gameType == 'tournament_team' and game.teamSize %}
-                                                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                                                    {{ game.teamSize }}er Teams
-                                                </span>
+        </div>
+        
+        {% set completedGames = games|filter(game => game.status == 'completed')|length %}
+        {% set totalGames = games|length %}
+        {% set progressPercentage = totalGames > 0 ? (completedGames / totalGames * 100)|round : 0 %}
+        
+        <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="bg-green-600 h-4 rounded-full transition-all duration-300" style="width: {{ progressPercentage }}%"></div>
+        </div>
+        <div class="text-center text-sm text-gray-600 mt-2">{{ progressPercentage }}% abgeschlossen</div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Games Management mit Drag & Drop -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">🎮 Spiele</h2>
+                    <div class="flex space-x-2">
+                        <button onclick="saveGamesOrder()" class="btn-success" id="saveOrderBtn" style="display: none;">
+                            💾 Reihenfolge speichern
+                        </button>
+                        <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary">
+                            + Spiel erstellen
+                        </a>
+                    </div>
+                </div>
+                
+                <div id="gamesList" class="space-y-4">
+                    {% for game in games %}
+                        <div class="game-item game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg" 
+                             data-game-id="{{ game.id }}" 
+                             data-order="{{ game.orderPosition }}">
+                            <div class="flex items-center">
+                                <!-- Drag Handle -->
+                                <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 mr-4 text-xl">
+                                    ⋮⋮
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
+                                            <div class="flex items-center space-x-2 mt-1">
+                                                <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
+                                                {% if game.gameType == 'tournament_team' and game.teamSize %}
+                                                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                                        {{ game.teamSize }}er Teams
+                                                    </span>
+                                                {% endif %}
+                                                {% if game.status == 'active' %}
+                                                    <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded animate-pulse">
+                                                        🔴 LIVE
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Joker Status for Active Games -->
+                                            {% if game.status == 'active' %}
+                                                <div class="mt-2 text-xs text-gray-500">
+                                                    {% set doubleJokers = 0 %}
+                                                    {% set swapJokers = 0 %}
+                                                    {% for joker in game.jokers %}
+                                                        {% if joker.isUsed %}
+                                                            {% if joker.jokerType == 'double' %}
+                                                                {% set doubleJokers = doubleJokers + 1 %}
+                                                            {% elseif joker.jokerType == 'swap' %}
+                                                                {% set swapJokers = swapJokers + 1 %}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    
+                                                    {% if doubleJokers > 0 or swapJokers > 0 %}
+                                                        🃏 Aktive Joker: 
+                                                        {% if doubleJokers > 0 %}
+                                                            <span class="text-red-600">{{ doubleJokers }}x Doppelt</span>
+                                                        {% endif %}
+                                                        {% if swapJokers > 0 %}
+                                                            {% if doubleJokers > 0 %}, {% endif %}
+                                                            <span class="text-blue-600">{{ swapJokers }}x Tausch</span>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
                                             {% endif %}
                                         </div>
-                                    </div>
-                                    
-                                    <div class="flex items-center space-x-2">
-                                        {% if game.status == 'pending' %}
-                                            <a href="{{ path('app_game_start', {id: game.id}) }}" class="btn-success text-sm">
-                                                ▶️ Start
-                                            </a>
-                                        {% elseif game.status == 'active' %}
-                                            <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-primary text-sm">
-                                                📊 Ergebnisse
-                                            </a>
-                                            {% if game.isQuizGame %}
-                                                <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" class="btn-secondary text-sm">
-                                                    📱 QR-Code
-                                                </a>
-                                            {% endif %}
-                                            {% if game.isTournamentGame %}
-                                                <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary text-sm">
-                                                    🏆 Bracket
-                                                </a>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="text-sm text-green-600 font-medium">✅ Abgeschlossen</span>
-                                        {% endif %}
                                         
-                                        <div class="relative">
-                                            <button class="text-gray-400 hover:text-gray-600" onclick="toggleDropdown('game-{{ game.id }}')">
-                                                ⋮
-                                            </button>
-                                            <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                                                <div class="py-1">
-                                                    <a href="{{ path('app_game_edit', {id: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                        ✏️ Bearbeiten
+                                        <div class="flex items-center space-x-2">
+                                            {% if game.status == 'pending' %}
+                                                <a href="{{ path('app_game_start', {id: game.id}) }}" class="btn-success text-sm">
+                                                    ▶️ Start
+                                                </a>
+                                            {% elseif game.status == 'active' %}
+                                                <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-primary text-sm">
+                                                    📊 Ergebnisse
+                                                </a>
+                                                {% if game.isQuizGame %}
+                                                    <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" class="btn-secondary text-sm">
+                                                        📱 QR-Code
                                                     </a>
-                                                    {% if game.isQuizGame %}
-                                                        <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                            ❓ Fragen
+                                                {% endif %}
+                                                {% if game.isTournamentGame %}
+                                                    <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary text-sm">
+                                                        🏆 Bracket
+                                                    </a>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-sm text-green-600 font-medium">✅ Abgeschlossen</span>
+                                                <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-secondary text-sm">
+                                                    📊 Ergebnisse
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <div class="relative">
+                                                <button class="text-gray-400 hover:text-gray-600" onclick="toggleDropdown('game-{{ game.id }}')">
+                                                    ⋮
+                                                </button>
+                                                <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                                    <div class="py-1">
+                                                        <a href="{{ path('app_game_edit', {id: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            ✏️ Bearbeiten
                                                         </a>
-                                                    {% endif %}
-                                                    <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                        🃏 Joker
-                                                    </a>
-                                                    <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100" onclick="return confirmDelete('Spiel wirklich löschen?')">
-                                                        🗑️ Löschen
-                                                    </a>
+                                                        {% if game.isQuizGame %}
+                                                            <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                                ❓ Fragen
+                                                            </a>
+                                                        {% endif %}
+                                                        <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            🃏 Joker
+                                                        </a>
+                                                        {% if game.status == 'active' %}
+                                                            <a href="{{ path('app_game_complete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-orange-600 hover:bg-gray-100">
+                                                                🏁 Abschließen
+                                                            </a>
+                                                        {% endif %}
+                                                        <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100" onclick="return confirmDelete('Spiel wirklich löschen?')">
+                                                            🗑️ Löschen
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -201,60 +263,139 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% else %}
-                    <div class="text-center text-gray-500 py-8">
-                        <div class="text-4xl mb-4">🎮</div>
-                        <p>Noch keine Spiele erstellt</p>
-                        <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary mt-4">
-                            Erstes Spiel erstellen
-                        </a>
-                    </div>
-                {% endfor %}
+                    {% else %}
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="text-4xl mb-4">🎮</div>
+                            <p>Noch keine Spiele erstellt</p>
+                            <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary mt-4">
+                                Erstes Spiel erstellen
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         
-        <!-- Player Rankings -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">🏆 Rangliste</h2>
-                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
-                   class="btn-secondary">
-                    Verwalten
-                </a>
-            </div>
-            
-            <div class="space-y-3">
-                {% for player in players %}
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
-                                {{ loop.index }}
-                            </div>
-                            <div>
-                                <div class="font-medium text-gray-800">{{ player.name }}</div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
-                                    </span>
-                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        ⇄ {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
-                                    </span>
+        <!-- Player Rankings & Joker Status -->
+        <div class="space-y-6">
+            <!-- Player Rankings -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">🏆 Rangliste</h2>
+                    <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                       class="btn-secondary">
+                        Verwalten
+                    </a>
+                </div>
+                
+                <div class="space-y-3">
+                    {% for player in players %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
+                                    {{ loop.index }}
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-800">{{ player.name }}</div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                            🔥 2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
+                                        </span>
+                                        <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-500{% endif %}">
+                                            ⇄ Swap {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="text-lg font-bold text-gray-800">{{ player.totalPoints }}</div>
                         </div>
-                        <div class="text-lg font-bold text-gray-800">{{ player.totalPoints }}</div>
-                    </div>
-                {% else %}
-                    <div class="text-center text-gray-500 py-8">
-                        <div class="text-4xl mb-4">👥</div>
-                        <p>Noch keine Spieler hinzugefügt</p>
-                        <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
-                           class="btn-primary mt-4">
-                            Spieler hinzufügen
-                        </a>
-                    </div>
+                    {% else %}
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="text-4xl mb-4">👥</div>
+                            <p>Noch keine Spieler hinzugefügt</p>
+                            <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                               class="btn-primary mt-4">
+                                Spieler hinzufügen
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Current Game Status -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🎯 Aktueller Status</h3>
+                
+                {% set currentGame = null %}
+                {% set nextGame = null %}
+                {% for game in games %}
+                    {% if game.status == 'active' %}
+                        {% set currentGame = game %}
+                    {% elseif game.status == 'pending' and nextGame is null %}
+                        {% set nextGame = game %}
+                    {% endif %}
                 {% endfor %}
+                
+                {% if currentGame %}
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-green-800">{{ currentGame.name }}</div>
+                                <div class="text-sm text-green-600">{{ currentGame.gameTypeLabel }}</div>
+                            </div>
+                            <div class="text-green-600">
+                                <span class="animate-pulse">🔴</span> LIVE
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if nextGame %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-blue-800">Nächstes Spiel:</div>
+                                <div class="text-sm text-blue-600">{{ nextGame.name }}</div>
+                            </div>
+                            <div class="text-blue-600">
+                                ⏭️
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if not currentGame and not nextGame %}
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="text-center text-gray-500">
+                            <div class="text-2xl mb-2">🏁</div>
+                            <div>Alle Spiele abgeschlossen</div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">⚡ Schnellaktionen</h3>
+                
+                <div class="space-y-3">
+                    <button onclick="refreshAllPlayerScores()" class="w-full btn-secondary text-sm">
+                        🔄 Alle Punkte neu berechnen
+                    </button>
+                    
+                    <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
+                       class="block w-full btn-primary text-sm text-center"
+                       target="_blank">
+                        📺 Live-Anzeige öffnen
+                    </a>
+                    
+                    {% if currentGame %}
+                        <a href="{{ path('app_joker_manage', {gameId: currentGame.id}) }}" 
+                           class="block w-full btn-secondary text-sm text-center">
+                            🃏 Joker verwalten
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -293,9 +434,33 @@ function copyPlayerLink() {
     });
 }
 
-// Drag & Drop für Spiele-Sortierung
+// Refresh all player scores
+function refreshAllPlayerScores() {
+    if (confirm('Alle Spielerpunkte neu berechnen? Dies kann bei vielen Spielen etwas dauern.')) {
+        fetch('/api/olympix/{{ olympix.id }}/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Alle Punkte wurden neu berechnet!');
+                location.reload();
+            } else {
+                alert('❌ Fehler beim Berechnen der Punkte');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Fehler beim Berechnen der Punkte');
+        });
+    }
+}
+
+// Enhanced Drag & Drop für Spiele-Sortierung
 document.addEventListener('DOMContentLoaded', function() {
-    // Prüfen ob bereits initialisiert
     if (window.gamesSortableInitialized) return;
     window.gamesSortableInitialized = true;
     
@@ -308,7 +473,11 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: 150,
             ghostClass: 'opacity-50',
             chosenClass: 'ring-blue-500',
-            onEnd: function() {
+            onStart: function(evt) {
+                evt.item.classList.add('dragging');
+            },
+            onEnd: function(evt) {
+                evt.item.classList.remove('dragging');
                 hasChanges = true;
                 document.getElementById('saveOrderBtn').style.display = 'block';
                 updateOrderNumbers();
@@ -325,10 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Global function für Button
     window.saveGamesOrder = function() {
-        if (!hasChanges) {
-            console.log('Keine Änderungen zu speichern');
-            return;
-        }
+        if (!hasChanges) return;
         
         const items = document.querySelectorAll('.game-item');
         const orderData = [];
@@ -340,14 +506,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        console.log('Speichere Reihenfolge:', orderData);
-        
         const requestData = {
             olympix_id: {{ olympix.id }},
             games: orderData
         };
-        
-        console.log('Request Data:', requestData);
         
         fetch('/api/games/update-order', {
             method: 'POST',
@@ -357,31 +519,8 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify(requestData)
         })
-        .then(response => {
-            console.log('Response Status:', response.status);
-            console.log('Response URL:', response.url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            // Prüfe Content-Type
-            const contentType = response.headers.get('content-type');
-            console.log('Content-Type:', contentType);
-            
-            if (!contentType || !contentType.includes('application/json')) {
-                // Zeige HTML-Antwort für Debug
-                return response.text().then(text => {
-                    console.error('Server gab HTML statt JSON zurück:', text.substring(0, 500));
-                    throw new Error('Server gab HTML statt JSON zurück - API-Route existiert nicht');
-                });
-            }
-            
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Response Data:', data);
-            
             if (data.success) {
                 hasChanges = false;
                 document.getElementById('saveOrderBtn').style.display = 'none';
@@ -398,16 +537,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.classList.remove('btn-secondary');
                     btn.classList.add('btn-success');
                 }, 2000);
-                
-                console.log('Reihenfolge erfolgreich gespeichert');
             } else {
-                console.error('Server Error:', data.error || 'Unbekannter Fehler');
                 alert('Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'));
             }
         })
         .catch(error => {
-            console.error('Fetch Error:', error);
-            alert('❌ API-Route nicht gefunden!\n\nDu musst einen Controller erstellen:\n/api/games/update-order\n\nFehler: ' + error.message);
+            console.error('Error:', error);
+            alert('Fehler beim Speichern der Reihenfolge');
         });
     };
 });
@@ -436,5 +572,13 @@ document.addEventListener('click', function(event) {
         });
     }
 });
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    // Only refresh if no forms are active
+    if (!document.querySelector('form:focus-within')) {
+        location.reload();
+    }
+}, 30000);
 </script>
 {% endblock %}

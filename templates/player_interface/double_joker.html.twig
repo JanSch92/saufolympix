@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doppelte Punkte - {{ player.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .player-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .game-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .game-option:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .game-option.selected {
+            border-color: #10b981;
+            background: #ecfdf5;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .game-option.has-double-joker {
+            border-color: #ef4444;
+            background: #fef2f2;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .game-option.has-double-joker:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-double {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-double:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+        
+        .btn-double:disabled {
+            background: #d1d5db;
+            color: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+        
+        .step.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-2xl mx-auto space-y-4">
+        <!-- Header -->
+        <div class="player-card p-6">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-gray-800">🔥 Doppelte Punkte</h1>
+                <p class="text-gray-600 mt-1">{{ player.name }} - {{ olympix.name }}</p>
+            </div>
+        </div>
+        
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3 class="font-semibold text-blue-800 mb-2">ℹ️ Wie funktioniert der Doppelte-Punkte-Joker?</h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>• Wähle ein <strong>zukünftiges Spiel</strong> aus (noch nicht gespielt)</li>
+                <li>• Der Joker wird <strong>vorgemerkt</strong> für dieses Spiel</li>
+                <li>• <strong>Wenn das Spiel gespielt wird</strong>, erhältst du automatisch die doppelten Punkte</li>
+                <li>• Der Joker kann nur <strong>einmal pro Olympix</strong> verwendet werden</li>
+                <li>• Pro Spiel kann jeder Spieler nur <strong>einen Doppelte-Punkte-Joker</strong> verwenden</li>
+            </ul>
+        </div>
+
+        {% if available_games_with_status is empty %}
+            <div class="player-card p-6">
+                <div class="text-center text-gray-500 py-8">
+                    <div class="text-4xl mb-4">🚫</div>
+                    <p class="text-lg">Keine Spiele verfügbar</p>
+                    <p class="text-sm mt-2">
+                        Alle zukünftigen Spiele haben bereits deinen Doppelte-Punkte-Joker oder es gibt keine zukünftigen Spiele
+                    </p>
+                </div>
+                
+                <div class="mt-6">
+                    <a href="{{ path('app_player_dashboard', {olympixId: olympix.id, playerId: player.id}) }}" 
+                       class="block w-full text-center py-3 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        ← Zurück zum Dashboard
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <form action="{{ path('app_player_joker_double', {olympixId: olympix.id, playerId: player.id}) }}" method="POST" id="doubleForm">
+                
+                <!-- Step 1: Game Selection -->
+                <div class="player-card p-6 step active" id="step1">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🎮 Zukünftiges Spiel auswählen</h2>
+                    
+                    <div class="space-y-3" id="gameOptions">
+                        {% for gameData in available_games_with_status %}
+                            <label class="game-option block {% if gameData.has_double_joker %}has-double-joker{% endif %}" 
+                                   for="game_{{ gameData.game.id }}"
+                                   {% if gameData.has_double_joker %}title="Du hast bereits einen Doppelte-Punkte-Joker für dieses Spiel"{% endif %}>
+                                <input type="radio" 
+                                       id="game_{{ gameData.game.id }}"
+                                       name="selected_game_id" 
+                                       value="{{ gameData.game.id }}"
+                                       class="hidden"
+                                       {% if gameData.has_double_joker %}disabled{% endif %}
+                                       onchange="selectGame(this, {{ gameData.game.id }})">
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-800 text-lg">{{ gameData.game.name }}</div>
+                                        <div class="text-sm text-gray-600">{{ gameData.game.gameTypeLabel }} • {{ gameData.game.statusLabel }}</div>
+                                        {% if gameData.has_double_joker %}
+                                            <div class="text-sm text-red-600 font-medium mt-1">❌ Doppelte Punkte bereits vorgemerkt</div>
+                                        {% else %}
+                                            <div class="text-sm text-green-600 font-medium mt-1">✅ Verfügbar für doppelte Punkte</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="text-right">
+                                        <div class="text-2xl">
+                                            {% if gameData.game.gameType == 'tournament_team' or gameData.game.gameType == 'tournament_single' %}
+                                                🏆
+                                            {% elseif gameData.game.gameType == 'quiz' %}
+                                                🧠
+                                            {% else %}
+                                                🎯
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
+                                                2x Punkte
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Warning Box -->
+                <div class="warning-box step" id="step2">
+                    <h3 class="font-semibold text-amber-800 mb-2">⚠️ Wichtiger Hinweis</h3>
+                    <ul class="text-amber-700 text-sm space-y-1">
+                        <li>• Der Joker wird <strong>vorgemerkt</strong> und kann nicht rückgängig gemacht werden</li>
+                        <li>• Du kannst diesen Joker nur <strong>einmal verwenden</strong></li>
+                        <li>• Die doppelten Punkte werden <strong>automatisch</strong> berechnet wenn das Spiel gespielt wird</li>
+                        <li>• Wenn du nicht am Spiel teilnimmst, <strong>verfällt der Joker</strong></li>
+                    </ul>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="player-card p-6 step" id="step3">
+                    <div class="space-y-3">
+                        <button type="submit" 
+                                class="btn-double" 
+                                id="submitBtn"
+                                disabled>
+                            🔥 Doppelte Punkte vormerken
+                        </button>
+                        
+                        <a href="{{ path('app_player_dashboard', {olympixId: olympix.id, playerId: player.id}) }}" 
+                           class="block w-full text-center py-3 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            ← Zurück zum Dashboard
+                        </a>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+        
+        <!-- Current Points Display -->
+        <div class="player-card p-4">
+            <h3 class="font-semibold text-gray-800 mb-3">📊 Deine aktuellen Punkte</h3>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div class="flex items-center justify-between">
+                    <div class="font-medium text-blue-800">{{ player.name }}</div>
+                    <div class="text-xl font-bold text-blue-900">{{ player.totalPoints }} Punkte</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedGameId = null;
+        let gameData = {};
+        
+        // Game data from server
+        {% for gameData in available_games_with_status %}
+            gameData[{{ gameData.game.id }}] = {
+                name: "{{ gameData.game.name }}",
+                gameType: "{{ gameData.game.gameType }}",
+                hasDoubleJoker: {{ gameData.has_double_joker ? 'true' : 'false' }}
+            };
+        {% endfor %}
+        
+        function selectGame(radio, gameId) {
+            selectedGameId = gameId;
+            
+            // Update UI
+            document.querySelectorAll('.game-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            radio.closest('.game-option').classList.add('selected');
+            
+            // Show remaining steps
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('step3').classList.add('active');
+            
+            updateSubmitButton();
+        }
+        
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (selectedGameId) {
+                submitBtn.disabled = false;
+                
+                const game = gameData[selectedGameId];
+                submitBtn.textContent = `🔥 Doppelte Punkte für "${game.name}" vormerken`;
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '🔥 Doppelte Punkte vormerken';
+            }
+        }
+        
+        // Form submission confirmation
+        document.getElementById('doubleForm').addEventListener('submit', function(e) {
+            if (!selectedGameId) {
+                e.preventDefault();
+                alert('Bitte wähle ein Spiel aus');
+                return;
+            }
+            
+            const game = gameData[selectedGameId];
+            
+            const confirmMessage = `Doppelte-Punkte-Joker wirklich vormerken?
+
+Spiel: ${game.name}
+
+• Der Joker wird vorgemerkt und angewendet wenn das Spiel gespielt wird
+• Du erhältst automatisch doppelte Punkte für deine Leistung
+• Falls du nicht am Spiel teilnimmst, verfällt der Joker
+• Dieser Joker kann nur einmal verwendet werden!
+
+Soll der Joker vorgemerkt werden?`;
+            
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

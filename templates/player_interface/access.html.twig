@@ -10,44 +10,160 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
+        .player-card {
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        .player-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .selected-player {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md text-center">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">🏆 {{ olympix.name }}</h1>
-        
-        <div class="mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Wähle deinen Namen:</h2>
-            
-            <div class="space-y-3">
-                {% for player in olympix.players %}
-                    <a href="{{ path('app_player_dashboard', {olympixId: olympix.id, playerId: player.id}) }}" 
-                       class="block w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all">
-                        <div class="font-semibold text-gray-800">{{ player.name }}</div>
-                        <div class="text-sm text-gray-600">{{ player.totalPoints }} Punkte</div>
-                    </a>
-                {% endfor %}
-            </div>
+    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🏆 {{ olympix.name }}</h1>
+            <p class="text-gray-600">Wähle deinen Namen</p>
         </div>
         
-        <div class="text-sm text-gray-500">
-            Wähle deinen Namen um deine Punkte und Joker zu verwalten
+        <div id="player-selection" class="space-y-3">
+            {% for player in olympix.players %}
+                <button onclick="selectPlayer({{ player.id }}, '{{ player.name|e('js') }}', {{ player.totalPoints }})" 
+                        class="player-card w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all text-left">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold text-gray-800">{{ player.name }}</div>
+                            <div class="text-sm text-gray-600">{{ player.totalPoints }} Punkte</div>
+                        </div>
+                        <div class="text-blue-600 font-bold text-lg">
+                            {% set position = 1 %}
+                            {% for p in olympix.players %}
+                                {% if p.totalPoints > player.totalPoints %}
+                                    {% set position = position + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            #{{ position }}
+                        </div>
+                    </div>
+                </button>
+            {% endfor %}
+        </div>
+        
+        <div id="selected-info" class="hidden mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <div class="font-semibold text-green-800">Ausgewählt:</div>
+                    <div id="selected-name" class="text-green-700"></div>
+                </div>
+                <button onclick="resetSelection()" class="text-green-600 hover:text-green-800 font-medium">
+                    Ändern
+                </button>
+            </div>
+            <button onclick="goToDashboard()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                Zum Dashboard →
+            </button>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>Dein Name wird gespeichert und beim nächsten Besuch automatisch ausgewählt</p>
+        </div>
+        
+        <div id="loading" class="hidden mt-6 text-center">
+            <div class="pulse-animation text-blue-600">
+                <div class="text-lg">🎮</div>
+                <div class="text-sm">Lade Dashboard...</div>
+            </div>
         </div>
     </div>
+
+    <script>
+        const olympixId = {{ olympix.id }};
+        const storageKey = `olympix_${olympixId}_selected_player`;
+        let selectedPlayerData = null;
+        
+        // Check if player is already selected
+        window.addEventListener('DOMContentLoaded', function() {
+            const storedPlayer = localStorage.getItem(storageKey);
+            if (storedPlayer) {
+                try {
+                    const playerData = JSON.parse(storedPlayer);
+                    // Check if the data is not too old (24 hours)
+                    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+                    if (playerData.timestamp && playerData.timestamp > twentyFourHoursAgo) {
+                        selectedPlayerData = playerData;
+                        showSelectedPlayer(playerData.name, playerData.points);
+                    } else {
+                        // Data is too old, remove it
+                        localStorage.removeItem(storageKey);
+                    }
+                } catch (e) {
+                    console.error('Error parsing stored player data:', e);
+                    localStorage.removeItem(storageKey);
+                }
+            }
+        });
+        
+        function selectPlayer(playerId, playerName, playerPoints) {
+            selectedPlayerData = {
+                id: playerId,
+                name: playerName,
+                points: playerPoints,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem(storageKey, JSON.stringify(selectedPlayerData));
+            showSelectedPlayer(playerName, playerPoints);
+        }
+        
+        function showSelectedPlayer(name, points) {
+            document.getElementById('player-selection').style.display = 'none';
+            document.getElementById('selected-info').classList.remove('hidden');
+            document.getElementById('selected-name').textContent = `${name} (${points} Punkte)`;
+        }
+        
+        function resetSelection() {
+            selectedPlayerData = null;
+            localStorage.removeItem(storageKey);
+            document.getElementById('player-selection').style.display = 'block';
+            document.getElementById('selected-info').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        }
+        
+        function goToDashboard() {
+            if (selectedPlayerData && selectedPlayerData.id) {
+                document.getElementById('selected-info').classList.add('hidden');
+                document.getElementById('loading').classList.remove('hidden');
+                
+                console.log('Weiterleitung zu:', `/player-dashboard/${olympixId}/${selectedPlayerData.id}`);
+                
+                // Small delay to show loading animation
+                setTimeout(() => {
+                    window.location.href = `/player-dashboard/${olympixId}/${selectedPlayerData.id}`;
+                }, 500);
+            } else {
+                alert('Fehler: Kein Spieler ausgewählt');
+                resetSelection();
+            }
+        }
+        
+        // Handle back button to refresh player data
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                location.reload();
+            }
+        });
+    </script>
 </body>
 </html>
-<script>
-// QR-Code ohne externe Bibliothek - als Link
-function showQRCode() {
-    const playerUrl = '{{ url('app_player_access', {olympixId: olympix.id}) }}';
-    document.getElementById('playerQRCode').innerHTML = `
-        <div class="bg-gray-100 p-8 rounded-lg">
-            <div class="text-2xl mb-4">📱</div>
-            <div class="text-sm mb-4">Link zum Scannen:</div>
-            <div class="bg-white p-4 rounded border-2 border-dashed border-gray-300 text-xs break-all">
-                ${playerUrl}
-            </div>
-        </div>
-    `;
-}
-</script>

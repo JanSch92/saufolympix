@@ -47,7 +47,6 @@ class Tournament
     public function setBracketData(array $bracketData): static
     {
         $this->bracketData = $bracketData;
-
         return $this;
     }
 
@@ -59,7 +58,6 @@ class Tournament
     public function setCurrentRound(int $currentRound): static
     {
         $this->currentRound = $currentRound;
-
         return $this;
     }
 
@@ -71,7 +69,6 @@ class Tournament
     public function setIsCompleted(bool $isCompleted): static
     {
         $this->isCompleted = $isCompleted;
-
         return $this;
     }
 
@@ -83,7 +80,6 @@ class Tournament
     public function setGame(Game $game): static
     {
         $this->game = $game;
-
         return $this;
     }
 
@@ -99,13 +95,11 @@ class Tournament
         // Shuffle participants for random seeding
         shuffle($participants);
         
-        // Create first round matches
         $bracket = [
             'rounds' => [],
-            'participants' => $participants
+            'participants' => $participants,
+            'bye' => null
         ];
-        
-        $currentRoundMatches = [];
         
         // Handle odd number of participants - give bye to lowest scoring participant
         if ($participantCount % 2 === 1) {
@@ -114,23 +108,23 @@ class Tournament
                 return $p['id'] !== $lowestScoringParticipant['id'];
             });
             $participants = array_values($participants);
-            
-            // Add bye to bracket
             $bracket['bye'] = $lowestScoringParticipant;
         }
         
         // Create first round matches
+        $firstRoundMatches = [];
         for ($i = 0; $i < count($participants); $i += 2) {
-            $currentRoundMatches[] = [
+            $firstRoundMatches[] = [
                 'id' => uniqid(),
                 'participant1' => $participants[$i],
                 'participant2' => $participants[$i + 1] ?? null,
                 'winner' => null,
-                'completed' => false
+                'completed' => false,
+                'round' => 1
             ];
         }
         
-        $bracket['rounds'][] = $currentRoundMatches;
+        $bracket['rounds'][] = $firstRoundMatches;
         
         // Generate subsequent rounds
         $this->generateSubsequentRounds($bracket);
@@ -140,8 +134,10 @@ class Tournament
 
     private function generateSubsequentRounds(array &$bracket): void
     {
-        $currentRoundMatches = $bracket['rounds'][0];
+        $currentRoundMatches = end($bracket['rounds']);
+        $roundNumber = count($bracket['rounds']) + 1;
         
+        // Generate rounds until we have final
         while (count($currentRoundMatches) > 1) {
             $nextRoundMatches = [];
             
@@ -152,6 +148,7 @@ class Tournament
                     'participant2' => null,
                     'winner' => null,
                     'completed' => false,
+                    'round' => $roundNumber,
                     'sourceMatch1' => $currentRoundMatches[$i]['id'],
                     'sourceMatch2' => $currentRoundMatches[$i + 1]['id'] ?? null
                 ];
@@ -159,9 +156,10 @@ class Tournament
             
             $bracket['rounds'][] = $nextRoundMatches;
             $currentRoundMatches = $nextRoundMatches;
+            $roundNumber++;
         }
         
-        // Add third place match if we have a semifinal
+        // Add third place match if we have semifinals
         if (count($bracket['rounds']) >= 2) {
             $semifinalRound = $bracket['rounds'][count($bracket['rounds']) - 2];
             if (count($semifinalRound) === 2) {
@@ -171,6 +169,7 @@ class Tournament
                     'participant2' => null,
                     'winner' => null,
                     'completed' => false,
+                    'round' => $roundNumber,
                     'sourceMatch1' => $semifinalRound[0]['id'],
                     'sourceMatch2' => $semifinalRound[1]['id']
                 ];
@@ -233,13 +232,11 @@ class Tournament
             }
         }
         
-        // Handle third place match
+        // Handle third place match - add LOSERS from semifinals
         if (isset($bracket['thirdPlaceMatch'])) {
             if ($bracket['thirdPlaceMatch']['sourceMatch1'] === $sourceMatchId) {
-                // This is a loser from semifinal
                 $bracket['thirdPlaceMatch']['participant1'] = $this->getLoserFromMatch($bracket, $sourceMatchId);
             } elseif ($bracket['thirdPlaceMatch']['sourceMatch2'] === $sourceMatchId) {
-                // This is a loser from semifinal
                 $bracket['thirdPlaceMatch']['participant2'] = $this->getLoserFromMatch($bracket, $sourceMatchId);
             }
         }
@@ -269,6 +266,12 @@ class Tournament
                     return $match['participant1'] !== null && $match['participant2'] !== null;
                 }
             }
+        }
+        
+        // Check third place match
+        if (isset($this->bracketData['thirdPlaceMatch']) && $this->bracketData['thirdPlaceMatch']['id'] === $matchId) {
+            $match = $this->bracketData['thirdPlaceMatch'];
+            return $match['participant1'] !== null && $match['participant2'] !== null;
         }
         
         return false;
@@ -301,26 +304,21 @@ class Tournament
         
         // Get final match winner (1st place)
         $finalRound = end($this->bracketData['rounds']);
-        $finalMatch = $finalRound[0];
-        if ($finalMatch['completed']) {
-            $results[1] = $finalMatch['winner'];
+        if ($finalRound && count($finalRound) === 1) {
+            $finalMatch = $finalRound[0];
+            if ($finalMatch['completed']) {
+                $results[1] = $finalMatch['winner'];
+                // Get runner-up (2nd place)
+                $results[2] = $finalMatch['participant1']['id'] === $finalMatch['winner']['id'] 
+                    ? $finalMatch['participant2'] 
+                    : $finalMatch['participant1'];
+            }
         }
         
-        // Get third place match winner (3rd place)
-        if (isset($this->bracketData['thirdPlaceMatch']) && $this->bracketData['thirdPlaceMatch']['completed']) {
-            $results[3] = $this->bracketData['thirdPlaceMatch']['winner'];
-        }
-        
-        // Get runner-up (2nd place)
-        if ($finalMatch['completed']) {
-            $results[2] = $finalMatch['participant1']['id'] === $finalMatch['winner']['id'] 
-                ? $finalMatch['participant2'] 
-                : $finalMatch['participant1'];
-        }
-        
-        // Get 4th place (loser of third place match)
+        // Get third place match winner (3rd place) and loser (4th place)
         if (isset($this->bracketData['thirdPlaceMatch']) && $this->bracketData['thirdPlaceMatch']['completed']) {
             $thirdPlaceMatch = $this->bracketData['thirdPlaceMatch'];
+            $results[3] = $thirdPlaceMatch['winner'];
             $results[4] = $thirdPlaceMatch['participant1']['id'] === $thirdPlaceMatch['winner']['id'] 
                 ? $thirdPlaceMatch['participant2'] 
                 : $thirdPlaceMatch['participant1'];

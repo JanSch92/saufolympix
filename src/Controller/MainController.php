@@ -3,7 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Olympix;
+use App\Entity\GameResult;
+use App\Entity\Joker;
 use App\Repository\OlympixRepository;
+use App\Repository\GameResultRepository;
+use App\Repository\JokerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -115,8 +119,49 @@ class MainController extends AbstractController
             return $this->json(['error' => 'Olympix nicht gefunden'], 404);
         }
 
-        // Calculate current rankings
+        // Get last completed game for ranking changes
+        $lastCompletedGame = null;
+        $games = $olympix->getGames()->toArray();
+        usort($games, function($a, $b) {
+            return $b->getOrderPosition() - $a->getOrderPosition();
+        });
+        
+        foreach ($games as $game) {
+            if ($game->getStatus() === 'completed') {
+                $lastCompletedGame = $game;
+                break;
+            }
+        }
+
+        // Calculate current rankings with position changes
         $players = [];
+        $rankingChanges = [];
+        
+        if ($lastCompletedGame) {
+            // Calculate rankings BEFORE last game
+            $playersBeforeLastGame = [];
+            foreach ($olympix->getPlayers() as $player) {
+                $pointsBeforeLastGame = $this->calculatePlayerPointsExcludingGame($player, $lastCompletedGame);
+                $playersBeforeLastGame[] = [
+                    'id' => $player->getId(),
+                    'name' => $player->getName(),
+                    'points' => $pointsBeforeLastGame,
+                ];
+            }
+            
+            // Sort by points before last game
+            usort($playersBeforeLastGame, function($a, $b) {
+                return $b['points'] - $a['points'];
+            });
+            
+            // Create position map BEFORE last game
+            $positionsBeforeLastGame = [];
+            foreach ($playersBeforeLastGame as $index => $player) {
+                $positionsBeforeLastGame[$player['id']] = $index + 1;
+            }
+        }
+
+        // Calculate current rankings
         foreach ($olympix->getPlayers() as $player) {
             $players[] = [
                 'id' => $player->getId(),
@@ -127,30 +172,64 @@ class MainController extends AbstractController
             ];
         }
 
-        // Sort by points
+        // Sort by current points
         usort($players, function($a, $b) {
             return $b['total_points'] - $a['total_points'];
         });
 
+        // Calculate ranking changes
+        if ($lastCompletedGame && isset($positionsBeforeLastGame)) {
+            foreach ($players as $index => &$player) {
+                $currentPosition = $index + 1;
+                $previousPosition = $positionsBeforeLastGame[$player['id']] ?? $currentPosition;
+                
+                $change = $previousPosition - $currentPosition; // Positive = moved up, Negative = moved down
+                
+                $player['position_change'] = $change;
+                $player['previous_position'] = $previousPosition;
+            }
+        } else {
+            // No changes if no completed game
+            foreach ($players as &$player) {
+                $player['position_change'] = 0;
+                $player['previous_position'] = null;
+            }
+        }
+
         $currentGame = $olympix->getCurrentGame();
         $nextGame = $olympix->getNextGame();
 
+        // Get last completed game if no current game
+        $displayGame = $currentGame ?: $lastCompletedGame;
+
         $gameData = null;
-        if ($currentGame) {
+        $gameResults = null;
+        
+        if ($displayGame) {
             $gameData = [
-                'id' => $currentGame->getId(),
-                'name' => $currentGame->getName(),
-                'type' => $currentGame->getGameType(),
-                'status' => $currentGame->getStatus(),
+                'id' => $displayGame->getId(),
+                'name' => $displayGame->getName(),
+                'type' => $displayGame->getGameType(),
+                'status' => $displayGame->getStatus(),
             ];
 
             // Add tournament bracket data if it's a tournament game
-            if ($currentGame->isTournamentGame() && $currentGame->getTournament()) {
+            if ($displayGame->isTournamentGame() && $displayGame->getTournament()) {
                 $gameData['tournament'] = [
-                    'bracket_data' => $currentGame->getTournament()->getBracketData(),
-                    'current_round' => $currentGame->getTournament()->getCurrentRound(),
-                    'is_completed' => $currentGame->getTournament()->isIsCompleted(),
+                    'bracket_data' => $displayGame->getTournament()->getBracketData(),
+                    'current_round' => $displayGame->getTournament()->getCurrentRound(),
+                    'is_completed' => $displayGame->getTournament()->isIsCompleted(),
                 ];
+
+                // Add tournament results if completed
+                if ($displayGame->getTournament()->isIsCompleted()) {
+                    $gameData['tournament']['tournament_results'] = $displayGame->getTournament()->getTournamentResults();
+                }
+            }
+
+            // Get game results if game is completed
+            if ($displayGame->getStatus() === 'completed') {
+                $gameResults = $this->getGameResultsWithJokers($displayGame);
             }
         }
 
@@ -163,6 +242,18 @@ class MainController extends AbstractController
             ];
         }
 
+        // Get all games for history
+        $allGames = [];
+        foreach ($olympix->getGames() as $game) {
+            $allGames[] = [
+                'id' => $game->getId(),
+                'name' => $game->getName(),
+                'type' => $game->getGameType(),
+                'status' => $game->getStatus(),
+                'order_position' => $game->getOrderPosition(),
+            ];
+        }
+
         return $this->json([
             'olympix' => [
                 'id' => $olympix->getId(),
@@ -171,6 +262,9 @@ class MainController extends AbstractController
             'players' => $players,
             'current_game' => $gameData,
             'next_game' => $nextGameData,
+            'games' => $allGames,
+            'game_results' => $gameResults,
+            'last_completed_game' => $lastCompletedGame ? $lastCompletedGame->getName() : null,
             'timestamp' => time(),
         ]);
     }
@@ -192,5 +286,76 @@ class MainController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json(['success' => true]);
+    }
+
+    /**
+     * Calculate player points excluding a specific game
+     */
+    private function calculatePlayerPointsExcludingGame($player, $excludeGame): int
+    {
+        $totalPoints = 0;
+        
+        foreach ($player->getGameResults() as $result) {
+            if ($result->getGame()->getId() !== $excludeGame->getId()) {
+                $totalPoints += $result->getFinalPoints(); // Include joker effects
+            }
+        }
+        
+        return $totalPoints;
+    }
+
+    /**
+     * Get game results with joker information for a completed game
+     */
+    private function getGameResultsWithJokers($game): array
+    {
+        // Get repositories
+        $gameResultRepository = $this->entityManager->getRepository(GameResult::class);
+        $jokerRepository = $this->entityManager->getRepository(Joker::class);
+        
+        // Get game results and jokers
+        $results = $gameResultRepository->findByGameOrderedByPosition($game->getId());
+        $usedJokers = $jokerRepository->getUsedJokersByGame($game->getId());
+        
+        // Group jokers by player
+        $jokersByPlayer = [];
+        foreach ($usedJokers as $joker) {
+            $playerId = $joker->getPlayer()->getId();
+            if (!isset($jokersByPlayer[$playerId])) {
+                $jokersByPlayer[$playerId] = [];
+            }
+            
+            if ($joker->getJokerType() === 'double') {
+                $jokersByPlayer[$playerId][] = 'double';
+            } elseif ($joker->getJokerType() === 'swap') {
+                $jokersByPlayer[$playerId][] = 'swap';
+                // Also add for target player
+                if ($joker->getTargetPlayer()) {
+                    $targetPlayerId = $joker->getTargetPlayer()->getId();
+                    if (!isset($jokersByPlayer[$targetPlayerId])) {
+                        $jokersByPlayer[$targetPlayerId] = [];
+                    }
+                    $jokersByPlayer[$targetPlayerId][] = 'swap';
+                }
+            }
+        }
+        
+        // Build results array
+        $gameResults = [];
+        foreach ($results as $result) {
+            $playerId = $result->getPlayer()->getId();
+            $gameResults[] = [
+                'player' => [
+                    'id' => $result->getPlayer()->getId(),
+                    'name' => $result->getPlayer()->getName(),
+                ],
+                'position' => $result->getPosition(),
+                'points' => $result->getPoints(),
+                'final_points' => $result->getFinalPoints(), // includes joker effects
+                'jokers' => $jokersByPlayer[$playerId] ?? [],
+            ];
+        }
+        
+        return $gameResults;
     }
 }

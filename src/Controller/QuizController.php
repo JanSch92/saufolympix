@@ -10,6 +10,7 @@ use App\Repository\QuizQuestionRepository;
 use App\Repository\QuizAnswerRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\GameResultRepository;
+use App\Repository\JokerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,7 +25,8 @@ class QuizController extends AbstractController
         private QuizQuestionRepository $quizQuestionRepository,
         private QuizAnswerRepository $quizAnswerRepository,
         private PlayerRepository $playerRepository,
-        private GameResultRepository $gameResultRepository
+        private GameResultRepository $gameResultRepository,
+        private JokerRepository $jokerRepository
     ) {}
 
     #[Route('/quiz/questions/{gameId}', name: 'app_quiz_questions')]
@@ -178,6 +180,16 @@ class QuizController extends AbstractController
                 // Check if all players have answered
                 if ($this->allPlayersAnswered($game)) {
                     $this->calculateQuizResults($game);
+                    
+                    // AUTOMATICALLY COMPLETE THE GAME
+                    $game->setStatus('completed');
+                    
+                    // Update player total points
+                    foreach ($game->getOlympix()->getPlayers() as $p) {
+                        $p->calculateTotalPoints();
+                    }
+                    
+                    $this->entityManager->flush();
                 }
 
                 return $this->render('quiz/success.html.twig', [
@@ -235,7 +247,17 @@ class QuizController extends AbstractController
 
         $this->calculateQuizResults($game);
 
-        $this->addFlash('success', 'Quiz-Ergebnisse wurden berechnet');
+        // AUTOMATICALLY COMPLETE THE GAME AFTER CALCULATION
+        $game->setStatus('completed');
+        
+        // Update player total points
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $player->calculateTotalPoints();
+        }
+        
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Quiz-Ergebnisse wurden berechnet und Spiel abgeschlossen');
         return $this->redirectToRoute('app_quiz_results', ['gameId' => $gameId]);
     }
 
@@ -257,12 +279,58 @@ class QuizController extends AbstractController
             $answeredPlayers[$question->getId()] = count($answers);
         }
 
+        $allAnswered = $this->allPlayersAnswered($game);
+
         return $this->json([
             'game_id' => $game->getId(),
+            'game_name' => $game->getName(),
+            'game_status' => $game->getStatus(),
             'total_players' => $totalPlayers,
             'questions' => count($questions),
             'answered_players' => $answeredPlayers,
-            'all_answered' => $this->allPlayersAnswered($game),
+            'all_answered' => $allAnswered,
+            'is_completed' => $game->isCompleted(),
+            'has_results' => $game->hasResults(),
+        ]);
+    }
+
+    #[Route('/api/quiz/{gameId}/auto-complete', name: 'app_api_quiz_auto_complete')]
+    public function apiAutoComplete(int $gameId): Response
+    {
+        $game = $this->gameRepository->find($gameId);
+
+        if (!$game) {
+            return $this->json(['error' => 'Spiel nicht gefunden'], 404);
+        }
+
+        if (!$game->isQuizGame()) {
+            return $this->json(['error' => 'Nur Quiz-Spiele können auto-completed werden'], 400);
+        }
+
+        if ($game->isCompleted()) {
+            return $this->json(['message' => 'Spiel bereits abgeschlossen'], 200);
+        }
+
+        if (!$this->allPlayersAnswered($game)) {
+            return $this->json(['error' => 'Noch nicht alle Spieler haben geantwortet'], 400);
+        }
+
+        // Calculate results and complete game
+        $this->calculateQuizResults($game);
+        
+        $game->setStatus('completed');
+        
+        // Update player total points
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $player->calculateTotalPoints();
+        }
+        
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Quiz wurde automatisch abgeschlossen',
+            'game_status' => $game->getStatus(),
         ]);
     }
 
@@ -326,5 +394,184 @@ class QuizController extends AbstractController
         }
 
         $this->entityManager->flush();
+        
+        // WICHTIG: Nach dem Erstellen der Quiz-Ergebnisse, JOKER anwenden!
+        $this->applyJokersForQuizGame($game);
+    }
+
+    /**
+     * NEUE METHODE: Apply jokers for quiz games
+     * Similar to GameController but for quiz games
+     */
+    private function applyJokersForQuizGame(Game $game): void
+    {
+        // Apply double jokers first
+        $this->applyDoubleJokersForQuizGame($game);
+        
+        // Then apply swap jokers
+        $this->applySwapJokersForQuizGame($game);
+    }
+
+    /**
+     * Apply double jokers for a quiz game
+     */
+    private function applyDoubleJokersForQuizGame(Game $game): void
+    {
+        // Get all pending double jokers for this game
+        $doubleJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'double',
+            'isUsed' => false
+        ]);
+
+        if (empty($doubleJokers)) {
+            return; // No double jokers for this game
+        }
+
+        foreach ($doubleJokers as $doubleJoker) {
+            $player = $doubleJoker->getPlayer();
+            
+            if (!$player) {
+                continue;
+            }
+
+            // Get game result for this player
+            $playerResult = null;
+            foreach ($game->getGameResults() as $result) {
+                if ($result->getPlayer()->getId() === $player->getId()) {
+                    $playerResult = $result;
+                    break;
+                }
+            }
+
+            if ($playerResult) {
+                // Apply double joker - mark in GameResult
+                $playerResult->setJokerDoubleApplied(true);
+                $this->entityManager->persist($playerResult);
+                
+                // Mark the double joker as used
+                $doubleJoker->setIsUsed(true);
+                $doubleJoker->setUsedAt(new \DateTime());
+                $this->entityManager->persist($doubleJoker);
+            } else {
+                // If player didn't participate, the joker is wasted but mark as used
+                $doubleJoker->setIsUsed(true);
+                $doubleJoker->setUsedAt(new \DateTime());
+                $this->entityManager->persist($doubleJoker);
+            }
+        }
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Apply swap jokers for a quiz game
+     */
+    private function applySwapJokersForQuizGame(Game $game): void
+    {
+        // Get all pending swap jokers for this game
+        $swapJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'swap',
+            'isUsed' => false
+        ]);
+
+        if (empty($swapJokers)) {
+            return; // No swap jokers for this game
+        }
+
+        foreach ($swapJokers as $swapJoker) {
+            $sourcePlayer = $swapJoker->getPlayer();
+            $targetPlayer = $swapJoker->getTargetPlayer();
+            
+            if (!$sourcePlayer || !$targetPlayer) {
+                continue;
+            }
+
+            // Get game results for both players
+            $sourceResult = null;
+            $targetResult = null;
+
+            foreach ($game->getGameResults() as $result) {
+                if ($result->getPlayer()->getId() === $sourcePlayer->getId()) {
+                    $sourceResult = $result;
+                }
+                if ($result->getPlayer()->getId() === $targetPlayer->getId()) {
+                    $targetResult = $result;
+                }
+            }
+
+            if ($sourceResult && $targetResult) {
+                // Swap the positions and points
+                $tempPosition = $sourceResult->getPosition();
+                $tempPoints = $sourceResult->getPoints();
+
+                $sourceResult->setPosition($targetResult->getPosition());
+                $sourceResult->setPoints($targetResult->getPoints());
+
+                $targetResult->setPosition($tempPosition);
+                $targetResult->setPoints($tempPoints);
+
+                $this->entityManager->persist($sourceResult);
+                $this->entityManager->persist($targetResult);
+
+                // Mark the swap joker as used
+                $swapJoker->setIsUsed(true);
+                $swapJoker->setUsedAt(new \DateTime());
+                $this->entityManager->persist($swapJoker);
+            } else {
+                // If one or both players didn't participate, the joker is wasted but mark as used
+                $swapJoker->setIsUsed(true);
+                $swapJoker->setUsedAt(new \DateTime());
+                $this->entityManager->persist($swapJoker);
+            }
+        }
+
+        $this->entityManager->flush();
+    }
+
+    private function getQuizStats(Game $game): array
+    {
+        $questions = $this->quizQuestionRepository->findByGameOrdered($game->getId());
+        $totalPlayers = $game->getOlympix()->getPlayers()->count();
+        $stats = [];
+
+        foreach ($questions as $question) {
+            $answers = $this->quizAnswerRepository->findByQuestion($question->getId());
+            $stats[] = [
+                'question_id' => $question->getId(),
+                'question_text' => $question->getQuestion(),
+                'correct_answer' => $question->getCorrectAnswer(),
+                'answers_count' => count($answers),
+                'completion_rate' => round((count($answers) / $totalPlayers) * 100, 2),
+            ];
+        }
+
+        return $stats;
+    }
+
+    private function canCompleteQuiz(Game $game): bool
+    {
+        return $this->allPlayersAnswered($game) && $game->isActive();
+    }
+
+    private function getQuizProgress(Game $game): array
+    {
+        $totalPlayers = $game->getOlympix()->getPlayers()->count();
+        $questions = $this->quizQuestionRepository->findByGameOrdered($game->getId());
+        $totalAnswersNeeded = count($questions) * $totalPlayers;
+        $currentAnswers = 0;
+
+        foreach ($questions as $question) {
+            $answers = $this->quizAnswerRepository->findByQuestion($question->getId());
+            $currentAnswers += count($answers);
+        }
+
+        return [
+            'total_answers_needed' => $totalAnswersNeeded,
+            'current_answers' => $currentAnswers,
+            'progress_percentage' => $totalAnswersNeeded > 0 ? round(($currentAnswers / $totalAnswersNeeded) * 100, 2) : 0,
+            'is_complete' => $currentAnswers >= $totalAnswersNeeded,
+        ];
     }
 }
