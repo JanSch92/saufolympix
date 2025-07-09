@@ -1,6 +1,6 @@
 {% extends 'baselive.html.twig' %}
 
-{% block title %}Doppelte Punkte Joker - {{ player.name }}{% endblock %}
+{% block title %}Doppelte Punkte Joker1 - {{ player.name }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -83,14 +83,153 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
+        
+        /* EXAKT WIE SWAP-JOKER - FUNKTIONIERT GARANTIERT */
+        .main-container {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .content-header {
+            flex-shrink: 0;
+            padding: 1rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            padding-top: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.6);
+            border-radius: 3px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+        
+        .submit-section {
+            flex-shrink: 0;
+            padding: 1rem;
+            padding-bottom: 6rem;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4rem;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .mobile-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            padding: 0.5rem;
+        }
+        
+        .mobile-nav a.active {
+            color: #10b981;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content-header {
+                padding: 0.75rem;
+                padding-bottom: 0.25rem;
+            }
+            
+            .scrollable-content {
+                padding: 0.75rem;
+                padding-top: 0;
+            }
+            
+            .submit-section {
+                padding: 0.75rem;
+                padding-bottom: 5rem;
+            }
+            
+            .game-option {
+                padding: 0.75rem;
+            }
+            
+            .game-type-icon {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.25rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .content-header {
+                padding: 0.5rem;
+                padding-bottom: 0.25rem;
+            }
+            
+            .scrollable-content {
+                padding: 0.5rem;
+                padding-top: 0;
+            }
+            
+            .submit-section {
+                padding: 0.5rem;
+                padding-bottom: 4.5rem;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="w-screen h-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden pb-20">
+<div class="main-container bg-slate-900 text-slate-100">
 
     <!-- Header -->
-    <header class="flex-none h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
+    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,56 +266,67 @@
         <form action="{{ path('app_player_joker_double', {olympixId: olympix.id, playerId: player.id}) }}" 
               method="POST" 
               id="doubleForm" 
-              class="flex-1 flex flex-col">
+              class="form-container">
             
-            <!-- Game List -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                {% for gameData in available_games_with_status %}
-                    {% if gameData.game.gameType != 'split_or_steal' %}
-                        <label class="game-option block p-4 {% if gameData.has_double_joker %}disabled{% endif %}" 
-                               for="game_{{ gameData.game.id }}">
-                            <input type="radio" 
-                                   id="game_{{ gameData.game.id }}"
-                                   name="selected_game_id" 
-                                   value="{{ gameData.game.id }}"
-                                   class="hidden"
-                                   {% if gameData.has_double_joker %}disabled{% endif %}
-                                   onchange="selectGame(this, {{ gameData.game.id }})">
-                            
-                            <div class="flex items-center space-x-4">
-                                <div class="game-type-icon">
-                                    {% if gameData.game.gameType == 'tournament_team' or gameData.game.gameType == 'tournament_single' %}
-                                        🏆
-                                    {% elseif gameData.game.gameType == 'quiz' %}
-                                        🧠
-                                    {% else %}
-                                        🎯
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-semibold text-slate-100 text-lg truncate">{{ gameData.game.name }}</div>
-                                    <div class="text-sm text-slate-400 mt-1">{{ gameData.game.gameTypeLabel }}</div>
-                                    {% if gameData.has_double_joker %}
-                                        <div class="text-sm text-red-400 font-medium mt-1">🔥 Joker bereits verwendet</div>
-                                    {% else %}
-                                        <div class="text-sm text-emerald-400 font-medium mt-1">🔥 Joker verfügbar</div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="text-right">
-                                    {% if not gameData.has_double_joker %}
-                                        <div class="points-display">2× Punkte</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </label>
-                    {% endif %}
-                {% endfor %}
+            <!-- Content Wrapper -->
+            <div class="content-wrapper">
+                <!-- Header -->
+                <div class="content-header">
+                    <h2 class="text-lg font-semibold text-slate-200 mb-1">Spiel auswählen</h2>
+                    <p class="text-sm text-slate-400">Wähle ein Spiel für doppelte Punkte</p>
+                </div>
+                
+                <!-- Scrollable Games List -->
+                <div class="scrollable-content">
+                    <div class="space-y-3">
+                        {% for gameData in available_games_with_status %}
+                            {% if gameData.game.gameType != 'split_or_steal' %}
+                                <label class="game-option block p-4 {% if gameData.has_double_joker %}disabled{% endif %}" 
+                                       for="game_{{ gameData.game.id }}">
+                                    <input type="radio" 
+                                           id="game_{{ gameData.game.id }}"
+                                           name="selected_game_id" 
+                                           value="{{ gameData.game.id }}"
+                                           class="hidden"
+                                           {% if gameData.has_double_joker %}disabled{% endif %}
+                                           onchange="selectGame(this, {{ gameData.game.id }})">
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <div class="game-type-icon">
+                                            {% if gameData.game.gameType == 'tournament_team' or gameData.game.gameType == 'tournament_single' %}
+                                                🏆
+                                            {% elseif gameData.game.gameType == 'quiz' %}
+                                                🧠
+                                            {% else %}
+                                                🎯
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-semibold text-slate-100 text-lg truncate">{{ gameData.game.name }}</div>
+                                            <div class="text-sm text-slate-400 mt-1">{{ gameData.game.gameTypeLabel }}</div>
+                                            {% if gameData.has_double_joker %}
+                                                <div class="text-sm text-red-400 font-medium mt-1">🔥 Joker bereits verwendet</div>
+                                            {% else %}
+                                                <div class="text-sm text-emerald-400 font-medium mt-1">🔥 Joker verfügbar</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="text-right">
+                                            {% if not gameData.has_double_joker %}
+                                                <div class="points-display">2× Punkte</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             
-            <!-- Submit Section - Always Visible -->
-            <div class="flex-none p-4 bg-slate-900/95 border-t border-slate-700/50">
+            <!-- Submit Section -->
+            <div class="submit-section">
                 <button type="submit" 
                         class="btn-submit" 
                         id="submitBtn"
