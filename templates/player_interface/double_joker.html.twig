@@ -1,6 +1,6 @@
 {% extends 'baselive.html.twig' %}
 
-{% block title %}Doppelte Punkte Joker1 - {{ player.name }}{% endblock %}
+{% block title %}Doppelte Punkte Joker - {{ player.name }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -84,7 +84,7 @@
             font-weight: 600;
         }
         
-        /* EXAKT WIE SWAP-JOKER - FUNKTIONIERT GARANTIERT */
+        /* MOBILE-OPTIMIERTE CONTAINER */
         .main-container {
             height: 100vh;
             overflow: hidden;
@@ -117,6 +117,7 @@
             overflow-y: auto;
             padding: 1rem;
             padding-top: 0;
+            padding-bottom: 10rem; /* VIEL PLATZ FÜR MOBILE NAVIGATION */
             -webkit-overflow-scrolling: touch;
         }
         
@@ -140,7 +141,7 @@
         .submit-section {
             flex-shrink: 0;
             padding: 1rem;
-            padding-bottom: 6rem;
+            padding-bottom: 8rem; /* VIEL PLATZ FÜR MOBILE NAVIGATION */
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(71, 85, 105, 0.3);
@@ -157,10 +158,11 @@
             background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(71, 85, 105, 0.3);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 100;
         }
         
         .mobile-nav a {
@@ -178,7 +180,7 @@
             color: #10b981;
         }
         
-        /* Responsive */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .content-header {
                 padding: 0.75rem;
@@ -188,11 +190,12 @@
             .scrollable-content {
                 padding: 0.75rem;
                 padding-top: 0;
+                padding-bottom: 9rem;
             }
             
             .submit-section {
                 padding: 0.75rem;
-                padding-bottom: 5rem;
+                padding-bottom: 7rem;
             }
             
             .game-option {
@@ -215,11 +218,30 @@
             .scrollable-content {
                 padding: 0.5rem;
                 padding-top: 0;
+                padding-bottom: 8rem;
             }
             
             .submit-section {
                 padding: 0.5rem;
-                padding-bottom: 4.5rem;
+                padding-bottom: 6rem;
+            }
+            
+            .mobile-nav {
+                height: 4.5rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .scrollable-content {
+                padding-bottom: 9rem;
+            }
+            
+            .submit-section {
+                padding-bottom: 7rem;
+            }
+            
+            .mobile-nav {
+                height: 5rem;
             }
         }
     </style>

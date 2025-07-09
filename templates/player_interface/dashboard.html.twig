@@ -2,9 +2,18 @@
 
 {% block title %}{{ player.name }} - {{ olympix.name }}{% endblock %}
 
+{% block flash_messages %}
+{# Flash-Messages werden hier unterdrückt #}
+{% endblock %}
+
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        /* Flash-Messages unterdrücken */
+        .flash-message, .flash-messages, .alert, .notification {
+            display: none !important;
+        }
+        
         .main-container {
             height: 100vh;
             overflow: hidden;
@@ -16,7 +25,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 1rem;
-            padding-bottom: 6rem;
+            padding-bottom: 10rem; /* VIEL MEHR PLATZ FÜR MOBILE NAVIGATION */
             -webkit-overflow-scrolling: touch;
         }
         
@@ -46,10 +55,11 @@
             background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(71, 85, 105, 0.3);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3); /* Besserer Schatten */
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 100; /* Höherer Z-Index */
         }
         
         .mobile-nav a {
@@ -339,17 +349,21 @@
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-top: 1.5rem;
+            margin-bottom: 2rem; /* Extra Margin für Mobile */
         }
         
-        .split-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
+        .split-btn, .steal-btn {
             padding: 1rem;
             border-radius: 0.75rem;
             font-weight: 700;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+        }
+        
+        .split-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
         
         .split-btn:hover {
@@ -360,12 +374,6 @@
         .steal-btn {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
         }
         
         .steal-btn:hover {
@@ -373,15 +381,14 @@
             box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
         }
         
-        .pending-joker-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            font-size: 0.75rem;
-            color: #60a5fa;
+        /* Zusätzliche Margin für letzte Elemente */
+        .game-status-card:last-child,
+        .ranking-card:last-child,
+        .split-steal-container:last-child {
+            margin-bottom: 2rem;
         }
+        
+
         
         .loading-indicator {
             text-align: center;
@@ -403,7 +410,7 @@
         @media (max-width: 768px) {
             .scrollable-content {
                 padding: 0.75rem;
-                padding-bottom: 5rem;
+                padding-bottom: 7rem; /* Noch mehr Platz auf Tablets */
             }
             
             .score-card {
@@ -426,7 +433,7 @@
         @media (max-width: 480px) {
             .scrollable-content {
                 padding: 0.5rem;
-                padding-bottom: 4.5rem;
+                padding-bottom: 7rem; /* Noch mehr Platz auf kleinen Phones */
             }
             
             .joker-grid {
@@ -436,11 +443,33 @@
             .score-number {
                 font-size: 2.5rem;
             }
+            
+            .mobile-nav {
+                height: 4.5rem; /* Höhere Navigation auf sehr kleinen Displays */
+            }
+            
+            .split-steal-buttons {
+                margin-bottom: 3rem; /* Extra Margin für Split-or-Steal */
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .scrollable-content {
+                padding: 0.25rem;
+                padding-bottom: 8rem; /* Maximaler Platz auf sehr kleinen Phones */
+            }
+            
+            .mobile-nav {
+                height: 5rem; /* Noch höhere Navigation */
+            }
         }
     </style>
 {% endblock %}
 
 {% block body %}
+<!-- Flash-Messages aus Session entfernen -->
+{% set _ = app.session.flashbag.clear() %}
+
 <div class="main-container bg-slate-900 text-slate-100">
 
     <!-- Header -->
@@ -558,10 +587,7 @@
             </div>
         </div>
         
-        <!-- Pending Joker Info -->
-        <div id="pending-joker-info" class="pending-joker-info hidden">
-            <div id="pending-text"></div>
-        </div>
+
         
         <!-- Game Status -->
         <div class="game-status-card">
@@ -657,6 +683,10 @@
     
     window.addEventListener('DOMContentLoaded', function() {
         console.log('🚀 Dashboard wird geladen...');
+        
+        // Flash-Messages sofort entfernen
+        const flashMessages = document.querySelectorAll('.flash-message, .flash-messages, .alert, .notification, .success, .error, .warning, .info');
+        flashMessages.forEach(msg => msg.remove());
         
         {% if player is defined %}
             currentPlayer = {
@@ -972,7 +1002,6 @@
         jokerData.swapUsedFor = data.swap_joker_used_for || null;
         
         updateJokerCards();
-        updatePendingJokerInfo();
     }
     
     function updateJokerInterfaceFallback() {
@@ -989,7 +1018,6 @@
         {% endif %}
         
         updateJokerCards();
-        updatePendingJokerInfo();
     }
     
     function updateJokerCards() {
@@ -1040,28 +1068,6 @@
                 <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
                 <div class="joker-status">Genutzt ${usedFor}</div>
             `;
-        }
-    }
-    
-    function updatePendingJokerInfo() {
-        const pendingInfo = document.getElementById('pending-joker-info');
-        const pendingText = document.getElementById('pending-text');
-        
-        let pendingMessages = [];
-        
-        if (!jokerData.doubleAvailable && jokerData.doubleUsedFor) {
-            pendingMessages.push(`🔥 Doppelte Punkte vorgemerkt für ${jokerData.doubleUsedFor}`);
-        }
-        
-        if (!jokerData.swapAvailable && jokerData.swapUsedFor) {
-            pendingMessages.push(`⇄ Punktetausch vorgemerkt für ${jokerData.swapUsedFor}`);
-        }
-        
-        if (pendingMessages.length > 0) {
-            pendingInfo.classList.remove('hidden');
-            pendingText.textContent = pendingMessages.join(' • ');
-        } else {
-            pendingInfo.classList.add('hidden');
         }
     }
     
