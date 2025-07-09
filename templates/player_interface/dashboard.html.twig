@@ -5,6 +5,68 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .main-container {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            padding-bottom: 6rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.6);
+            border-radius: 3px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+        
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4rem;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .mobile-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            padding: 0.5rem;
+        }
+        
+        .mobile-nav a.active {
+            color: #10b981;
+        }
+        
         .status-dot {
             width: 8px;
             height: 8px;
@@ -18,66 +80,371 @@
             50% { opacity: 0.5; }
         }
         
-        .joker-available {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
+        .score-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 2rem;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
         }
         
-        .joker-used {
-            background: rgba(71, 85, 105, 0.6);
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #06b6d4, #3b82f6, #8b5cf6);
+            border-radius: 2rem 2rem 0 0;
+        }
+        
+        .score-number {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .position-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .joker-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .joker-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .joker-card.available {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .joker-card.available:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .joker-card.used {
+            background: rgba(71, 85, 105, 0.2);
+            border-color: rgba(71, 85, 105, 0.3);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .joker-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .joker-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .joker-card.available .joker-title {
+            color: #10b981;
+        }
+        
+        .joker-card.used .joker-title {
             color: #94a3b8;
         }
         
-        .split-steal-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            transition: all 0.3s ease;
+        .joker-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
         }
         
-        .split-steal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        .joker-status {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            display: inline-block;
+            margin-top: 0.25rem;
         }
         
-        .split-steal-btn.steal {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        .joker-card.available .joker-status {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
         }
         
-        .split-steal-btn.steal:hover {
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        .joker-card.used .joker-status {
+            background: rgba(71, 85, 105, 0.3);
+            color: #94a3b8;
+        }
+        
+        .game-status-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .game-status-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
         
         .game-active {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            text-align: center;
         }
         
         .game-next {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            text-align: center;
         }
         
         .game-finished {
             background: rgba(71, 85, 105, 0.3);
             color: #94a3b8;
+            padding: 1rem;
+            border-radius: 1rem;
+            text-align: center;
+        }
+        
+        .ranking-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .ranking-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(51, 65, 85, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.2);
+        }
+        
+        .ranking-item.you {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border-color: rgba(16, 185, 129, 0.3);
         }
         
         .ranking-position {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 0.75rem;
         }
         
-        .ranking-you {
+        .ranking-name {
+            flex: 1;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        
+        .ranking-points {
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        
+        .split-steal-container {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .split-steal-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .split-steal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .split-btn {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .split-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .steal-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .steal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .pending-joker-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            color: #60a5fa;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            color: #64748b;
+            padding: 1rem;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #ef4444;
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .scrollable-content {
+                padding: 0.75rem;
+                padding-bottom: 5rem;
+            }
+            
+            .score-card {
+                padding: 1.5rem;
+            }
+            
+            .score-number {
+                font-size: 3rem;
+            }
+            
+            .joker-card {
+                padding: 1rem;
+            }
+            
+            .joker-icon {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .scrollable-content {
+                padding: 0.5rem;
+                padding-bottom: 4.5rem;
+            }
+            
+            .joker-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .score-number {
+                font-size: 2.5rem;
+            }
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="w-screen h-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden pb-20">
+<div class="main-container bg-slate-900 text-slate-100">
 
     <!-- Header -->
-    <header class="flex-none h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
+    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,37 +466,34 @@
     </header>
 
     <!-- Split or Steal Interface -->
-    <div id="split-or-steal-interface" class="hidden flex-1 flex flex-col p-4 space-y-4">
-        <div class="professional-card p-6 text-center">
-            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+    <div id="split-or-steal-interface" class="hidden scrollable-content">
+        <div class="split-steal-container">
+            <div class="split-steal-icon">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                 </svg>
             </div>
             <h2 class="text-xl font-bold gradient-text mb-2">Split or Steal</h2>
             <div class="text-sm text-slate-400 mb-4">
-                <span id="points-at-stake">0</span> Punkte
+                <span id="points-at-stake">0</span> Punkte im Spiel
             </div>
             
-            <div class="professional-card p-4 mb-6 bg-slate-800/40">
-                <div class="text-sm text-slate-400 mb-2">Gegner</div>
+            <div class="bg-slate-800/40 rounded-lg p-4 mb-6">
+                <div class="text-sm text-slate-400 mb-2">Dein Gegner</div>
                 <div id="opponent-name" class="text-lg font-bold text-slate-100">Lade...</div>
             </div>
             
-            <div id="choice-buttons" class="space-y-3">
-                <button onclick="makeChoice('split')" 
-                        class="split-steal-btn w-full py-4 px-6 text-white font-bold rounded-lg">
+            <div id="choice-buttons" class="split-steal-buttons">
+                <button onclick="makeChoice('split')" class="split-btn">
                     🤝 SPLIT
                 </button>
-                
-                <button onclick="makeChoice('steal')" 
-                        class="split-steal-btn steal w-full py-4 px-6 text-white font-bold rounded-lg">
+                <button onclick="makeChoice('steal')" class="steal-btn">
                     💰 STEAL
                 </button>
             </div>
             
             <div id="choice-made" class="hidden">
-                <div class="professional-card p-4 bg-emerald-500/20 border border-emerald-500/30">
+                <div class="bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 mt-4">
                     <div class="font-semibold text-emerald-400 mb-2">Wahl gespeichert</div>
                     <div id="player-choice" class="text-emerald-300 font-medium"></div>
                     <div class="text-xs text-emerald-400 mt-2">Warte auf Auswertung...</div>
@@ -137,7 +501,7 @@
             </div>
             
             <div id="match-result" class="hidden">
-                <div class="professional-card p-4 bg-blue-500/20 border border-blue-500/30">
+                <div class="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mt-4">
                     <div class="font-semibold text-blue-400 mb-2">Ergebnis</div>
                     <div id="result-description" class="text-blue-300 text-sm mb-2"></div>
                     <div id="points-earned" class="text-lg font-bold text-blue-100"></div>
@@ -146,76 +510,81 @@
         </div>
     </div>
 
-    <!-- Main Tab Content -->
-    <div id="main-content" class="flex-1 p-4 space-y-4 overflow-y-auto">
+    <!-- Main Content -->
+    <div id="main-content" class="scrollable-content">
         
-        <!-- Points & Position -->
-        <div class="professional-card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="text-center">
-                    <div class="text-sm text-slate-400">Deine Punkte</div>
-                    <div id="player-points" class="text-3xl font-bold gradient-text">
-                        {% if player is defined %}{{ player.totalPoints }}{% else %}0{% endif %}
-                    </div>
-                </div>
-                <div class="text-center">
-                    <div class="text-sm text-slate-400">Position</div>
-                    <div id="player-position" class="text-3xl font-bold text-slate-200">
-                        {% if player is defined and players is defined %}
-                            {% set position = 0 %}
-                            {% for p in players %}
-                                {% if p.id == player.id %}
-                                    {% set position = loop.index %}
-                                {% endif %}
-                            {% endfor %}
-                            #{{ position }}
-                        {% else %}
-                            #-
-                        {% endif %}
-                    </div>
-                </div>
+        <!-- Score Card -->
+        <div class="score-card">
+            <div class="text-sm text-slate-400 mb-2">Deine Punkte</div>
+            <div id="player-points" class="score-number">
+                {% if player is defined %}{{ player.totalPoints }}{% else %}0{% endif %}
             </div>
-            
-            <!-- Joker Buttons -->
-            <div class="grid grid-cols-2 gap-3">
-                <button id="double-joker-btn" onclick="navigateToDoubleJoker()" 
-                        class="joker-available py-3 px-4 rounded-lg font-medium transition-all hover:scale-105"
-                        {% if player is defined and not player.hasJokerDoubleAvailable %}disabled{% endif %}>
-                    🔥 Doppelte Punkte
-                </button>
-                <button id="swap-joker-btn" onclick="navigateToSwapJoker()" 
-                        class="joker-available py-3 px-4 rounded-lg font-medium transition-all hover:scale-105"
-                        {% if player is defined and not player.hasJokerSwapAvailable %}disabled{% endif %}>
-                    ⇄ Punktetausch
-                </button>
-            </div>
-            
-            <!-- Pending Joker Info -->
-            <div id="pending-joker-info" class="mt-3 text-xs text-slate-400 hidden">
-                <div id="pending-text"></div>
+            <div class="position-badge">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                </svg>
+                <span id="player-position">
+                    {% if player is defined and players is defined %}
+                        {% set position = 0 %}
+                        {% for p in players %}
+                            {% if p.id == player.id %}
+                                {% set position = loop.index %}
+                            {% endif %}
+                        {% endfor %}
+                        Platz {{ position }}
+                    {% else %}
+                        Platz -
+                    {% endif %}
+                </span>
             </div>
         </div>
         
+        <!-- Joker Cards -->
+        <div class="joker-grid">
+            <div id="double-joker-card" onclick="navigateToDoubleJoker()" 
+                 class="joker-card available">
+                <div class="joker-icon">🔥</div>
+                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
+                <div class="joker-status">Verfügbar</div>
+            </div>
+            
+            <div id="swap-joker-card" onclick="navigateToSwapJoker()" 
+                 class="joker-card available">
+                <div class="joker-icon">⇄</div>
+                <div class="joker-title">Punktetausch</div>
+                <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
+                <div class="joker-status">Verfügbar</div>
+            </div>
+        </div>
+        
+        <!-- Pending Joker Info -->
+        <div id="pending-joker-info" class="pending-joker-info hidden">
+            <div id="pending-text"></div>
+        </div>
+        
         <!-- Game Status -->
-        <div class="professional-card p-6">
-            <div class="flex items-center space-x-2 mb-4">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="game-status-card">
+            <div class="game-status-header">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
-                <span class="text-sm font-medium text-slate-400">Spiel</span>
+                <span>Aktuelles Spiel</span>
             </div>
             
             <div id="game-status">
                 {% if current_game is defined and current_game %}
-                    <div class="game-active p-4 rounded-lg">
+                    <div class="game-active">
                         <div class="font-semibold">{{ current_game.name }}</div>
+                        <div class="text-sm opacity-90 mt-1">Läuft gerade</div>
                     </div>
                 {% elseif next_game is defined and next_game %}
-                    <div class="game-next p-4 rounded-lg">
-                        <div class="font-semibold">Nächstes: {{ next_game.name }}</div>
+                    <div class="game-next">
+                        <div class="font-semibold">{{ next_game.name }}</div>
+                        <div class="text-sm opacity-90 mt-1">Nächstes Spiel</div>
                     </div>
                 {% else %}
-                    <div class="game-finished p-4 rounded-lg text-center">
+                    <div class="game-finished">
                         <div class="text-lg mb-1">🏁</div>
                         <div class="font-semibold">Alle Spiele gespielt</div>
                     </div>
@@ -225,36 +594,30 @@
         
     </div>
     
-    <!-- Ranking Tab Content -->
-    <div id="ranking-content" class="hidden flex-1 p-4 overflow-y-auto">
-        <div class="professional-card p-6">
-            <div class="flex items-center space-x-2 mb-4">
-                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Ranking Content -->
+    <div id="ranking-content" class="hidden scrollable-content">
+        <div class="ranking-card">
+            <div class="ranking-header">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                 </svg>
-                <span class="text-sm font-medium text-slate-400">Live-Rangliste</span>
+                <span>Live-Rangliste</span>
             </div>
             
-            <div id="ranking-list" class="space-y-2">
+            <div id="ranking-list">
                 {% if players is defined %}
                     {% for p in players %}
-                        <div class="flex items-center justify-between p-3 
-                            {% if player is defined and p.id == player.id %}ranking-you{% else %}professional-card{% endif %} 
-                            rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="ranking-position w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">
-                                    {{ loop.index }}
-                                </div>
-                                <div class="font-medium text-slate-100">
-                                    {{ p.name }}
-                                    {% if player is defined and p.id == player.id %} (Du){% endif %}
-                                </div>
+                        <div class="ranking-item {% if player is defined and p.id == player.id %}you{% endif %}">
+                            <div class="ranking-position">{{ loop.index }}</div>
+                            <div class="ranking-name">
+                                {{ p.name }}
+                                {% if player is defined and p.id == player.id %} (Du){% endif %}
                             </div>
-                            <div class="font-bold text-slate-100">{{ p.totalPoints }}</div>
+                            <div class="ranking-points">{{ p.totalPoints }}</div>
                         </div>
                     {% endfor %}
                 {% else %}
-                    <div class="text-center text-slate-400">Lade Rangliste...</div>
+                    <div class="loading-indicator">Lade Rangliste...</div>
                 {% endif %}
             </div>
         </div>
@@ -283,10 +646,18 @@
         doubleAvailable: true,
         swapAvailable: true,
         canUseDouble: true,
-        canUseSwap: true
+        canUseSwap: true,
+        doubleUsedFor: null,
+        swapUsedFor: null
     };
     
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
     window.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Dashboard wird geladen...');
+        
         {% if player is defined %}
             currentPlayer = {
                 id: {{ player.id }},
@@ -294,11 +665,14 @@
                 points: {{ player.totalPoints }}
             };
             localStorage.setItem(storageKey, JSON.stringify(currentPlayer));
+            
+            console.log('✅ Spieler aus Twig-Daten geladen:', currentPlayer);
             refreshData();
             startAutoRefresh();
         {% else %}
             loadSelectedPlayer();
             if (currentPlayer) {
+                console.log('✅ Spieler aus localStorage geladen:', currentPlayer);
                 refreshData();
                 startAutoRefresh();
             }
@@ -310,6 +684,7 @@
     function loadSelectedPlayer() {
         const storedPlayer = localStorage.getItem(storageKey);
         if (!storedPlayer) {
+            console.log('❌ Kein Spieler in localStorage gefunden');
             window.location.href = `/player-access/${olympixId}`;
             return;
         }
@@ -319,10 +694,15 @@
             document.getElementById('player-name').textContent = currentPlayer.name;
             document.getElementById('player-points').textContent = currentPlayer.points || 0;
         } catch (e) {
+            console.error('❌ Fehler beim Laden des Spielers:', e);
             localStorage.removeItem(storageKey);
             window.location.href = `/player-access/${olympixId}`;
         }
     }
+    
+    // ========================================
+    // VIEW MANAGEMENT
+    // ========================================
     
     function toggleView() {
         if (currentView === 'main') {
@@ -335,6 +715,7 @@
     function showTab(tabName) {
         document.getElementById('main-content').classList.add('hidden');
         document.getElementById('ranking-content').classList.add('hidden');
+        document.getElementById('split-or-steal-interface').classList.add('hidden');
         
         const navIcon = document.getElementById('nav-icon');
         const navText = document.getElementById('nav-text');
@@ -352,19 +733,24 @@
         }
     }
     
+    // ========================================
+    // DATA REFRESH
+    // ========================================
+    
     function refreshData() {
         if (!currentPlayer || isRefreshing) return;
         
         isRefreshing = true;
+        console.log('🔄 Refreshing data...');
         
+        // Prüfe Split or Steal zuerst
         fetchWithFallback(`/api/player/${olympixId}/active-split-or-steal?player_id=${currentPlayer.id}`)
             .then(data => {
-                if (data && !data.error) {
+                if (data && !data.error && data.active_match) {
+                    console.log('🎯 Split or Steal aktiv');
                     updateSplitOrStealInterface(data);
                 } else {
-                    document.getElementById('split-or-steal-interface').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    
+                    console.log('📊 Normale Dashboard-Daten laden');
                     return Promise.all([
                         fetchWithFallback(`/api/player/${olympixId}/${currentPlayer.id}/status`),
                         fetchWithFallback(`/api/player/${olympixId}/${currentPlayer.id}/joker-status`)
@@ -376,21 +762,26 @@
                     const [statusData, jokerData] = results;
                     
                     if (statusData && !statusData.error) {
+                        console.log('✅ Status-Daten erhalten:', statusData);
                         updatePlayerData(statusData);
                     }
                     
                     if (jokerData && !jokerData.error) {
+                        console.log('✅ Joker-Daten erhalten:', jokerData);
                         updateJokerInterface(jokerData);
                     } else {
+                        console.log('⚠️ Joker API nicht verfügbar, verwende Fallback');
                         updateJokerInterfaceFallback();
                     }
                 }
             })
             .catch(error => {
-                console.error('Error refreshing data:', error);
+                console.error('❌ Fehler beim Refreshen:', error);
+                updateJokerInterfaceFallback();
             })
             .finally(() => {
                 isRefreshing = false;
+                console.log('✅ Refresh abgeschlossen');
             });
     }
     
@@ -407,9 +798,19 @@
                 return response.json();
             })
             .catch(error => {
+                console.error('🌐 Fetch Error:', error);
                 return { error: error.message };
             });
     }
+    
+    function startAutoRefresh() {
+        console.log('⏰ Auto-Refresh gestartet (3s)');
+        refreshInterval = setInterval(refreshData, 3000);
+    }
+    
+    // ========================================
+    // SPLIT OR STEAL
+    // ========================================
     
     function updateSplitOrStealInterface(data) {
         const splitInterface = document.getElementById('split-or-steal-interface');
@@ -423,7 +824,7 @@
             document.getElementById('opponent-name').textContent = activeMatch.opponent.name;
             document.getElementById('points-at-stake').textContent = activeMatch.points_at_stake;
             
-            document.getElementById('choice-buttons').style.display = 'block';
+            document.getElementById('choice-buttons').style.display = 'grid';
             document.getElementById('choice-made').classList.add('hidden');
             document.getElementById('match-result').classList.add('hidden');
             
@@ -436,98 +837,14 @@
             }
         } else {
             splitInterface.classList.add('hidden');
-            mainContent.classList.remove('hidden');
             activeMatch = null;
-        }
-    }
-    
-    function updatePlayerData(data) {
-        if (data.player) {
-            currentPlayer.points = data.player.total_points;
-            document.getElementById('player-points').textContent = data.player.total_points;
-            document.getElementById('player-position').textContent = `#${data.player.position}`;
-            
-            localStorage.setItem(storageKey, JSON.stringify(currentPlayer));
-        }
-        
-        if (data.ranking) {
-            updateRanking(data.ranking);
-        }
-        
-        updateGameStatus(data.current_game, data.next_game);
-    }
-    
-    function updateJokerInterface(data) {
-        jokerData.doubleAvailable = data.joker_double_available_global !== false;
-        jokerData.swapAvailable = data.joker_swap_available_global !== false;
-        jokerData.canUseDouble = data.can_use_double_joker !== false;
-        jokerData.canUseSwap = data.can_use_swap_joker !== false;
-        
-        const doubleBtn = document.getElementById('double-joker-btn');
-        const swapBtn = document.getElementById('swap-joker-btn');
-        
-        if (jokerData.doubleAvailable) {
-            doubleBtn.className = 'joker-available py-3 px-4 rounded-lg font-medium transition-all hover:scale-105';
-            doubleBtn.disabled = false;
-        } else {
-            doubleBtn.className = 'joker-used py-3 px-4 rounded-lg font-medium';
-            doubleBtn.disabled = true;
-        }
-        
-        if (jokerData.swapAvailable) {
-            swapBtn.className = 'joker-available py-3 px-4 rounded-lg font-medium transition-all hover:scale-105';
-            swapBtn.disabled = false;
-        } else {
-            swapBtn.className = 'joker-used py-3 px-4 rounded-lg font-medium';
-            swapBtn.disabled = true;
-        }
-        
-        loadPendingJokers();
-    }
-    
-    function updateJokerInterfaceFallback() {
-        {% if player is defined %}
-            jokerData.doubleAvailable = {{ player.hasJokerDoubleAvailable ? 'true' : 'false' }};
-            jokerData.swapAvailable = {{ player.hasJokerSwapAvailable ? 'true' : 'false' }};
-            
-            updateJokerInterface({
-                joker_double_available_global: jokerData.doubleAvailable,
-                joker_swap_available_global: jokerData.swapAvailable,
-                can_use_double_joker: jokerData.doubleAvailable,
-                can_use_swap_joker: jokerData.swapAvailable
-            });
-        {% endif %}
-    }
-    
-    function loadPendingJokers() {
-        const pendingInfo = document.getElementById('pending-joker-info');
-        const pendingText = document.getElementById('pending-text');
-        
-        if (!jokerData.doubleAvailable || !jokerData.swapAvailable) {
-            pendingInfo.classList.remove('hidden');
-            
-            let text = '';
-            if (!jokerData.doubleAvailable) {
-                text += '🔥 Doppelte Punkte vorgemerkt ';
-            }
-            if (!jokerData.swapAvailable) {
-                text += '⇄ Punktetausch vorgemerkt';
-            }
-            
-            if (text) {
-                pendingText.textContent = text;
-            } else {
-                pendingInfo.classList.add('hidden');
-            }
-        } else {
-            pendingInfo.classList.add('hidden');
         }
     }
     
     function makeChoice(choice) {
         if (!activeMatch || activeMatch.has_chosen) return;
         
-        const buttons = document.querySelectorAll('#choice-buttons button');
+        const buttons = document.querySelectorAll('.split-steal-buttons button');
         buttons.forEach(btn => btn.disabled = true);
         
         const formData = new FormData();
@@ -549,6 +866,7 @@
             }
         })
         .catch(error => {
+            console.error('Fehler beim Absenden der Wahl:', error);
             buttons.forEach(btn => btn.disabled = false);
         });
     }
@@ -570,6 +888,26 @@
         document.getElementById('points-earned').textContent = `+${pointsEarned} Punkte`;
     }
     
+    // ========================================
+    // PLAYER DATA UPDATE
+    // ========================================
+    
+    function updatePlayerData(data) {
+        if (data.player) {
+            currentPlayer.points = data.player.total_points;
+            document.getElementById('player-points').textContent = data.player.total_points;
+            document.getElementById('player-position').textContent = `Platz ${data.player.position}`;
+            
+            localStorage.setItem(storageKey, JSON.stringify(currentPlayer));
+        }
+        
+        if (data.ranking) {
+            updateRanking(data.ranking);
+        }
+        
+        updateGameStatus(data.current_game, data.next_game);
+    }
+    
     function updateRanking(ranking) {
         const container = document.getElementById('ranking-list');
         let html = '';
@@ -579,16 +917,12 @@
             const isCurrentPlayer = player.id === parseInt(currentPlayer.id);
             
             html += `
-                <div class="flex items-center justify-between p-3 ${isCurrentPlayer ? 'ranking-you' : 'professional-card'} rounded-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="ranking-position w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">
-                            ${position}
-                        </div>
-                        <div class="font-medium text-slate-100">
-                            ${player.name}${isCurrentPlayer ? ' (Du)' : ''}
-                        </div>
+                <div class="ranking-item ${isCurrentPlayer ? 'you' : ''}">
+                    <div class="ranking-position">${position}</div>
+                    <div class="ranking-name">
+                        ${player.name}${isCurrentPlayer ? ' (Du)' : ''}
                     </div>
-                    <div class="font-bold text-slate-100">${player.total_points}</div>
+                    <div class="ranking-points">${player.total_points}</div>
                 </div>
             `;
         });
@@ -601,19 +935,21 @@
         
         if (currentGame) {
             container.innerHTML = `
-                <div class="game-active p-4 rounded-lg">
+                <div class="game-active">
                     <div class="font-semibold">${currentGame.name}</div>
+                    <div class="text-sm opacity-90 mt-1">Läuft gerade</div>
                 </div>
             `;
         } else if (nextGame) {
             container.innerHTML = `
-                <div class="game-next p-4 rounded-lg">
-                    <div class="font-semibold">Nächstes: ${nextGame.name}</div>
+                <div class="game-next">
+                    <div class="font-semibold">${nextGame.name}</div>
+                    <div class="text-sm opacity-90 mt-1">Nächstes Spiel</div>
                 </div>
             `;
         } else {
             container.innerHTML = `
-                <div class="game-finished p-4 rounded-lg text-center">
+                <div class="game-finished">
                     <div class="text-lg mb-1">🏁</div>
                     <div class="font-semibold">Alle Spiele gespielt</div>
                 </div>
@@ -621,21 +957,135 @@
         }
     }
     
-    function startAutoRefresh() {
-        refreshInterval = setInterval(refreshData, 5000);
+    // ========================================
+    // JOKER INTERFACE
+    // ========================================
+    
+    function updateJokerInterface(data) {
+        console.log('🎯 Joker-Interface wird aktualisiert:', data);
+        
+        jokerData.doubleAvailable = data.joker_double_available_global !== false;
+        jokerData.swapAvailable = data.joker_swap_available_global !== false;
+        jokerData.canUseDouble = data.can_use_double_joker !== false;
+        jokerData.canUseSwap = data.can_use_swap_joker !== false;
+        jokerData.doubleUsedFor = data.double_joker_used_for || null;
+        jokerData.swapUsedFor = data.swap_joker_used_for || null;
+        
+        updateJokerCards();
+        updatePendingJokerInfo();
     }
     
+    function updateJokerInterfaceFallback() {
+        console.log('⚠️ Joker-Fallback wird verwendet');
+        
+        {% if player is defined %}
+            // Nur als Fallback verwenden
+            jokerData.doubleAvailable = {{ player.hasJokerDoubleAvailable ? 'true' : 'false' }};
+            jokerData.swapAvailable = {{ player.hasJokerSwapAvailable ? 'true' : 'false' }};
+            jokerData.canUseDouble = jokerData.doubleAvailable;
+            jokerData.canUseSwap = jokerData.swapAvailable;
+            jokerData.doubleUsedFor = null;
+            jokerData.swapUsedFor = null;
+        {% endif %}
+        
+        updateJokerCards();
+        updatePendingJokerInfo();
+    }
+    
+    function updateJokerCards() {
+        const doubleCard = document.getElementById('double-joker-card');
+        const swapCard = document.getElementById('swap-joker-card');
+        
+        console.log('🎴 Joker-Karten werden aktualisiert:', jokerData);
+        
+        // Double Joker Card
+        if (jokerData.doubleAvailable && jokerData.canUseDouble) {
+            doubleCard.className = 'joker-card available';
+            doubleCard.onclick = () => navigateToDoubleJoker();
+            doubleCard.innerHTML = `
+                <div class="joker-icon">🔥</div>
+                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
+                <div class="joker-status">Verfügbar</div>
+            `;
+        } else {
+            doubleCard.className = 'joker-card used';
+            doubleCard.onclick = null;
+            const usedFor = jokerData.doubleUsedFor ? `für ${jokerData.doubleUsedFor}` : '';
+            doubleCard.innerHTML = `
+                <div class="joker-icon">🔥</div>
+                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
+                <div class="joker-status">Genutzt ${usedFor}</div>
+            `;
+        }
+        
+        // Swap Joker Card
+        if (jokerData.swapAvailable && jokerData.canUseSwap) {
+            swapCard.className = 'joker-card available';
+            swapCard.onclick = () => navigateToSwapJoker();
+            swapCard.innerHTML = `
+                <div class="joker-icon">⇄</div>
+                <div class="joker-title">Punktetausch</div>
+                <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
+                <div class="joker-status">Verfügbar</div>
+            `;
+        } else {
+            swapCard.className = 'joker-card used';
+            swapCard.onclick = null;
+            const usedFor = jokerData.swapUsedFor ? `für ${jokerData.swapUsedFor}` : '';
+            swapCard.innerHTML = `
+                <div class="joker-icon">⇄</div>
+                <div class="joker-title">Punktetausch</div>
+                <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
+                <div class="joker-status">Genutzt ${usedFor}</div>
+            `;
+        }
+    }
+    
+    function updatePendingJokerInfo() {
+        const pendingInfo = document.getElementById('pending-joker-info');
+        const pendingText = document.getElementById('pending-text');
+        
+        let pendingMessages = [];
+        
+        if (!jokerData.doubleAvailable && jokerData.doubleUsedFor) {
+            pendingMessages.push(`🔥 Doppelte Punkte vorgemerkt für ${jokerData.doubleUsedFor}`);
+        }
+        
+        if (!jokerData.swapAvailable && jokerData.swapUsedFor) {
+            pendingMessages.push(`⇄ Punktetausch vorgemerkt für ${jokerData.swapUsedFor}`);
+        }
+        
+        if (pendingMessages.length > 0) {
+            pendingInfo.classList.remove('hidden');
+            pendingText.textContent = pendingMessages.join(' • ');
+        } else {
+            pendingInfo.classList.add('hidden');
+        }
+    }
+    
+    // ========================================
+    // NAVIGATION
+    // ========================================
+    
     function navigateToDoubleJoker() {
-        if (jokerData.canUseDouble) {
+        if (jokerData.canUseDouble && jokerData.doubleAvailable) {
+            console.log('🔥 Navigiere zu Double Joker');
             window.location.href = `/player-joker-double/${olympixId}/${currentPlayer.id}`;
         }
     }
     
     function navigateToSwapJoker() {
-        if (jokerData.canUseSwap) {
+        if (jokerData.canUseSwap && jokerData.swapAvailable) {
+            console.log('⇄ Navigiere zu Swap Joker');
             window.location.href = `/player-joker-swap/${olympixId}/${currentPlayer.id}`;
         }
     }
+    
+    // ========================================
+    // LIFECYCLE
+    // ========================================
     
     window.addEventListener('beforeunload', function() {
         if (refreshInterval) {
@@ -650,6 +1100,7 @@
             }
         } else {
             if (currentPlayer) {
+                console.log('👀 Seite wieder sichtbar, refreshe Daten');
                 refreshData();
                 startAutoRefresh();
             }

@@ -148,7 +148,6 @@ class PlayerInterfaceController extends AbstractController
             $this->entityManager->persist($joker);
             $this->entityManager->flush();
 
-            $this->addFlash('success', 'Doppelte Punkte Joker vorgemerkt! 🔥 Wenn "' . $selectedGame->getName() . '" gespielt wird, erhältst du automatisch doppelte Punkte.');
             return $this->redirectToRoute('app_player_dashboard', ['olympixId' => $olympixId, 'playerId' => $playerId]);
         }
 
@@ -232,7 +231,6 @@ class PlayerInterfaceController extends AbstractController
 
             // Check if ANY swap already exists for this game (only one swap per game allowed)
             if ($this->jokerRepository->hasAnySwapForGame($selectedGame->getId())) {
-                $this->addFlash('error', 'Für dieses Spiel wurde bereits ein Punkte-Tausch vorgemerkt. Pro Spiel ist nur ein Tausch möglich.');
                 return $this->redirectToRoute('app_player_joker_swap', ['olympixId' => $olympixId, 'playerId' => $playerId]);
             }
 
@@ -253,7 +251,6 @@ class PlayerInterfaceController extends AbstractController
             $this->entityManager->persist($joker);
             $this->entityManager->flush();
 
-            $this->addFlash('success', 'Punkte-Tausch vorgemerkt! 🔄 Wenn "' . $selectedGame->getName() . '" gespielt wird, tauschst du automatisch deine Position mit ' . $targetPlayer->getName() . '.');
             return $this->redirectToRoute('app_player_dashboard', ['olympixId' => $olympixId, 'playerId' => $playerId]);
         }
 
@@ -358,39 +355,57 @@ class PlayerInterfaceController extends AbstractController
         ]);
     }
 
-    #[Route('/api/player/{olympixId}/{playerId}/joker-status', name: 'app_api_player_joker_status_interface')]
-    public function apiPlayerJokerStatus(int $olympixId, int $playerId): JsonResponse
-    {
-        $player = $this->playerRepository->find($playerId);
-        
-        if (!$player || $player->getOlympix()->getId() !== $olympixId) {
-            return new JsonResponse(['error' => 'Spieler nicht gefunden'], 404);
-        }
-
-        $currentGame = $this->gameRepository->findActiveGameForOlympix($olympixId);
-        $lastCompletedGame = $this->gameRepository->findLastCompletedGameForOlympix($olympixId);
-        $pendingGames = $this->gameRepository->findPendingGamesForOlympix($olympixId);
-
-        return new JsonResponse([
-            'player_id' => $player->getId(),
-            'olympix_id' => $olympixId,
-            'joker_double_available_global' => $player->hasJokerDoubleAvailable(),
-            'joker_swap_available_global' => $player->hasJokerSwapAvailable(),
-            'can_use_double_joker' => $player->hasJokerDoubleAvailable() && count($pendingGames) > 0,
-            'can_use_swap_joker' => $player->hasJokerSwapAvailable() && count($pendingGames) > 0,
-            'current_game' => $currentGame ? [
-                'id' => $currentGame->getId(),
-                'name' => $currentGame->getName(),
-                'status' => $currentGame->getStatus(),
-            ] : null,
-            'last_completed_game' => $lastCompletedGame ? [
-                'id' => $lastCompletedGame->getId(),
-                'name' => $lastCompletedGame->getName(),
-                'status' => $lastCompletedGame->getStatus(),
-            ] : null,
-            'pending_games_count' => count($pendingGames),
-        ]);
+#[Route('/api/player/{olympixId}/{playerId}/joker-status', name: 'app_api_player_joker_status_interface')]
+public function apiPlayerJokerStatus(int $olympixId, int $playerId): JsonResponse
+{
+    $player = $this->playerRepository->find($playerId);
+    
+    if (!$player || $player->getOlympix()->getId() !== $olympixId) {
+        return new JsonResponse(['error' => 'Spieler nicht gefunden'], 404);
     }
+
+    $currentGame = $this->gameRepository->findActiveGameForOlympix($olympixId);
+    $lastCompletedGame = $this->gameRepository->findLastCompletedGameForOlympix($olympixId);
+    $pendingGames = $this->gameRepository->findPendingGamesForOlympix($olympixId);
+
+    // NEU: Finde vorgemerkte Joker
+    $pendingDoubleJoker = $this->jokerRepository->findOneBy([
+        'player' => $player,
+        'jokerType' => 'double',
+        'isUsed' => false
+    ]);
+    
+    $pendingSwapJoker = $this->jokerRepository->findOneBy([
+        'player' => $player,
+        'jokerType' => 'swap',
+        'isUsed' => false
+    ]);
+
+    return new JsonResponse([
+        'player_id' => $player->getId(),
+        'olympix_id' => $olympixId,
+        'joker_double_available_global' => $player->hasJokerDoubleAvailable(),
+        'joker_swap_available_global' => $player->hasJokerSwapAvailable(),
+        'can_use_double_joker' => $player->hasJokerDoubleAvailable() && count($pendingGames) > 0,
+        'can_use_swap_joker' => $player->hasJokerSwapAvailable() && count($pendingGames) > 0,
+        
+        // NEU: Informationen über verwendete Joker
+        'double_joker_used_for' => $pendingDoubleJoker ? $pendingDoubleJoker->getGame()->getName() : null,
+        'swap_joker_used_for' => $pendingSwapJoker ? $pendingSwapJoker->getGame()->getName() : null,
+        
+        'current_game' => $currentGame ? [
+            'id' => $currentGame->getId(),
+            'name' => $currentGame->getName(),
+            'status' => $currentGame->getStatus(),
+        ] : null,
+        'last_completed_game' => $lastCompletedGame ? [
+            'id' => $lastCompletedGame->getId(),
+            'name' => $lastCompletedGame->getName(),
+            'status' => $lastCompletedGame->getStatus(),
+        ] : null,
+        'pending_games_count' => count($pendingGames),
+    ]);
+}
 
     #[Route('/api/player/{olympixId}/{playerId}/pending-doubles', name: 'app_api_player_pending_doubles')]
     public function apiPlayerPendingDoubles(int $olympixId, int $playerId): JsonResponse
