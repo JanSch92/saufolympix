@@ -1,169 +1,233 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ olympix.name }} - Spieler-Zugang</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+{% extends 'baselive.html.twig' %}
+
+{% block title %}{{ olympix.name }} - Spielerzugang{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
         .player-card {
-            transform: translateY(0);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
+        
         .player-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
-        .selected-player {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
+        
+        .player-card.selected {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(16, 185, 129, 0.1);
         }
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
+        }
+        
+        .player-scroll {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        
+        .player-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .player-scroll::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+        }
+        
+        .player-scroll::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.6);
+            border-radius: 3px;
+        }
+        
+        .player-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8);
         }
     </style>
-</head>
-<body class="flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">🏆 {{ olympix.name }}</h1>
-            <p class="text-gray-600">Wähle deinen Namen</p>
-        </div>
-        
-        <div id="player-selection" class="space-y-3">
-            {% for player in olympix.players %}
-                <button onclick="selectPlayer({{ player.id }}, '{{ player.name|e('js') }}', {{ player.totalPoints }})" 
-                        class="player-card w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all text-left">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-semibold text-gray-800">{{ player.name }}</div>
-                            <div class="text-sm text-gray-600">{{ player.totalPoints }} Punkte</div>
-                        </div>
-                        <div class="text-blue-600 font-bold text-lg">
-                            {% set position = 1 %}
-                            {% for p in olympix.players %}
-                                {% if p.totalPoints > player.totalPoints %}
-                                    {% set position = position + 1 %}
-                                {% endif %}
-                            {% endfor %}
-                            #{{ position }}
-                        </div>
+{% endblock %}
+
+{% block body %}
+<div class="w-screen h-screen flex flex-col bg-slate-900 text-slate-100">
+    <div class="flex-1 flex items-center justify-center p-2">
+        <div class="w-full max-w-md">
+            
+            <!-- Header -->
+            <div class="professional-card p-3 mb-3">
+                <div class="text-center">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                        </svg>
                     </div>
-                </button>
-            {% endfor %}
-        </div>
-        
-        <div id="selected-info" class="hidden mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <div class="font-semibold text-green-800">Ausgewählt:</div>
-                    <div id="selected-name" class="text-green-700"></div>
+                    <h1 class="text-base font-bold gradient-text mb-1">{{ olympix.name }}</h1>
+                    <p class="text-xs text-slate-400">Spieler auswählen</p>
                 </div>
-                <button onclick="resetSelection()" class="text-green-600 hover:text-green-800 font-medium">
-                    Ändern
-                </button>
             </div>
-            <button onclick="goToDashboard()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                Zum Dashboard →
-            </button>
-        </div>
-        
-        <div class="mt-6 text-center text-sm text-gray-500">
-            <p>Dein Name wird gespeichert und beim nächsten Besuch automatisch ausgewählt</p>
-        </div>
-        
-        <div id="loading" class="hidden mt-6 text-center">
-            <div class="pulse-animation text-blue-600">
-                <div class="text-lg">🎮</div>
-                <div class="text-sm">Lade Dashboard...</div>
+            
+            <!-- Player Selection -->
+            <div id="player-selection" class="mb-3">
+                <div class="player-scroll space-y-1.5">
+                    {% for player in olympix.players %}
+                        <button onclick="selectPlayer({{ player.id }}, '{{ player.name|e('js') }}', {{ player.totalPoints }})" 
+                                class="player-card w-full p-2.5 text-left">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="w-7 h-7 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center text-white font-bold text-xs">
+                                        {{ player.name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-100 text-sm">{{ player.name }}</div>
+                                        <div class="text-xs text-slate-400">{{ player.totalPoints }} Punkte</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    {% set position = 1 %}
+                                    {% for p in olympix.players %}
+                                        {% if p.totalPoints > player.totalPoints %}
+                                            {% set position = position + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <div class="text-base font-bold text-slate-200">#{{ position }}</div>
+                                    <div class="text-xs text-slate-500">Platz</div>
+                                </div>
+                            </div>
+                        </button>
+                    {% endfor %}
+                </div>
             </div>
+            
+            <!-- Selected Player -->
+            <div id="selected-info" class="hidden">
+                <div class="professional-card p-3 mb-3 pulse-glow">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-emerald-400 text-sm">Ausgewählt</div>
+                                <div id="selected-name" class="text-slate-200 text-xs"></div>
+                            </div>
+                        </div>
+                        <button onclick="resetSelection()" class="text-slate-400 hover:text-slate-200 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loading -->
+            <div id="loading" class="hidden professional-card p-3 text-center">
+                <div class="loading-spinner mx-auto mb-2"></div>
+                <div class="text-slate-200 font-medium text-sm">Dashboard wird geladen...</div>
+            </div>
+            
         </div>
     </div>
+</div>
 
-    <script>
-        const olympixId = {{ olympix.id }};
-        const storageKey = `olympix_${olympixId}_selected_player`;
-        let selectedPlayerData = null;
-        
-        // Check if player is already selected
-        window.addEventListener('DOMContentLoaded', function() {
-            const storedPlayer = localStorage.getItem(storageKey);
-            if (storedPlayer) {
-                try {
-                    const playerData = JSON.parse(storedPlayer);
-                    // Check if the data is not too old (24 hours)
-                    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
-                    if (playerData.timestamp && playerData.timestamp > twentyFourHoursAgo) {
-                        selectedPlayerData = playerData;
-                        showSelectedPlayer(playerData.name, playerData.points);
-                    } else {
-                        // Data is too old, remove it
-                        localStorage.removeItem(storageKey);
-                    }
-                } catch (e) {
-                    console.error('Error parsing stored player data:', e);
+<script>
+    const olympixId = {{ olympix.id }};
+    const storageKey = `olympix_${olympixId}_selected_player`;
+    let selectedPlayerData = null;
+    
+    window.addEventListener('DOMContentLoaded', function() {
+        const storedPlayer = localStorage.getItem(storageKey);
+        if (storedPlayer) {
+            try {
+                const playerData = JSON.parse(storedPlayer);
+                const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+                if (playerData.timestamp && playerData.timestamp > twentyFourHoursAgo) {
+                    selectedPlayerData = playerData;
+                    showSelectedPlayer(playerData.name, playerData.points);
+                    setTimeout(() => {
+                        goToDashboard();
+                    }, 1000);
+                } else {
                     localStorage.removeItem(storageKey);
                 }
+            } catch (e) {
+                localStorage.removeItem(storageKey);
             }
-        });
-        
-        function selectPlayer(playerId, playerName, playerPoints) {
-            selectedPlayerData = {
-                id: playerId,
-                name: playerName,
-                points: playerPoints,
-                timestamp: Date.now()
-            };
-            
-            localStorage.setItem(storageKey, JSON.stringify(selectedPlayerData));
-            showSelectedPlayer(playerName, playerPoints);
         }
+    });
+    
+    function selectPlayer(playerId, playerName, playerPoints) {
+        selectedPlayerData = {
+            id: playerId,
+            name: playerName,
+            points: playerPoints,
+            timestamp: Date.now()
+        };
         
-        function showSelectedPlayer(name, points) {
-            document.getElementById('player-selection').style.display = 'none';
-            document.getElementById('selected-info').classList.remove('hidden');
-            document.getElementById('selected-name').textContent = `${name} (${points} Punkte)`;
-        }
+        localStorage.setItem(storageKey, JSON.stringify(selectedPlayerData));
+        showSelectedPlayer(playerName, playerPoints);
         
-        function resetSelection() {
-            selectedPlayerData = null;
-            localStorage.removeItem(storageKey);
-            document.getElementById('player-selection').style.display = 'block';
+        setTimeout(() => {
+            goToDashboard();
+        }, 1000);
+    }
+    
+    function showSelectedPlayer(name, points) {
+        document.getElementById('player-selection').style.display = 'none';
+        document.getElementById('selected-info').classList.remove('hidden');
+        document.getElementById('selected-name').textContent = `${name} (${points} Punkte)`;
+    }
+    
+    function resetSelection() {
+        selectedPlayerData = null;
+        localStorage.removeItem(storageKey);
+        document.getElementById('player-selection').style.display = 'block';
+        document.getElementById('selected-info').classList.add('hidden');
+        document.getElementById('loading').classList.add('hidden');
+    }
+    
+    function goToDashboard() {
+        if (selectedPlayerData && selectedPlayerData.id) {
             document.getElementById('selected-info').classList.add('hidden');
-            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            
+            setTimeout(() => {
+                window.location.href = `/player-dashboard/${olympixId}/${selectedPlayerData.id}`;
+            }, 500);
+        } else {
+            resetSelection();
         }
-        
-        function goToDashboard() {
-            if (selectedPlayerData && selectedPlayerData.id) {
-                document.getElementById('selected-info').classList.add('hidden');
-                document.getElementById('loading').classList.remove('hidden');
-                
-                console.log('Weiterleitung zu:', `/player-dashboard/${olympixId}/${selectedPlayerData.id}`);
-                
-                // Small delay to show loading animation
-                setTimeout(() => {
-                    window.location.href = `/player-dashboard/${olympixId}/${selectedPlayerData.id}`;
-                }, 500);
-            } else {
-                alert('Fehler: Kein Spieler ausgewählt');
-                resetSelection();
-            }
+    }
+    
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            location.reload();
         }
-        
-        // Handle back button to refresh player data
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
-                location.reload();
-            }
-        });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

@@ -1,417 +1,171 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Split or Steal Ergebnisse - {{ game.name }}{% endblock %}
+{% block title %}Ergebnisse - {{ game.name }}{% endblock %}
 
 {% block body %}
-<div class="max-w-6xl mx-auto">
-    <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">🏆 Split or Steal Ergebnisse</h1>
-                <p class="text-gray-600 mt-1">{{ game.name }}</p>
-                <div class="mt-2 text-sm text-gray-500">
-                    Status: <span class="font-semibold text-green-600">{{ game.statusLabel }}</span>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">
+                    📊 Ergebnisse eingeben
+                </h1>
+                <div class="text-sm text-gray-600">
+                    {{ game.name }} ({{ game.gameTypeLabel }})
                 </div>
             </div>
-            <div class="flex space-x-4">
-                <a href="{{ path('app_split_or_steal_setup', {gameId: game.id}) }}" 
-                   class="btn-secondary">
-                    ⚙️ Setup
-                </a>
+
+            <div class="mb-4">
                 <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
-                   class="btn-primary">
+                   class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     ← Zurück
                 </a>
             </div>
-        </div>
-    </div>
 
-    <!-- Game Summary -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">📊 Zusammenfassung</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-blue-50 rounded-lg p-4">
-                <div class="text-blue-600 font-semibold">Gesamt Matches</div>
-                <div class="text-2xl font-bold text-blue-800">{{ matches|length }}</div>
-            </div>
-            <div class="bg-green-50 rounded-lg p-4">
-                <div class="text-green-600 font-semibold">Abgeschlossen</div>
-                <div class="text-2xl font-bold text-green-800">
-                    {{ matches|filter(match => match.isCompleted)|length }}
+            {% if double_jokers is not empty or swap_joker %}
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-3">🃏 Aktive Joker für dieses Spiel</h3>
+                
+                {% if double_jokers is not empty %}
+                <div class="mb-2">
+                    <h4 class="font-medium text-blue-700 mb-1">🔥 Doppelte Punkte Joker</h4>
+                    <ul class="text-sm text-blue-600">
+                        {% for joker in double_jokers %}
+                        <li>• {{ joker.player.name }} bekommt doppelte Punkte</li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            </div>
-            <div class="bg-orange-50 rounded-lg p-4">
-                <div class="text-orange-600 font-semibold">Punkte im Spiel</div>
-                <div class="text-2xl font-bold text-orange-800">
-                    {{ matches|map(match => match.pointsAtStake)|reduce((a, b) => a + b, 0) }}
-                </div>
-            </div>
-            <div class="bg-purple-50 rounded-lg p-4">
-                <div class="text-purple-600 font-semibold">Vergebene Punkte</div>
-                <div class="text-2xl font-bold text-purple-800">
-                    {% set totalAwarded = 0 %}
-                    {% for match in matches %}
-                        {% if match.isCompleted %}
-                            {% set totalAwarded = totalAwarded + (match.player1Points + match.player2Points) %}
-                        {% endif %}
-                    {% endfor %}
-                    {{ totalAwarded }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Strategy Analysis -->
-        <div class="bg-gray-50 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-800 mb-3">🧠 Strategie-Analyse</h3>
-            
-            {% set splitCount = 0 %}
-            {% set stealCount = 0 %}
-            {% set totalChoices = 0 %}
-            
-            {% for match in matches %}
-                {% if match.isCompleted %}
-                    {% if match.player1Choice == 'split' %}
-                        {% set splitCount = splitCount + 1 %}
-                    {% else %}
-                        {% set stealCount = stealCount + 1 %}
-                    {% endif %}
-                    {% if match.player2Choice == 'split' %}
-                        {% set splitCount = splitCount + 1 %}
-                    {% else %}
-                        {% set stealCount = stealCount + 1 %}
-                    {% endif %}
-                    {% set totalChoices = totalChoices + 2 %}
                 {% endif %}
-            {% endfor %}
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white rounded p-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-medium text-green-700">🤝 Split-Entscheidungen</div>
-                            <div class="text-sm text-gray-600">Kooperative Spieler</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xl font-bold text-green-800">{{ splitCount }}</div>
-                            <div class="text-sm text-gray-500">
-                                {% if totalChoices > 0 %}
-                                    {{ ((splitCount / totalChoices) * 100)|round(1) }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                            </div>
-                        </div>
+
+                {% if swap_joker %}
+                <div class="mb-2">
+                    <h4 class="font-medium text-blue-700 mb-1">⇄ Punkte Tausch</h4>
+                    <div class="text-sm text-blue-600">
+                        • {{ swap_joker.player.name }} ↔ {{ swap_joker.targetPlayer.name }}
                     </div>
                 </div>
-                
-                <div class="bg-white rounded p-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-medium text-red-700">💰 Steal-Entscheidungen</div>
-                            <div class="text-sm text-gray-600">Kompetitive Spieler</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xl font-bold text-red-800">{{ stealCount }}</div>
-                            <div class="text-sm text-gray-500">
-                                {% if totalChoices > 0 %}
-                                    {{ ((stealCount / totalChoices) * 100)|round(1) }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </div>
-        </div>
-    </div>
-
-    <!-- Match Results -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">🎯 Match-Ergebnisse</h2>
-        
-        <div class="space-y-4">
-            {% for match in matches %}
-                <div class="border rounded-lg p-4 {% if match.isCompleted %}
-                    {% if match.player1Points > 0 or match.player2Points > 0 %}
-                        bg-green-50 border-green-200
-                    {% else %}
-                        bg-red-50 border-red-200
-                    {% endif %}
-                {% else %}
-                    bg-gray-50 border-gray-200
-                {% endif %}">
-                    
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="text-sm font-medium text-gray-600">
-                            Match {{ loop.index }}
-                        </div>
-                        <div class="text-lg font-bold text-blue-600">
-                            {{ match.pointsAtStake }} Punkte
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Player 1 -->
-                        <div class="text-center">
-                            <div class="font-semibold text-gray-800 mb-2">{{ match.player1.name }}</div>
-                            
-                            {% if match.isCompleted %}
-                                <div class="mb-2">
-                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium 
-                                        {% if match.player1Choice == 'split' %}
-                                            bg-green-200 text-green-800
-                                        {% else %}
-                                            bg-red-200 text-red-800
-                                        {% endif %}">
-                                        {% if match.player1Choice == 'split' %}
-                                            🤝 SPLIT
-                                        {% else %}
-                                            💰 STEAL
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div class="text-xl font-bold 
-                                    {% if match.player1Points > 0 %}
-                                        text-green-600
-                                    {% else %}
-                                        text-red-600
-                                    {% endif %}">
-                                    +{{ match.player1Points }} Punkte
-                                </div>
-                            {% else %}
-                                <div class="text-gray-500">Noch nicht abgeschlossen</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- VS -->
-                        <div class="text-center flex items-center justify-center">
-                            <div class="text-gray-500 font-bold">VS</div>
-                        </div>
-
-                        <!-- Player 2 -->
-                        <div class="text-center">
-                            <div class="font-semibold text-gray-800 mb-2">{{ match.player2.name }}</div>
-                            
-                            {% if match.isCompleted %}
-                                <div class="mb-2">
-                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium 
-                                        {% if match.player2Choice == 'split' %}
-                                            bg-green-200 text-green-800
-                                        {% else %}
-                                            bg-red-200 text-red-800
-                                        {% endif %}">
-                                        {% if match.player2Choice == 'split' %}
-                                            🤝 SPLIT
-                                        {% else %}
-                                            💰 STEAL
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div class="text-xl font-bold 
-                                    {% if match.player2Points > 0 %}
-                                        text-green-600
-                                    {% else %}
-                                        text-red-600
-                                    {% endif %}">
-                                    +{{ match.player2Points }} Punkte
-                                </div>
-                            {% else %}
-                                <div class="text-gray-500">Noch nicht abgeschlossen</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    {% if match.isCompleted %}
-                        <div class="mt-4 p-3 bg-white bg-opacity-60 rounded-lg">
-                            <div class="text-sm font-medium text-gray-700 text-center">
-                                {{ match.resultDescription }}
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Player Performance -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">🎭 Spieler-Performance</h2>
-        
-        {% set playerStats = {} %}
-        {% for match in matches %}
-            {% if match.isCompleted %}
-                <!-- Player 1 Stats -->
-                {% set playerId = match.player1.id %}
-                {% if playerStats[playerId] is not defined %}
-                    {% set playerStats = playerStats|merge({(playerId): {
-                        'name': match.player1.name,
-                        'points': 0,
-                        'matches': 0,
-                        'splits': 0,
-                        'steals': 0,
-                        'wins': 0
-                    }}) %}
-                {% endif %}
-                
-                {% set currentStats = playerStats[playerId] %}
-                {% set playerStats = playerStats|merge({(playerId): {
-                    'name': currentStats.name,
-                    'points': currentStats.points + match.player1Points,
-                    'matches': currentStats.matches + 1,
-                    'splits': currentStats.splits + (match.player1Choice == 'split' ? 1 : 0),
-                    'steals': currentStats.steals + (match.player1Choice == 'steal' ? 1 : 0),
-                    'wins': currentStats.wins + (match.player1Points > match.player2Points ? 1 : 0)
-                }}) %}
-                
-                <!-- Player 2 Stats -->
-                {% set playerId = match.player2.id %}
-                {% if playerStats[playerId] is not defined %}
-                    {% set playerStats = playerStats|merge({(playerId): {
-                        'name': match.player2.name,
-                        'points': 0,
-                        'matches': 0,
-                        'splits': 0,
-                        'steals': 0,
-                        'wins': 0
-                    }}) %}
-                {% endif %}
-                
-                {% set currentStats = playerStats[playerId] %}
-                {% set playerStats = playerStats|merge({(playerId): {
-                    'name': currentStats.name,
-                    'points': currentStats.points + match.player2Points,
-                    'matches': currentStats.matches + 1,
-                    'splits': currentStats.splits + (match.player2Choice == 'split' ? 1 : 0),
-                    'steals': currentStats.steals + (match.player2Choice == 'steal' ? 1 : 0),
-                    'wins': currentStats.wins + (match.player2Points > match.player1Points ? 1 : 0)
-                }}) %}
             {% endif %}
-        {% endfor %}
-        
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b">
-                        <th class="text-left py-2">Spieler</th>
-                        <th class="text-center py-2">Punkte</th>
-                        <th class="text-center py-2">Matches</th>
-                        <th class="text-center py-2">Siege</th>
-                        <th class="text-center py-2">🤝 Split</th>
-                        <th class="text-center py-2">💰 Steal</th>
-                        <th class="text-center py-2">Strategie</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for playerId, stats in playerStats %}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-3 font-medium">{{ stats.name }}</td>
-                            <td class="text-center py-3 font-bold text-green-600">{{ stats.points }}</td>
-                            <td class="text-center py-3">{{ stats.matches }}</td>
-                            <td class="text-center py-3">{{ stats.wins }}</td>
-                            <td class="text-center py-3">{{ stats.splits }}</td>
-                            <td class="text-center py-3">{{ stats.steals }}</td>
-                            <td class="text-center py-3">
-                                {% if stats.matches > 0 %}
-                                    {% set splitPercentage = (stats.splits / stats.matches * 100)|round(0) %}
-                                    {% if splitPercentage >= 75 %}
-                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                            Kooperativ
-                                        </span>
-                                    {% elseif splitPercentage >= 25 %}
-                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-                                            Ausgewogen
-                                        </span>
-                                    {% else %}
-                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
-                                            Kompetitiv
-                                        </span>
-                                    {% endif %}
+
+            {% if game.isTournamentGame %}
+                {% if game.tournament and game.tournament.isCompleted %}
+                    <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">🏆 Turnier-Ergebnisse</h3>
+                        <div class="mb-4">
+                            <a href="{{ path('app_game_bracket', {id: game.id}) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                                🏆 Bracket anzeigen
+                            </a>
+                        </div>
+                        <div class="text-green-700 mb-4">
+                            <p class="font-medium">Turnier abgeschlossen</p>
+                            <p class="text-sm">Alle Matches sind gespielt. Ergebnisse können gespeichert werden.</p>
+                        </div>
+                        
+                        <form method="post" class="flex space-x-2">
+                            <button type="button" 
+                                    onclick="window.location='{{ path('app_game_admin', {id: game.olympix.id}) }}'"
+                                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                Abbrechen
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                Turnier-Ergebnisse speichern
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h3 class="font-semibold text-yellow-800 mb-2">⏳ Turnier läuft noch</h3>
+                        <p class="text-yellow-700 mb-4">Das Turnier ist noch nicht abgeschlossen. Beende alle Matches im Bracket.</p>
+                        <a href="{{ path('app_game_bracket', {id: game.id}) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors">
+                            🏆 Bracket anzeigen
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <form method="post" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for player in players %}
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-lg font-semibold text-gray-800">{{ player.name }}</h3>
+                                <div class="text-sm text-gray-600">{{ player.totalPoints }} Punkte gesamt</div>
+                            </div>
+                            
+                            {% set existingResult = null %}
+                            {% for result in existing_results %}
+                                {% if result.player.id == player.id %}
+                                    {% set existingResult = result %}
                                 {% endif %}
-                            </td>
-                        </tr>
+                            {% endfor %}
+                            
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Position</label>
+                                <select name="positions[{{ player.id }}]" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Nicht teilgenommen</option>
+                                    {% for i in 1..players|length %}
+                                        <option value="{{ i }}" 
+                                                {% if existingResult and existingResult.position == i %}selected{% endif %}>
+                                            {{ i }}. Platz
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" 
+                                onclick="window.location='{{ path('app_game_admin', {id: game.olympix.id}) }}'"
+                                class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            Abbrechen
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Ergebnisse speichern
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+
+            {% if existing_results is not empty %}
+            <div class="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-4">📋 Aktuelle Ergebnisse</h3>
+                <div class="space-y-2">
+                    {% for result in existing_results %}
+                    <div class="flex items-center justify-between py-2 px-3 bg-white rounded-lg border">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">
+                                {{ result.position }}
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-800">{{ result.player.name }}</div>
+                                {% if result.jokerDoubleApplied %}
+                                    <div class="text-xs text-orange-600 font-medium">🔥 Doppelte Punkte aktiv</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-gray-800">
+                                {{ result.finalPoints }} Punkte
+                            </div>
+                            {% if result.jokerDoubleApplied %}
+                                <div class="text-xs text-orange-600">
+                                    ({{ result.points }} × 2)
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Game Results Integration -->
-    {% if game_results %}
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">📈 Auswirkung auf Gesamt-Ranking</h2>
-        
-        <div class="space-y-2">
-            {% for result in game_results %}
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div class="font-medium text-gray-800">
-                        {{ result.player.name }}
-                    </div>
-                    <div class="font-bold text-green-600">
-                        +{{ result.finalPoints }} Punkte
-                    </div>
                 </div>
-            {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
 </div>
-
-<script>
-// Auto-refresh if game is still active
-{% if game.status == 'active' %}
-    setInterval(function() {
-        location.reload();
-    }, 10000); // Refresh every 10 seconds
-{% endif %}
-
-// Add some interactivity
-document.addEventListener('DOMContentLoaded', function() {
-    // Highlight match on hover
-    const matches = document.querySelectorAll('.border.rounded-lg.p-4');
-    matches.forEach(match => {
-        match.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-        });
-        
-        match.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '';
-        });
-    });
-    
-    // Add tooltips for strategy analysis
-    const strategyTags = document.querySelectorAll('[class*="bg-green-100"], [class*="bg-yellow-100"], [class*="bg-red-100"]');
-    strategyTags.forEach(tag => {
-        tag.style.cursor = 'help';
-        tag.addEventListener('mouseenter', function() {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'absolute z-10 bg-black text-white text-xs rounded px-2 py-1';
-            tooltip.style.transform = 'translateY(-100%)';
-            tooltip.style.marginTop = '-5px';
-            
-            if (this.textContent.includes('Kooperativ')) {
-                tooltip.textContent = 'Wählt meistens Split - vertrauensvoll';
-            } else if (this.textContent.includes('Ausgewogen')) {
-                tooltip.textContent = 'Wählt Split und Steal ausgeglichen';
-            } else if (this.textContent.includes('Kompetitiv')) {
-                tooltip.textContent = 'Wählt meistens Steal - risikofreudig';
-            }
-            
-            this.style.position = 'relative';
-            this.appendChild(tooltip);
-        });
-        
-        tag.addEventListener('mouseleave', function() {
-            const tooltip = this.querySelector('.absolute');
-            if (tooltip) {
-                tooltip.remove();
-            }
-        });
-    });
-});
-</script>
 {% endblock %}

@@ -292,31 +292,49 @@ class Game
         return $this->gameType === 'split_or_steal';
     }
 
-    public function getDefaultPointsDistribution(): array
-    {
-        // Use custom points distribution if set
-        if ($this->pointsDistribution) {
-            return $this->pointsDistribution;
-        }
+public function getDefaultPointsDistribution(): array
+{
+    // Use custom points distribution if set
+    if ($this->pointsDistribution) {
+        return $this->pointsDistribution;
+    }
 
-        // FIXED: Use fixed values for tournaments
-        if ($this->isTournamentGame()) {
-            return [8, 6, 4, 2]; // 1st, 2nd, 3rd, 4th place - FIXED VALUES
-        }
-
-        // Split or Steal - default points per match
-        if ($this->isSplitOrStealGame()) {
-            return [50]; // Default 50 points per match
-        }
-
-        // Free for all - points based on number of players (descending)
+    // FIXED: Use dynamic values for tournaments based on player count
+    if ($this->isTournamentGame()) {
         $playerCount = $this->olympix->getPlayers()->count();
+        
+        // Dynamische Punkteverteilung basierend auf Spieleranzahl
         $points = [];
-        for ($i = $playerCount; $i >= 1; $i--) {
-            $points[] = $i;
+        for ($i = 1; $i <= $playerCount; $i++) {
+            if ($i == 1) {
+                $points[] = 8; // 1. Platz
+            } elseif ($i == 2) {
+                $points[] = 6; // 2. Platz
+            } elseif ($i == 3) {
+                $points[] = 4; // 3. Platz
+            } elseif ($i == 4) {
+                $points[] = 2; // 4. Platz
+            } else {
+                $points[] = 0; // Alle anderen: 0 Punkte
+            }
         }
+        
         return $points;
     }
+
+    // Split or Steal - default points per match
+    if ($this->isSplitOrStealGame()) {
+        return [50]; // Default 50 points per match
+    }
+
+    // Free for all - points based on number of players (descending)
+    $playerCount = $this->olympix->getPlayers()->count();
+    $points = [];
+    for ($i = $playerCount; $i >= 1; $i--) {
+        $points[] = $i;
+    }
+    return $points;
+}
 
     public function isCompleted(): bool
     {

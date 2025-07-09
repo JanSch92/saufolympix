@@ -117,16 +117,6 @@ class GameController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Check if game needs setup
-        if ($game->needsSetup()) {
-            $this->addFlash('error', 'Spiel muss erst konfiguriert werden');
-            $setupUrl = $game->getSetupUrl();
-            if ($setupUrl) {
-                return $this->redirect($setupUrl);
-            }
-            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
-        }
-
         // Special handling for Split or Steal games
         if ($game->isSplitOrStealGame()) {
             $matches = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($game->getId());
@@ -144,7 +134,7 @@ class GameController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Set all other games to pending/completed (not active) - VERSION 8
+        // Set all other games to pending/completed (not active)
         $allGames = $this->gameRepository->findByOlympixOrdered($game->getOlympix()->getId());
         foreach ($allGames as $g) {
             if ($g->getStatus() === 'active') {
@@ -190,9 +180,6 @@ class GameController extends AbstractController
             return $this->redirectToRoute('app_split_or_steal_evaluate', ['gameId' => $game->getId()]);
         }
 
-        // VERSION 8: NOTE: Jokers are now applied immediately when results are processed, not on manual completion
-        // This method only handles manual game completion without results
-        
         $game->setStatus('completed');
         
         // Update player total points
@@ -228,7 +215,7 @@ class GameController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            // VERSION 7: PROCESS GAME RESULTS AND APPLY JOKERS
+            // Process game results and apply jokers
             $this->processGameResults($game, $request);
             
             $this->addFlash('success', 'Ergebnisse für "' . $game->getName() . '" wurden gespeichert!');
@@ -238,26 +225,53 @@ class GameController extends AbstractController
         $players = $game->getOlympix()->getPlayers();
         $existingResults = $this->gameResultRepository->findByGameOrderedByPosition($game->getId());
 
-        // Get ALL double jokers for this game (both pending and used for display) - VERSION 8
+        // Get matches for Split-or-Steal games (needed by template)
+        $matches = [];
+        if ($game->isSplitOrStealGame()) {
+            $matches = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($game->getId());
+        }
+
+        // Get ALL double jokers for this game (both pending and used for display)
         $doubleJokers = $this->jokerRepository->findBy([
             'game' => $game,
             'jokerType' => 'double'
         ]);
         
-        // Get swap joker for this game (if any) - VERSION 8
+        // Get swap joker for this game (if any)
         $swapJoker = $this->jokerRepository->findOneBy([
             'game' => $game,
             'jokerType' => 'swap'
         ]);
 
-        return $this->render('game/results.html.twig', [
+        // Get pending jokers using standard Doctrine methods
+        $pendingDoubleJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'double',
+            'isUsed' => false
+        ]);
+
+        $pendingSwapJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'swap',
+            'isUsed' => false
+        ]);
+
+        // Use different templates based on game type
+        $template = match($game->getGameType()) {
+            'split_or_steal' => 'split_or_steal/results.html.twig',
+            default => 'game/results.html.twig'
+        };
+
+        return $this->render($template, [
             'game' => $game,
             'players' => $players,
             'existing_results' => $existingResults,
+            'game_results' => $existingResults, // Add missing variable
+            'matches' => $matches,
             'double_jokers' => $doubleJokers,
             'swap_joker' => $swapJoker,
-            'pending_double_jokers' => $this->jokerRepository->findPendingDoubleJokersByGame($game->getId()),
-            'pending_swap_jokers' => $this->jokerRepository->findPendingSwapJokersByGame($game->getId()),
+            'pending_double_jokers' => $pendingDoubleJokers,
+            'pending_swap_jokers' => $pendingSwapJokers,
         ]);
     }
 
@@ -292,7 +306,7 @@ class GameController extends AbstractController
             }
         }
 
-        // VERSION 8: Check if game has results
+        // Check if game has results
         if ($game->getGameResults()->count() > 0) {
             $this->addFlash('error', 'Spiel kann nicht gelöscht werden, da bereits Ergebnisse vorhanden sind');
             return $this->redirectToRoute('app_game_admin', ['id' => $olympixId]);
@@ -670,64 +684,51 @@ class GameController extends AbstractController
         $this->createTournamentResultsWithJokers($game);
     }
 
-    private function createTournamentResultsWithJokers(Game $game): void
-    {
-        $tournament = $game->getTournament();
-        if (!$tournament || !$tournament->isIsCompleted()) {
-            return;
-        }
+private function createTournamentResultsWithJokers(Game $game): void
+{
+    $tournament = $game->getTournament();
+    if (!$tournament || !$tournament->isIsCompleted()) {
+        return;
+    }
 
-        // Get pending jokers BEFORE creating results
-        $pendingDoubleJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'double',
-            'isUsed' => false
-        ]);
+    // Get pending jokers BEFORE creating results
+    $pendingDoubleJokers = $this->jokerRepository->findBy([
+        'game' => $game,
+        'jokerType' => 'double',
+        'isUsed' => false
+    ]);
 
-        $pendingSwapJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'swap',
-            'isUsed' => false
-        ]);
+    $pendingSwapJokers = $this->jokerRepository->findBy([
+        'game' => $game,
+        'jokerType' => 'swap',
+        'isUsed' => false
+    ]);
 
-        $results = $tournament->getTournamentResults();
-        $pointsDistribution = [8, 6, 4, 2]; // Fixed values for tournaments
+    $results = $tournament->getTournamentResults();
+    
+    // CHANGED: Use dynamic points distribution instead of fixed [8, 6, 4, 2]
+    $pointsDistribution = $game->getDefaultPointsDistribution();
 
-        // Clear existing results
-        foreach ($game->getGameResults() as $result) {
-            $this->entityManager->remove($result);
-        }
+    // Clear existing results
+    foreach ($game->getGameResults() as $result) {
+        $this->entityManager->remove($result);
+    }
 
-        // Create GameResults array to track who gets what
-        $gameResults = [];
+    // Create GameResults array to track who gets what
+    $gameResults = [];
 
-        foreach ($results as $position => $participantData) {
-            if ($participantData['type'] === 'team') {
-                // Handle team results - distribute points to all team members
-                foreach ($participantData['players'] as $playerData) {
-                    $player = $this->playerRepository->find($playerData['id']);
-                    if ($player) {
-                        $result = new GameResult();
-                        $result->setGame($game);
-                        $result->setPlayer($player);
-                        $result->setPosition($position);
-                        
-                        $points = $pointsDistribution[$position - 1] ?? 0;
-                        $result->setPoints($points);
-
-                        $gameResults[$player->getId()] = $result;
-                        $this->entityManager->persist($result);
-                    }
-                }
-            } else {
-                // Handle single player results
-                $player = $this->playerRepository->find($participantData['id']);
+    foreach ($results as $position => $participantData) {
+        if ($participantData['type'] === 'team') {
+            // Handle team results - distribute points to all team members
+            foreach ($participantData['players'] as $playerData) {
+                $player = $this->playerRepository->find($playerData['id']);
                 if ($player) {
                     $result = new GameResult();
                     $result->setGame($game);
                     $result->setPlayer($player);
                     $result->setPosition($position);
                     
+                    // CHANGED: Use dynamic points distribution
                     $points = $pointsDistribution[$position - 1] ?? 0;
                     $result->setPoints($points);
 
@@ -735,7 +736,24 @@ class GameController extends AbstractController
                     $this->entityManager->persist($result);
                 }
             }
+        } else {
+            // Handle single player results
+            $player = $this->playerRepository->find($participantData['id']);
+            if ($player) {
+                $result = new GameResult();
+                $result->setGame($game);
+                $result->setPlayer($player);
+                $result->setPosition($position);
+                
+                // CHANGED: Use dynamic points distribution
+                $points = $pointsDistribution[$position - 1] ?? 0;
+                $result->setPoints($points);
+
+                $gameResults[$player->getId()] = $result;
+                $this->entityManager->persist($result);
+            }
         }
+    }
 
         // Flush - save GameResults in DB
         $this->entityManager->flush();

@@ -298,32 +298,58 @@ class Tournament
         return null;
     }
 
-    public function getTournamentResults(): array
-    {
-        $results = [];
-        
-        // Get final match winner (1st place)
-        $finalRound = end($this->bracketData['rounds']);
-        if ($finalRound && count($finalRound) === 1) {
-            $finalMatch = $finalRound[0];
-            if ($finalMatch['completed']) {
-                $results[1] = $finalMatch['winner'];
-                // Get runner-up (2nd place)
-                $results[2] = $finalMatch['participant1']['id'] === $finalMatch['winner']['id'] 
-                    ? $finalMatch['participant2'] 
-                    : $finalMatch['participant1'];
-            }
+public function getTournamentResults(): array
+{
+    $results = [];
+    
+    // Hole alle ursprünglichen Teilnehmer
+    $allParticipants = $this->bracketData['participants'] ?? [];
+    
+    // Sammle alle Gewinner und Verlierer pro Runde
+    $roundResults = [];
+    
+    // 1. Finale (Platz 1 und 2)
+    $finalRound = end($this->bracketData['rounds']);
+    if ($finalRound && count($finalRound) === 1) {
+        $finalMatch = $finalRound[0];
+        if ($finalMatch['completed']) {
+            $winner = $finalMatch['winner'];
+            $loser = $finalMatch['participant1']['id'] === $winner['id'] 
+                ? $finalMatch['participant2'] 
+                : $finalMatch['participant1'];
+            
+            $results[1] = $winner;
+            $results[2] = $loser;
         }
-        
-        // Get third place match winner (3rd place) and loser (4th place)
-        if (isset($this->bracketData['thirdPlaceMatch']) && $this->bracketData['thirdPlaceMatch']['completed']) {
-            $thirdPlaceMatch = $this->bracketData['thirdPlaceMatch'];
-            $results[3] = $thirdPlaceMatch['winner'];
-            $results[4] = $thirdPlaceMatch['participant1']['id'] === $thirdPlaceMatch['winner']['id'] 
-                ? $thirdPlaceMatch['participant2'] 
-                : $thirdPlaceMatch['participant1'];
-        }
-        
-        return $results;
     }
+    
+    // 2. Spiel um Platz 3 (Platz 3 und 4)
+    if (isset($this->bracketData['thirdPlaceMatch']) && $this->bracketData['thirdPlaceMatch']['completed']) {
+        $thirdPlaceMatch = $this->bracketData['thirdPlaceMatch'];
+        $winner = $thirdPlaceMatch['winner'];
+        $loser = $thirdPlaceMatch['participant1']['id'] === $winner['id'] 
+            ? $thirdPlaceMatch['participant2'] 
+            : $thirdPlaceMatch['participant1'];
+        
+        $results[3] = $winner;
+        $results[4] = $loser;
+    }
+    
+    // 3. Alle anderen Spieler (die in früheren Runden rausgeflogen sind)
+    $placedPlayerIds = [];
+    foreach ($results as $participant) {
+        $placedPlayerIds[] = $participant['id'];
+    }
+    
+    // Finde Spieler die noch nicht platziert sind
+    $currentPosition = 5;
+    foreach ($allParticipants as $participant) {
+        if (!in_array($participant['id'], $placedPlayerIds)) {
+            $results[$currentPosition] = $participant;
+            $currentPosition++;
+        }
+    }
+    
+    return $results;
+}
 }
