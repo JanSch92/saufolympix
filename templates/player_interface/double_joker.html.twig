@@ -304,7 +304,7 @@
                 
                 <!-- Scrollable Games List -->
                 <div class="scrollable-content">
-                    <div class="space-y-3" style="margin-bottom: 50px;">
+                    <div class="space-y-3" style="margin-bottom: 100px;">
                         {% for gameData in available_games_with_status %}
                             {% if gameData.game.gameType != 'split_or_steal' %}
                                 <label class="game-option block p-4 {% if gameData.has_double_joker %}disabled{% endif %}" 
