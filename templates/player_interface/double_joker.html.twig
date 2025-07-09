@@ -39,31 +39,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
-        .btn-submit {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
-        }
-        
-        .btn-submit:disabled {
-            background: rgba(71, 85, 105, 0.6);
-            color: #94a3b8;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
         .game-type-icon {
             width: 3rem;
             height: 3rem;
@@ -117,7 +92,7 @@
             overflow-y: auto;
             padding: 1rem;
             padding-top: 0;
-            padding-bottom: 10rem; /* VIEL PLATZ FÜR MOBILE NAVIGATION */
+            padding-bottom: 6rem; /* Platz für Mobile Navigation */
             -webkit-overflow-scrolling: touch;
         }
         
@@ -138,17 +113,6 @@
             background: rgba(71, 85, 105, 0.8);
         }
         
-        .submit-section {
-            flex-shrink: 0;
-            padding: 1rem;
-            padding-bottom: 8rem; /* VIEL PLATZ FÜR MOBILE NAVIGATION */
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(71, 85, 105, 0.3);
-            position: relative;
-            z-index: 10;
-        }
-        
         .mobile-nav {
             position: fixed;
             bottom: 0;
@@ -163,6 +127,7 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
+            gap: 1rem;
         }
         
         .mobile-nav a {
@@ -172,12 +137,50 @@
             justify-content: center;
             color: #94a3b8;
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             padding: 0.5rem;
+            border-radius: 0.5rem;
+            min-width: 60px;
         }
         
         .mobile-nav a.active {
             color: #10b981;
+        }
+        
+        .mobile-nav a:hover {
+            background: rgba(71, 85, 105, 0.2);
+        }
+        
+        .mobile-nav .nav-apply {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white !important;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            min-width: auto;
+        }
+        
+        .mobile-nav .nav-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+            background: linear-gradient(135deg, #f5576c 0%, #e11d48 100%);
+        }
+        
+        .mobile-nav .nav-apply:disabled {
+            background: rgba(71, 85, 105, 0.6);
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .mobile-nav .nav-apply:disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgba(71, 85, 105, 0.6);
         }
         
         /* RESPONSIVE */
@@ -190,12 +193,7 @@
             .scrollable-content {
                 padding: 0.75rem;
                 padding-top: 0;
-                padding-bottom: 9rem;
-            }
-            
-            .submit-section {
-                padding: 0.75rem;
-                padding-bottom: 7rem;
+                padding-bottom: 5rem;
             }
             
             .game-option {
@@ -206,6 +204,15 @@
                 width: 2.5rem;
                 height: 2.5rem;
                 font-size: 1.25rem;
+            }
+            
+            .mobile-nav {
+                gap: 0.5rem;
+            }
+            
+            .mobile-nav .nav-apply {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
             }
         }
         
@@ -218,26 +225,23 @@
             .scrollable-content {
                 padding: 0.5rem;
                 padding-top: 0;
-                padding-bottom: 8rem;
-            }
-            
-            .submit-section {
-                padding: 0.5rem;
-                padding-bottom: 6rem;
+                padding-bottom: 4.5rem;
             }
             
             .mobile-nav {
                 height: 4.5rem;
+                gap: 0.25rem;
+            }
+            
+            .mobile-nav .nav-apply {
+                padding: 0.5rem;
+                font-size: 0.8rem;
             }
         }
         
         @media (max-width: 360px) {
             .scrollable-content {
-                padding-bottom: 9rem;
-            }
-            
-            .submit-section {
-                padding-bottom: 7rem;
+                padding-bottom: 4.5rem;
             }
             
             .mobile-nav {
@@ -346,27 +350,25 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Submit Section -->
-            <div class="submit-section">
-                <button type="submit" 
-                        class="btn-submit" 
-                        id="submitBtn"
-                        disabled>
-                    🔥 Doppelte Punkte Joker vormerken
-                </button>
-            </div>
         </form>
     {% endif %}
 
     <!-- Mobile Navigation -->
     <div class="mobile-nav">
-        <a href="{{ path('app_player_dashboard', {olympixId: olympix.id, playerId: player.id}) }}" class="group active">
+        <a href="{{ path('app_player_dashboard', {olympixId: olympix.id, playerId: player.id}) }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
             </svg>
             <span class="text-xs">Dashboard</span>
         </a>
+        
+        <button type="button" 
+                class="nav-apply" 
+                id="navApplyBtn"
+                disabled
+                onclick="submitForm()">
+            <span class="text-xs">🔥 Anwenden</span>
+        </button>
     </div>
 </div>
 
@@ -392,34 +394,21 @@
         });
         radio.closest('.game-option').classList.add('selected');
         
-        updateSubmitButton();
+        updateNavButton();
     }
     
-    function updateSubmitButton() {
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (selectedGameId) {
-            submitBtn.disabled = false;
-            const game = gameData[selectedGameId];
-            submitBtn.textContent = `🔥 Doppelte Punkte Joker für "${game.name}" vormerken`;
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.textContent = '🔥 Doppelte Punkte Joker vormerken';
-        }
+    function updateNavButton() {
+        const navBtn = document.getElementById('navApplyBtn');
+        navBtn.disabled = !selectedGameId;
     }
     
-    document.getElementById('doubleForm').addEventListener('submit', function(e) {
+    function submitForm() {
         if (!selectedGameId) {
-            e.preventDefault();
             return;
         }
         
-        const game = gameData[selectedGameId];
-        const confirmMessage = `Doppelte Punkte Joker für "${game.name}" vormerken?`;
-        
-        if (!confirm(confirmMessage)) {
-            e.preventDefault();
-        }
-    });
+        // Einfach das Form direkt submitten
+        document.getElementById('doubleForm').submit();
+    }
 </script>
 {% endblock %}
