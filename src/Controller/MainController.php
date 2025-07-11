@@ -211,7 +211,57 @@ class MainController extends AbstractController
                 'name' => $displayGame->getName(),
                 'type' => $displayGame->getGameType(),
                 'status' => $displayGame->getStatus(),
+                'is_gamechanger_game' => $displayGame->isGamechangerGame(),
             ];
+
+            // *** NEU: GAMECHANGER-DATEN HINZUFÜGEN ***
+            if ($displayGame->isGamechangerGame()) {
+                $gamechangerThrowRepository = $this->entityManager->getRepository(\App\Entity\GamechangerThrow::class);
+                
+                // Lade Gamechanger-Daten
+                $throws = $gamechangerThrowRepository->findByGameOrderedByPlayerOrder($displayGame->getId());
+                $stats = $gamechangerThrowRepository->getGamechangerStatistics($displayGame->getId());
+                $isGameComplete = $gamechangerThrowRepository->isGameComplete($displayGame->getId());
+                
+                // Finde nächsten Spieler (basierend auf GamechangerController Logik)
+                $nextPlayer = null;
+                $allThrows = $gamechangerThrowRepository->findByGameOrderedByPlayerOrder($displayGame->getId());
+                foreach ($allThrows as $throw) {
+                    if ($throw->getThrownPoints() == 0) {
+                        $nextPlayer = [
+                            'id' => $throw->getPlayer()->getId(),
+                            'name' => $throw->getPlayer()->getName()
+                        ];
+                        break;
+                    }
+                }
+                
+                // Konvertiere Würfe für JSON
+                $throwsData = [];
+                foreach ($throws as $throw) {
+                    if ($throw->getThrownPoints() > 0) { // Nur echte Würfe
+                        $throwsData[] = [
+                            'player' => [
+                                'id' => $throw->getPlayer()->getId(),
+                                'name' => $throw->getPlayer()->getName()
+                            ],
+                            'thrown_points' => $throw->getThrownPoints(),
+                            'points_scored' => $throw->getPointsScored(),
+                            'scoring_reason' => $throw->getScoringReason(),
+                            'thrown_at' => $throw->getThrownAt()->format('H:i:s'),
+                            'player_order' => $throw->getPlayerOrder()
+                        ];
+                    }
+                }
+                
+                $gameData['gamechanger'] = [
+                    'throws' => $throwsData,
+                    'stats' => $stats,
+                    'next_player' => $nextPlayer,
+                    'is_game_complete' => $isGameComplete,
+                    'throws_count' => count($throwsData)
+                ];
+            }
 
             // Add tournament bracket data if it's a tournament game
             if ($displayGame->isTournamentGame() && $displayGame->getTournament()) {

@@ -53,6 +53,7 @@
                     <option value="tournament_single">Turnier (Einzel)</option>
                     <option value="quiz">Quiz</option>
                     <option value="split_or_steal">Split or Steal</option>
+                    <option value="gamechanger">Gamechanger</option> <!-- *** NEU HINZUGEFÜGT *** -->
                 </select>
             </div>
             
@@ -85,254 +86,266 @@
                 </div>
             </div>
             
-            <!-- Game Type Explanations -->
+            <!-- Game Type Help -->
             <div class="mb-6">
-                <div id="gameTypeExplanation" class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
-                    <h4 class="font-semibold mb-2">Spieltyp-Erklärung:</h4>
-                    <div id="freeForAllExplanation" class="hidden">
-                        <p><strong>Free For All:</strong> Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz). Standardpunkte: 8,7,6,5,4,3,2,1 (bei 8 Spielern).</p>
-                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Bier Pong Turnier, alle spielen gleichzeitig an verschiedenen Tischen</p>
+                <div class="bg-gray-50 rounded-lg p-4 text-sm">
+                    
+                    <!-- Free For All -->
+                    <div id="help-free_for_all" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Free For All</h4>
+                        <p class="text-gray-600 mb-2">
+                            Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz).
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> Bier Pong Turnier, alle spielen gleichzeitig an verschiedenen Tischen
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> 8,7,6,5,4,3,2,1 (bei 8 Spielern)
+                        </p>
                     </div>
-                    <div id="tournamentTeamExplanation" class="hidden">
-                        <p><strong>Turnier (Team):</strong> Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos. Standardpunkte: 8,6,4,2 (1.-4. Platz).</p>
-                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Flunky Ball Teams, KO-System</p>
+                    
+                    <!-- Tournament Team -->
+                    <div id="help-tournament_team" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Turnier (Team)</h4>
+                        <p class="text-gray-600 mb-2">
+                            Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. 
+                            Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos.
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> Flunky Ball Teams, KO-System
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> 8,6,4,2 (1.-4. Platz)
+                        </p>
                     </div>
-                    <div id="tournamentSingleExplanation" class="hidden">
-                        <p><strong>Turnier (Einzel):</strong> Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos. Standardpunkte: 8,6,4,2 (1.-4. Platz).</p>
-                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> 1vs1 Dart Turnier, KO-System</p>
+                    
+                    <!-- Tournament Single -->
+                    <div id="help-tournament_single" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Turnier (Einzel)</h4>
+                        <p class="text-gray-600 mb-2">
+                            Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. 
+                            Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos.
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> 1vs1 Dart Turnier, KO-System
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> 8,6,4,2 (1.-4. Platz)
+                        </p>
                     </div>
-                    <div id="quizExplanation" class="hidden">
-                        <p><strong>Quiz:</strong> Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobil ihre Antworten eingeben können. Standardpunkte: Nach Platzierung der Schätzungen.</p>
-                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> "Wie viele Gummibärchen sind im Glas?"</p>
+                    
+                    <!-- Quiz -->
+                    <div id="help-quiz" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Quiz</h4>
+                        <p class="text-gray-600 mb-2">
+                            Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobil ihre Antworten eingeben können.
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> "Wie viele Gummibärchen sind im Glas?"
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> Nach Platzierung der Schätzungen
+                        </p>
                     </div>
-                    <div id="splitOrStealExplanation" class="hidden">
-                        <p><strong>Split or Steal:</strong> Zwei Spieler treten gegeneinander an. Jeder wählt heimlich Split oder Steal. Beide Split = Punkte geteilt, einer Split + einer Steal = Stealer bekommt alles, beide Steal = keiner bekommt Punkte. Standardpunkte: 50 pro Match.</p>
-                        <p class="mt-2 text-blue-600"><strong>Beispiel:</strong> Psychologie-Spiel wie in der TV-Show "Golden Balls"</p>
-                        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
-                            <div class="bg-green-100 p-2 rounded text-xs">
-                                <strong>🤝 Beide Split:</strong><br>
-                                Jeder bekommt 50%
-                            </div>
-                            <div class="bg-red-100 p-2 rounded text-xs">
-                                <strong>💰 Einer Steal:</strong><br>
-                                Stealer bekommt 100%
-                            </div>
-                            <div class="bg-gray-100 p-2 rounded text-xs">
-                                <strong>🚫 Beide Steal:</strong><br>
-                                Keiner bekommt etwas
-                            </div>
-                        </div>
+                    
+                    <!-- Split or Steal -->
+                    <div id="help-split_or_steal" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Split or Steal</h4>
+                        <p class="text-gray-600 mb-2">
+                            Zwei Spieler treten gegeneinander an. Jeder wählt heimlich Split oder Steal. 
+                            Beide Split = Punkte geteilt, einer Split + einer Steal = Stealer bekommt alles, beide Steal = keiner bekommt Punkte.
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> Psychologisches Spiel um 50 Punkte
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> 50 Punkte pro Match
+                        </p>
+                    </div>
+
+                    <!-- *** NEU: GAMECHANGER HELP *** -->
+                    <div id="help-gamechanger" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">Gamechanger</h4>
+                        <p class="text-gray-600 mb-2">
+                            Jeder Spieler wirft genau einmal in zufälliger Reihenfolge. Triffst du deine aktuellen Gesamtpunkte, bekommst du +8 Punkte. 
+                            Triffst du die Punkte eines anderen Spielers, bekommt er -4 Punkte.
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> Du hast 45 Punkte und wirfst 45 → +8 Punkte für dich. Wirfst du 30 und ein anderer hat 30 → -4 Punkte für ihn.
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Besonderheit:</strong> Schnelles Spiel (10-20 Min), jeder wirft nur einmal, strategisches Element durch aktuelle Punktestände.
+                        </p>
+                    </div>
+                    
+                    <!-- Default -->
+                    <div id="help-default" class="game-type-help">
+                        <p class="text-gray-500 text-center">Wähle einen Spieltyp aus, um Details zu sehen</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Player Requirements -->
-            <div class="mb-6">
-                <div id="playerRequirements" class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                    <h4 class="font-semibold text-blue-800 mb-2">Spieler-Anforderungen:</h4>
-                    <div id="playerRequirementsText" class="text-blue-700">
-                        Wähle einen Spieltyp aus, um die Anforderungen zu sehen.
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Estimated Duration -->
-            <div class="mb-6">
-                <div id="estimatedDuration" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
-                    <h4 class="font-semibold text-yellow-800 mb-2">⏱️ Geschätzte Dauer:</h4>
-                    <div id="estimatedDurationText" class="text-yellow-700">
-                        Wähle einen Spieltyp aus, um die Dauer zu sehen.
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-4">
-                <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
-                   class="btn-secondary">
-                    Abbrechen
-                </a>
+            <!-- Submit Button -->
+            <div class="flex justify-end">
                 <button type="submit" class="btn-primary">
                     Spiel erstellen
                 </button>
             </div>
         </form>
     </div>
+
+    <!-- Player Info -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-800 mb-3">📊 Aktuelle Spieler ({{ olympix.players|length }})</h3>
+        
+        {% if olympix.players|length > 0 %}
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                {% for player in olympix.players %}
+                    <div class="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div class="font-medium text-gray-800">{{ player.name }}</div>
+                        <div class="text-sm text-blue-600">{{ player.totalPoints }} Punkte</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-blue-600 mb-4">Noch keine Spieler hinzugefügt.</p>
+        {% endif %}
+        
+        <div class="text-sm text-blue-600">
+            <p><strong>Mindestanforderungen:</strong></p>
+            <ul class="list-disc list-inside mt-2 space-y-1">
+                <li>Free For All: mind. 2 Spieler</li>
+                <li>Turnier (Einzel): mind. 2 Spieler</li>
+                <li>Turnier (Team): mind. 4 Spieler</li>
+                <li>Quiz: mind. 1 Spieler</li>
+                <li>Split or Steal: mind. 2 Spieler</li>
+                <li>Gamechanger: mind. 2 Spieler</li> <!-- *** NEU HINZUGEFÜGT *** -->
+            </ul>
+        </div>
+        
+        {% if olympix.players|length < 2 %}
+            <div class="mt-4">
+                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                   class="btn-primary">
+                    ➕ Spieler hinzufügen
+                </a>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 <script>
-function updateGameTypeOptions() {
-    const gameType = document.getElementById('game_type').value;
-    const teamSizeContainer = document.getElementById('teamSizeContainer');
-    
-    // Hide all explanations
-    document.querySelectorAll('[id$="Explanation"]').forEach(el => {
-        el.classList.add('hidden');
-    });
-    
-    // Show team size for team tournaments
-    if (gameType === 'tournament_team') {
-        teamSizeContainer.classList.remove('hidden');
-    } else {
-        teamSizeContainer.classList.add('hidden');
-    }
-    
-    // Show relevant explanation
-    if (gameType) {
-        const explanationMap = {
-            'free_for_all': 'freeForAllExplanation',
-            'tournament_team': 'tournamentTeamExplanation',
-            'tournament_single': 'tournamentSingleExplanation',
-            'quiz': 'quizExplanation',
-            'split_or_steal': 'splitOrStealExplanation'
-        };
-        
-        const explanationId = explanationMap[gameType];
-        if (explanationId) {
-            document.getElementById(explanationId).classList.remove('hidden');
-        }
-        
-        // Update player requirements
-        updatePlayerRequirements(gameType);
-        
-        // Update estimated duration
-        updateEstimatedDuration(gameType);
-    }
-}
-
-function updatePlayerRequirements(gameType) {
-    const requirementsText = document.getElementById('playerRequirementsText');
-    const currentPlayers = {{ olympix.players|length }};
-    
-    const requirements = {
-        'free_for_all': {
-            min: 2,
-            max: null,
-            text: 'Mindestens 2 Spieler erforderlich. Alle Spieler nehmen gleichzeitig teil.'
-        },
-        'tournament_team': {
-            min: 4,
-            max: 16,
-            text: 'Mindestens 4 Spieler (2 Teams) erforderlich. Maximum 16 Spieler.'
-        },
-        'tournament_single': {
-            min: 2,
-            max: 16,
-            text: 'Mindestens 2 Spieler erforderlich. Maximum 16 Spieler.'
-        },
-        'quiz': {
-            min: 1,
-            max: null,
-            text: 'Mindestens 1 Spieler erforderlich. Alle können teilnehmen.'
-        },
-        'split_or_steal': {
-            min: 2,
-            max: null,
-            text: 'Mindestens 2 Spieler erforderlich. Werden in 2er-Paare aufgeteilt.'
-        }
-    };
-    
-    const req = requirements[gameType];
-    if (req) {
-        let text = req.text;
-        let color = 'blue';
-        
-        if (currentPlayers < req.min) {
-            text += ` <strong class="text-red-600">⚠️ Aktuell nur ${currentPlayers} Spieler - ${req.min} erforderlich!</strong>`;
-            color = 'red';
-        } else if (req.max && currentPlayers > req.max) {
-            text += ` <strong class="text-yellow-600">⚠️ Aktuell ${currentPlayers} Spieler - Maximum ${req.max}!</strong>`;
-            color = 'yellow';
-        } else {
-            text += ` <strong class="text-green-600">✅ Aktuell ${currentPlayers} Spieler - Passt perfekt!</strong>`;
-            color = 'green';
-        }
-        
-        requirementsText.innerHTML = text;
-        
-        // Update container color
-        const container = document.getElementById('playerRequirements');
-        container.className = `bg-${color}-50 border border-${color}-200 rounded-lg p-4 text-sm`;
-    }
-}
-
-function updateEstimatedDuration(gameType) {
-    const durationText = document.getElementById('estimatedDurationText');
-    
-    const durations = {
-        'free_for_all': '⏱️ 15-30 Minuten (je nach Spielart)',
-        'tournament_team': '⏱️ 30-60 Minuten (abhängig von Teilnehmerzahl)',
-        'tournament_single': '⏱️ 20-45 Minuten (abhängig von Teilnehmerzahl)',
-        'quiz': '⏱️ 10-20 Minuten (je nach Anzahl Fragen)',
-        'split_or_steal': '⏱️ 5-15 Minuten (sehr schnell)'
-    };
-    
-    durationText.textContent = durations[gameType] || 'Wähle einen Spieltyp aus, um die Dauer zu sehen.';
-}
-
-// Initialize form
-document.addEventListener('DOMContentLoaded', function() {
-    updateGameTypeOptions();
-    
-    // Form validation
-    const form = document.getElementById('gameForm');
-    form.addEventListener('submit', function(e) {
+    function updateGameTypeOptions() {
         const gameType = document.getElementById('game_type').value;
-        const gameName = document.getElementById('name').value.trim();
-        const currentPlayers = {{ olympix.players|length }};
+        const teamSizeContainer = document.getElementById('teamSizeContainer');
+        const pointsDistribution = document.getElementById('points_distribution');
         
-        if (!gameName) {
-            e.preventDefault();
-            alert('Bitte gib einen Spielnamen ein');
-            return;
+        // Hide all help texts
+        document.querySelectorAll('.game-type-help').forEach(help => {
+            help.classList.add('hidden');
+        });
+        
+        // Show selected help text
+        const helpElement = document.getElementById('help-' + gameType) || document.getElementById('help-default');
+        helpElement.classList.remove('hidden');
+        
+        // Show/hide team size for team tournaments
+        if (gameType === 'tournament_team') {
+            teamSizeContainer.classList.remove('hidden');
+        } else {
+            teamSizeContainer.classList.add('hidden');
         }
         
-        if (!gameType) {
-            e.preventDefault();
-            alert('Bitte wähle einen Spieltyp aus');
-            return;
+        // Update points distribution placeholder and visibility
+        if (gameType === 'quiz' || gameType === 'split_or_steal' || gameType === 'gamechanger') { // *** ERWEITERT UM GAMECHANGER ***
+            pointsDistribution.style.display = 'none';
+            pointsDistribution.previousElementSibling.style.display = 'none'; // Hide label
+        } else {
+            pointsDistribution.style.display = 'block';
+            pointsDistribution.previousElementSibling.style.display = 'block'; // Show label
+            
+            if (gameType === 'tournament_team' || gameType === 'tournament_single') {
+                pointsDistribution.placeholder = 'z.B. 8,6,4,2 (1.-4. Platz)';
+            } else {
+                pointsDistribution.placeholder = 'z.B. 8,7,6,5,4,3,2,1 (von 1. bis letzter Platz)';
+            }
         }
+    }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        updateGameTypeOptions();
         
-        // Check player requirements
-        const requirements = {
-            'free_for_all': { min: 2 },
-            'tournament_team': { min: 4, max: 16 },
-            'tournament_single': { min: 2, max: 16 },
-            'quiz': { min: 1 },
-            'split_or_steal': { min: 2 }
-        };
-        
-        const req = requirements[gameType];
-        if (req) {
-            if (currentPlayers < req.min) {
+        // Form validation
+        const form = document.getElementById('gameForm');
+        form.addEventListener('submit', function(e) {
+            const gameType = document.getElementById('game_type').value;
+            const gameName = document.getElementById('name').value.trim();
+            const currentPlayers = {{ olympix.players|length }};
+            
+            if (!gameName) {
                 e.preventDefault();
-                alert(`Für ${gameType} sind mindestens ${req.min} Spieler erforderlich. Aktuell sind nur ${currentPlayers} Spieler vorhanden.`);
+                alert('Bitte gib einen Spielnamen ein');
                 return;
             }
             
-            if (req.max && currentPlayers > req.max) {
-                const proceed = confirm(`Für ${gameType} sind maximal ${req.max} Spieler empfohlen. Aktuell sind ${currentPlayers} Spieler vorhanden. Trotzdem fortfahren?`);
+            if (!gameType) {
+                e.preventDefault();
+                alert('Bitte wähle einen Spieltyp aus');
+                return;
+            }
+            
+            // Check player requirements - *** ERWEITERT UM GAMECHANGER ***
+            const requirements = {
+                'free_for_all': { min: 2 },
+                'tournament_team': { min: 4, max: 16 },
+                'tournament_single': { min: 2, max: 16 },
+                'quiz': { min: 1 },
+                'split_or_steal': { min: 2 },
+                'gamechanger': { min: 2 } // *** NEU HINZUGEFÜGT ***
+            };
+            
+            const req = requirements[gameType];
+            if (req) {
+                if (currentPlayers < req.min) {
+                    e.preventDefault();
+                    alert(`Für ${gameType} sind mindestens ${req.min} Spieler erforderlich. Aktuell sind nur ${currentPlayers} Spieler vorhanden.`);
+                    return;
+                }
+                
+                if (req.max && currentPlayers > req.max) {
+                    const proceed = confirm(`Für ${gameType} sind maximal ${req.max} Spieler empfohlen. Aktuell sind ${currentPlayers} Spieler vorhanden. Trotzdem fortfahren?`);
+                    if (!proceed) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+            
+            // Special warning for Split or Steal with odd number
+            if (gameType === 'split_or_steal' && currentPlayers % 2 !== 0) {
+                const proceed = confirm(`Bei ${currentPlayers} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`);
                 if (!proceed) {
                     e.preventDefault();
                     return;
                 }
             }
-        }
-        
-        // Special warning for Split or Steal with odd number
-        if (gameType === 'split_or_steal' && currentPlayers % 2 !== 0) {
-            const proceed = confirm(`Bei ${currentPlayers} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`);
+            
+            // Special info for Gamechanger - *** NEU HINZUGEFÜGT ***
+            if (gameType === 'gamechanger') {
+                const proceed = confirm(`Gamechanger-Spiel "${gameName}" mit ${currentPlayers} Spielern erstellen?\n\nJeder Spieler wirft genau einmal in zufälliger Reihenfolge. Spieldauer: ca. 10-20 Minuten.`);
+                if (!proceed) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            // Submit confirmation
+            const proceed = confirm(`Spiel "${gameName}" vom Typ "${gameType}" erstellen?`);
             if (!proceed) {
                 e.preventDefault();
-                return;
             }
-        }
-        
-        // Submit confirmation
-        const proceed = confirm(`Spiel "${gameName}" vom Typ "${gameType}" erstellen?`);
-        if (!proceed) {
-            e.preventDefault();
-        }
+        });
     });
-});
 </script>
 {% endblock %}

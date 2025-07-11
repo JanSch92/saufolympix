@@ -155,6 +155,82 @@
           min-height: 200px !important;
           overflow-y: auto !important;
         }
+
+        /* GAMECHANGER SPEZIFISCHE HÖHEN */
+        #gamechanger-live-ranking {
+          height: calc(100vh - 200px) !important;
+          overflow-y: auto !important;
+        }
+        
+        #gamechanger-throws {
+          height: calc(100vh - 300px) !important;
+          overflow-y: auto !important;
+        }
+
+        /* RANKING ANIMATIONEN */
+        .ranking-item {
+          transition: all 0.3s ease;
+        }
+        
+        .ranking-item.position-up {
+          animation: slideUp 0.6s ease-out;
+        }
+        
+        .ranking-item.position-down {
+          animation: slideDown 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+          0% {
+            transform: translateY(20px);
+            background-color: rgba(16, 185, 129, 0.2);
+          }
+          100% {
+            transform: translateY(0);
+            background-color: transparent;
+          }
+        }
+        
+        @keyframes slideDown {
+          0% {
+            transform: translateY(-20px);
+            background-color: rgba(239, 68, 68, 0.2);
+          }
+          100% {
+            transform: translateY(0);
+            background-color: transparent;
+          }
+        }
+        
+        /* POSITION CHANGE INDICATORS */
+        .position-indicator {
+          position: absolute;
+          top: 50%;
+          right: -12px;
+          transform: translateY(-50%);
+          font-size: 0.75rem;
+          font-weight: bold;
+          padding: 2px 6px;
+          border-radius: 4px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .position-indicator.show {
+          opacity: 1;
+        }
+        
+        .position-indicator.up {
+          background: rgba(16, 185, 129, 0.2);
+          color: #10b981;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .position-indicator.down {
+          background: rgba(239, 68, 68, 0.2);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+        }
     </style>
 {% endblock %}
 
@@ -162,16 +238,15 @@
 <div class="w-screen h-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden">
 
   <!-- PROFESSIONAL HEADER -->
-  <header class="flex-none h-20 flex items-center justify-between px-8 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
+  <header class="flex-none h-16 flex items-center justify-between px-8 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
     <div class="flex items-center space-x-4">
-      <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
         </svg>
       </div>
       <div>
-        <h1 class="text-2xl font-bold gradient-text">{{ olympix.name }}</h1>
-        <p class="text-sm text-slate-400">Live Wettkampf Dashboard</p>
+        <p class="text-sm text-slate-400">Live Dashboard</p>
       </div>
     </div>
     
@@ -263,7 +338,7 @@
     <section class="col-span-12 lg:col-span-6 tournament-center-content flex flex-col space-y-6 overflow-hidden">
       
       <!-- CURRENT GAME CARD -->
-      <div class="professional-card p-6 flex flex-col space-y-4 hover-lift">
+      <div id="current-game-card" class="professional-card p-6 flex flex-col space-y-4 hover-lift">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
             <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
@@ -327,6 +402,150 @@
         <h3 class="text-2xl font-bold gradient-text mb-6 text-center">Turnier-Ergebnisse</h3>
         <div class="overflow-auto custom-scrollbar" id="tournament-results">
           <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- GAMECHANGER LIVE VIEW - VOLLSTÄNDIG ÜBERARBEITET -->
+      <div id="gamechanger-container" class="hidden flex-1 professional-card p-6 overflow-hidden">
+        <div class="flex items-center justify-center mb-6">
+          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold gradient-text" id="gamechanger-title">Gamechanger</h3>
+        </div>
+        
+        <!-- OPTIMALES GAMECHANGER LAYOUT: 3 SPALTEN -->
+        <div class="h-full flex space-x-4 overflow-hidden">
+          
+          <!-- LINKS: LIVE RANGLISTE -->
+          <div class="w-72 flex-shrink-0">
+            <div class="professional-card h-full flex flex-col overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-700/50 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-lg font-semibold text-slate-100 flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <span>Live Rangliste</span>
+                  </h4>
+                  <div class="flex items-center space-x-2">
+                    <div class="status-dot active"></div>
+                    <span class="text-sm font-medium text-emerald-400" id="gamechanger-player-count">0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1" id="gamechanger-live-ranking">
+                <!-- Populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- MITTE: SPIELER INFO + STATISTIKEN + REGELN -->
+          <div class="w-80 flex-shrink-0 flex flex-col space-y-3">
+            
+            <!-- AKTUELLER SPIELER -->
+            <div class="professional-card p-3">
+              <h4 class="text-sm font-semibold mb-2 text-slate-200 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Am Zug</span>
+              </h4>
+              <div class="text-center">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <div class="font-bold text-lg text-slate-100" id="current-player-name">Wartend...</div>
+                <div class="text-sm text-slate-400" id="current-player-points">Lade Daten...</div>
+              </div>
+            </div>
+            
+            <!-- STATISTIKEN -->
+            <div class="professional-card p-3">
+              <h4 class="text-sm font-semibold mb-2 text-slate-200 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span>Statistiken</span>
+              </h4>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="text-center p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                  <div class="text-xl font-bold text-emerald-400" id="stat-bonus-hits">0</div>
+                  <div class="text-xs text-emerald-300">🎯 Eigene</div>
+                </div>
+                <div class="text-center p-2 bg-red-500/10 rounded-lg border border-red-500/30">
+                  <div class="text-xl font-bold text-red-400" id="stat-penalty-hits">0</div>
+                  <div class="text-xs text-red-300">💥 Andere</div>
+                </div>
+                <div class="text-center p-2 bg-blue-500/10 rounded-lg border border-blue-500/30">
+                  <div class="text-xl font-bold text-blue-400" id="stat-normal-throws">0</div>
+                  <div class="text-xs text-blue-300">🎲 Normal</div>
+                </div>
+                <div class="text-center p-2 bg-slate-700/50 rounded-lg border border-slate-600/30">
+                  <div class="text-xl font-bold text-slate-200" id="stat-total-throws">0</div>
+                  <div class="text-xs text-slate-300">📊 Gesamt</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- REGELN -->
+            <div class="professional-card p-3">
+              <h4 class="text-sm font-semibold mb-2 text-slate-200 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Regeln</span>
+              </h4>
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center justify-between p-2 bg-emerald-500/10 rounded border border-emerald-500/20">
+                  <span class="text-emerald-300 flex items-center space-x-1">
+                    <span>🎯</span>
+                    <span>Eigene Punkte treffen</span>
+                  </span>
+                  <span class="text-emerald-400 font-bold">+8</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-red-500/10 rounded border border-red-500/20">
+                  <span class="text-red-300 flex items-center space-x-1">
+                    <span>💥</span>
+                    <span>Andere Spieler treffen</span>
+                  </span>
+                  <span class="text-red-400 font-bold">-4</span>
+                </div>
+                <div class="flex items-center justify-between p-2 bg-blue-500/10 rounded border border-blue-500/20">
+                  <span class="text-blue-300 flex items-center space-x-1">
+                    <span>🎲</span>
+                    <span>Normale Würfe</span>
+                  </span>
+                  <span class="text-slate-400">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- RECHTS: WÜRFE HISTORIE (HOCHFORMAT) -->
+          <div class="flex-1 professional-card p-3 overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-lg font-semibold text-slate-200 flex items-center space-x-2">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <span>Würfe Historie</span>
+              </h4>
+              <div class="flex items-center space-x-2">
+                <div class="status-dot active"></div>
+                <span class="text-sm text-emerald-400">Live</span>
+              </div>
+            </div>
+            
+            <div class="overflow-y-auto custom-scrollbar space-y-2" id="gamechanger-throws">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -405,6 +624,8 @@
 
 <script>
 let refreshInterval;
+let previousPlayersData = null; // Für Positionsänderungen
+let previousGamechangerData = null; // Speichert vorherige Gamechanger-Daten
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Live Display initialized');
@@ -454,12 +675,156 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = html;
   }
 
+  // VERBESSERTE GAMECHANGER RANGLISTE - ANIMATION NUR BEI ÄNDERUNGEN
+  function updateGamechangerPlayerList(players) {
+    const container = document.getElementById('gamechanger-live-ranking');
+    const playerCountElement = document.getElementById('gamechanger-player-count');
+    
+    if (!container || !Array.isArray(players)) return;
+    
+    console.log('Updating Gamechanger player list with', players.length, 'players');
+    
+    // Spielerzahl aktualisieren
+    if (playerCountElement) {
+      playerCountElement.textContent = players.length + ' Spieler';
+    }
+    
+    // Prüfe, ob sich die Rangliste geändert hat
+    let hasChanges = false;
+    let positionChanges = new Map();
+    
+    if (previousGamechangerData && previousGamechangerData.length > 0) {
+      // Vergleiche mit vorherigen Daten
+      const previousHash = previousGamechangerData.map(p => `${p.name || 'Unknown'}-${p.total_points || 0}`).join('|');
+      const currentHash = players.map(p => `${p.name || 'Unknown'}-${p.total_points || 0}`).join('|');
+      
+      if (previousHash !== currentHash) {
+        hasChanges = true;
+        console.log('Gamechanger ranking has changed - calculating position changes');
+        
+        // Erstelle eine Map der vorherigen Positionen
+        const previousPositions = new Map();
+        previousGamechangerData.forEach((player, index) => {
+          const playerId = player.id || player.name || 'Unknown';
+          previousPositions.set(playerId, index + 1);
+        });
+        
+        // Berechne Positionsänderungen
+        players.forEach((player, index) => {
+          const currentPosition = index + 1;
+          const playerId = player.id || player.name || 'Unknown';
+          const previousPosition = previousPositions.get(playerId);
+          
+          if (previousPosition && previousPosition !== currentPosition) {
+            const change = previousPosition - currentPosition; // Positiver Wert = Aufstieg
+            positionChanges.set(playerId, change);
+            console.log(`Player ${player.name} moved from position ${previousPosition} to ${currentPosition} (change: ${change})`);
+          }
+        });
+      }
+    } else {
+      hasChanges = true; // Erste Ladung
+    }
+    
+    // Speichere aktuelle Daten für nächsten Vergleich
+    previousGamechangerData = JSON.parse(JSON.stringify(players));
+    
+    let html = '';
+    players.forEach((player, index) => {
+      const position = index + 1;
+      const playerName = player.name || 'Unbekannt';
+      const totalPoints = player.total_points || 0;
+      const playerId = player.id || player.name || 'Unknown';
+      
+      // Position Badge Styling
+      let positionBadgeClass = 'bg-slate-600';
+      if (position === 1) positionBadgeClass = 'bg-gradient-to-br from-amber-400 to-yellow-500';
+      else if (position === 2) positionBadgeClass = 'bg-gradient-to-br from-slate-300 to-slate-400';
+      else if (position === 3) positionBadgeClass = 'bg-gradient-to-br from-orange-400 to-amber-500';
+      
+      // Positionsänderung nur anzeigen wenn es Änderungen gibt
+      let positionChangeIndicator = '';
+      let animationClass = '';
+      
+      if (hasChanges && positionChanges.has(playerId)) {
+        const change = positionChanges.get(playerId);
+        
+        if (change > 0) {
+          positionChangeIndicator = `
+            <div class="position-indicator up show">
+              <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+              </svg>
+              +${change}
+            </div>
+          `;
+          animationClass = 'position-up';
+        } else if (change < 0) {
+          positionChangeIndicator = `
+            <div class="position-indicator down show">
+              <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
+              </svg>
+              ${change}
+            </div>
+          `;
+          animationClass = 'position-down';
+        }
+      }
+      
+      // Joker Status
+      const doubleJokerClass = player.joker_double_available ? 
+        'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+        'bg-slate-700/50 text-slate-400 border border-slate-600/30';
+      const swapJokerClass = player.joker_swap_available ? 
+        'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 
+        'bg-slate-700/50 text-slate-400 border border-slate-600/30';
+      
+      html += `
+        <div class="ranking-item ${animationClass} relative flex items-center p-2 bg-slate-800/40 hover:bg-slate-800/60 rounded-lg transition-all duration-200 border border-slate-700/30 hover:border-slate-600/50">
+          
+          <!-- Position Badge -->
+          <div class="flex-none w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white ${positionBadgeClass}">
+            ${position}
+          </div>
+          
+          <!-- Spieler Info -->
+          <div class="flex-1 mx-2 min-w-0">
+            <div class="font-medium truncate text-slate-100 text-sm">${playerName}</div>
+            <div class="text-xs text-slate-400">${totalPoints} Punkte</div>
+            
+            <!-- Joker Status (kompakt) -->
+            <div class="flex space-x-1 mt-1">
+              <span class="px-1 py-0.5 rounded text-xs font-medium ${doubleJokerClass}">2×</span>
+              <span class="px-1 py-0.5 rounded text-xs font-medium ${swapJokerClass}">⇄</span>
+            </div>
+          </div>
+          
+          <!-- Positionsänderung -->
+          ${positionChangeIndicator}
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Animationen nach kurzer Verzögerung ausblenden (nur wenn es Änderungen gab)
+    if (hasChanges && positionChanges.size > 0) {
+      setTimeout(() => {
+        const indicators = container.querySelectorAll('.position-indicator');
+        indicators.forEach(indicator => {
+          indicator.classList.remove('show');
+        });
+      }, 3000);
+    }
+  }
+
   // AUTO-SCROLL VARIABLEN
   let gameHistoryScrollInterval;
   let gameHistoryScrollPosition = 0;
   let gameHistoryScrollDirection = 1; // 1 = nach unten, -1 = nach oben
   let gameHistoryPaused = false;
-  let gameHistoryScrollStarted = false; // NEUE VARIABLE!
+  let gameHistoryScrollStarted = false;
 
   function updateGameHistory(games) {
     const container = document.getElementById('game-history');
@@ -512,77 +877,48 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     });
     
-    // NUR HTML AKTUALISIEREN, SCROLL NICHT RESETTEN!
     container.innerHTML = html;
-    
-    // Auto-Scroll NICHT neu starten bei Updates!
-    // Nur beim ersten Laden
   }
 
   function startGameHistoryAutoScroll() {
     const container = document.getElementById('game-history');
-    if (!container) {
-      console.log('Game history container not found');
-      return;
-    }
+    if (!container) return;
     
-    // VERHINDERE MEHRFACHE STARTS
-    if (gameHistoryScrollStarted) {
-      console.log('Auto-scroll already running, skipping restart');
-      return;
-    }
+    if (gameHistoryScrollStarted) return;
     
-    // Existierendes Interval stoppen
-    if (gameHistoryScrollInterval) {
-      clearInterval(gameHistoryScrollInterval);
-    }
-    
-    // FORCIERE DEN SCROLL - EGAL WAS DIE MESSUNG SAGT
-    // Wenn mehr als 5 Kinder da sind, dann MUSS gescrollt werden
     if (container.children.length > 5) {
-      console.log('FORCING scroll - mehr als 5 Kinder gefunden');
+      console.log('Starting game history auto-scroll');
       
-      // Reset position
       gameHistoryScrollPosition = 0;
       gameHistoryScrollDirection = 1;
       container.scrollTop = 0;
-      
-      // MARKIERE ALS GESTARTET
       gameHistoryScrollStarted = true;
       
-      // Auto-Scroll Interval starten
       gameHistoryScrollInterval = setInterval(() => {
         if (gameHistoryPaused) return;
         
         const scrollStep = 0.5;
-        // BERECHNE maxScroll ANDERS
         const maxScroll = Math.max(50, container.scrollHeight - container.clientHeight);
         
         if (gameHistoryScrollDirection === 1) {
-          // Nach unten scrollen
           gameHistoryScrollPosition += scrollStep;
           
-          // Unten angekommen?
           if (gameHistoryScrollPosition >= maxScroll) {
             gameHistoryScrollPosition = maxScroll;
             gameHistoryScrollDirection = -1;
             
-            // Kurze Pause am Ende
             gameHistoryPaused = true;
             setTimeout(() => {
               gameHistoryPaused = false;
             }, 1500);
           }
         } else {
-          // Nach oben scrollen
           gameHistoryScrollPosition -= scrollStep;
           
-          // Oben angekommen?
           if (gameHistoryScrollPosition <= 0) {
             gameHistoryScrollPosition = 0;
             gameHistoryScrollDirection = 1;
             
-            // Kurze Pause am Anfang
             gameHistoryPaused = true;
             setTimeout(() => {
               gameHistoryPaused = false;
@@ -590,90 +926,29 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        // Scroll-Position setzen
         container.scrollTop = gameHistoryScrollPosition;
-        
       }, 50);
-      
-      return;
     }
-    
-    // Normale Logik nur als Fallback
-    const maxScroll = container.scrollHeight - container.clientHeight;
-    
-    if (maxScroll <= 0) {
-      console.log('No scroll needed based on measurements');
-      return;
-    }
-    
-    // Reset position
-    gameHistoryScrollPosition = 0;
-    gameHistoryScrollDirection = 1;
-    container.scrollTop = 0;
-    
-    // MARKIERE ALS GESTARTET
-    gameHistoryScrollStarted = true;
-    
-    // Auto-Scroll Interval starten
-    gameHistoryScrollInterval = setInterval(() => {
-      if (gameHistoryPaused) return;
-      
-      const scrollStep = 0.5;
-      const maxScroll = container.scrollHeight - container.clientHeight;
-      
-      if (gameHistoryScrollDirection === 1) {
-        gameHistoryScrollPosition += scrollStep;
-        
-        if (gameHistoryScrollPosition >= maxScroll) {
-          gameHistoryScrollPosition = maxScroll;
-          gameHistoryScrollDirection = -1;
-          
-          gameHistoryPaused = true;
-          setTimeout(() => {
-            gameHistoryPaused = false;
-          }, 1500);
-        }
-      } else {
-        gameHistoryScrollPosition -= scrollStep;
-        
-        if (gameHistoryScrollPosition <= 0) {
-          gameHistoryScrollPosition = 0;
-          gameHistoryScrollDirection = 1;
-          
-          gameHistoryPaused = true;
-          setTimeout(() => {
-            gameHistoryPaused = false;
-          }, 1500);
-        }
-      }
-      
-      container.scrollTop = gameHistoryScrollPosition;
-      
-    }, 50);
   }
 
   function stopGameHistoryAutoScroll() {
     if (gameHistoryScrollInterval) {
       clearInterval(gameHistoryScrollInterval);
       gameHistoryScrollInterval = null;
-      gameHistoryScrollStarted = false; // RESET STATUS
-      console.log('Auto-scroll stopped');
+      gameHistoryScrollStarted = false;
     }
   }
 
-  // Event Listeners für manuelle Pause beim Hover
   function setupGameHistoryHoverPause() {
     const container = document.getElementById('game-history');
     if (!container) return;
     
     container.addEventListener('mouseenter', () => {
       gameHistoryPaused = true;
-      console.log('Auto-scroll paused (hover)');
     });
     
     container.addEventListener('mouseleave', () => {
       gameHistoryPaused = false;
-      console.log('Auto-scroll resumed (hover end)');
     });
   }
 
@@ -725,9 +1000,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ' (' + result.jokers.map(j => j === 'double' ? '2× Bonus' : 'Tausch').join(', ') + ')' : 
           '';
         
-        const pointsDisplay = result.final_points !== result.points ? 
-          '+' + result.final_points + ' Punkte' : 
-          '+' + result.points + ' Punkte';
+        // Korrekte Punkte-Anzeige (auch negative)
+        const points = result.final_points !== undefined ? result.final_points : (result.points || 0);
+        const pointsDisplay = points >= 0 ? '+' + points + ' Punkte' : points + ' Punkte';
         
         const playerName = result.player?.name || 'Unbekannt';
         const position = result.position || 0;
@@ -751,16 +1026,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // VERBESSERTE TOURNAMENT BRACKET FUNKTION
   function updateTournamentBracket(game) {
     const sidebars = document.querySelectorAll('.tournament-hide-sidebar');
     const centerContent = document.querySelector('.tournament-center-content');
     const bracketContainer = document.getElementById('tournament-bracket-container');
     const tournamentTitle = document.getElementById('tournament-title');
+    const currentGameCard = document.getElementById('current-game-card');
     
-    console.log('Tournament check:', game);
-    
-    // Prüfe ob es ein Turnier-Spiel ist
     const isTournament = game && (
       game.is_tournament_game || 
       game.isTournamentGame || 
@@ -773,76 +1045,197 @@ document.addEventListener('DOMContentLoaded', () => {
     );
     
     const tournamentData = game && game.tournament;
-    
-    // WICHTIG: Zeige Tournament-Vollbild NUR wenn:
-    // - Es ein Turnier ist UND
-    // - Tournament-Daten vorhanden sind UND  
-    // - Das Spiel AKTIV ist (nicht completed!)
-    const shouldShowTournamentFullscreen = isTournament && tournamentData && 
-      game.status === 'active';
-    
-    console.log('Tournament decision:', {
-      isTournament,
-      hasTournamentData: !!tournamentData,
-      gameStatus: game?.status,
-      shouldShowTournamentFullscreen
-    });
+    const shouldShowTournamentFullscreen = isTournament && tournamentData && game.status === 'active';
     
     if (shouldShowTournamentFullscreen) {
-      console.log('Switching to tournament FULLSCREEN view');
-      
-      // Auto-Scroll pausieren da Seitenleisten versteckt sind
       stopGameHistoryAutoScroll();
       
-      // Seitenleisten ausblenden
       sidebars.forEach(sidebar => {
         sidebar.style.display = 'none';
       });
       
-      // Zentralen Bereich erweitern
+      // Current Game Card ausblenden
+      if (currentGameCard) {
+        currentGameCard.style.display = 'none';
+      }
+      
       if (centerContent) {
         centerContent.classList.remove('lg:col-span-6');
         centerContent.classList.add('lg:col-span-12');
       }
       
-      // Tournament-Bracket anzeigen
       if (bracketContainer) {
         bracketContainer.classList.remove('hidden');
       }
       
-      // Tournament-Titel aktualisieren
       if (tournamentTitle) {
         tournamentTitle.textContent = game.name || 'Turnier';
       }
       
-      // Bracket-Daten aktualisieren
       if (tournamentData.bracket_data) {
         updateBracketDisplay(tournamentData.bracket_data);
       }
       
     } else {
-      console.log('Switching to NORMAL view with sidebars');
+      // Current Game Card wieder einblenden
+      if (currentGameCard) {
+        currentGameCard.style.display = '';
+      }
       
-      // Seitenleisten wieder anzeigen
       sidebars.forEach(sidebar => {
         sidebar.style.display = '';
       });
       
-      // Zentralen Bereich zurücksetzen
       if (centerContent) {
         centerContent.classList.remove('lg:col-span-12');
         centerContent.classList.add('lg:col-span-6');
       }
       
-      // Tournament-Bracket ausblenden
       if (bracketContainer) {
         bracketContainer.classList.add('hidden');
       }
       
-      // Auto-Scroll wieder starten da Seitenleisten wieder da sind (nur wenn nicht bereits aktiv)
       if (!gameHistoryScrollStarted) {
         startGameHistoryAutoScroll();
       }
+    }
+  }
+
+  function updateGamechangerView(game) {
+    const sidebars = document.querySelectorAll('.tournament-hide-sidebar');
+    const centerContent = document.querySelector('.tournament-center-content');
+    const gamechangerContainer = document.getElementById('gamechanger-container');
+    const gamechangerTitle = document.getElementById('gamechanger-title');
+    const currentGameCard = document.getElementById('current-game-card');
+    
+    const isGamechanger = game && (
+      game.is_gamechanger_game || 
+      game.isGamechangerGame || 
+      game.gamechanger_game ||
+      (game.type && (
+        game.type.includes('gamechanger') ||
+        game.type === 'gamechanger'
+      )) ||
+      (game.name && game.name.toLowerCase().includes('gamechanger'))
+    );
+    
+    const shouldShowGamechangerFullscreen = isGamechanger && 
+      (game.status === 'active' || game.status === 'setup' || game.status === 'pending');
+    
+    if (shouldShowGamechangerFullscreen) {
+      console.log('Switching to gamechanger FULLSCREEN view');
+      
+      stopGameHistoryAutoScroll();
+      
+      sidebars.forEach(sidebar => {
+        sidebar.style.display = 'none';
+      });
+      
+      // Current Game Card ausblenden
+      if (currentGameCard) {
+        currentGameCard.style.display = 'none';
+      }
+      
+      if (centerContent) {
+        centerContent.classList.remove('lg:col-span-6');
+        centerContent.classList.add('lg:col-span-12');
+      }
+      
+      if (gamechangerContainer) {
+        gamechangerContainer.classList.remove('hidden');
+      }
+      
+      if (gamechangerTitle) {
+        gamechangerTitle.textContent = game.name || 'Gamechanger';
+      }
+      
+      if (game.gamechanger) {
+        updateGamechangerDisplayFromAPI(game.gamechanger);
+      } else {
+        updateGamechangerDisplayFromAPI(createMockGamechangerData());
+      }
+      
+    } else {
+      // Current Game Card wieder einblenden
+      if (currentGameCard) {
+        currentGameCard.style.display = '';
+      }
+      
+      if (gamechangerContainer) {
+        gamechangerContainer.classList.add('hidden');
+      }
+      
+      const isTournament = game && (
+        game.is_tournament_game || 
+        game.isTournamentGame || 
+        game.tournament_game ||
+        (game.type && (
+          game.type.includes('tournament') ||
+          game.type === 'tournament_single' ||
+          game.type === 'tournament_double'
+        ))
+      );
+      
+      if (!isTournament) {
+        sidebars.forEach(sidebar => {
+          sidebar.style.display = '';
+        });
+        
+        if (centerContent) {
+          centerContent.classList.remove('lg:col-span-12');
+          centerContent.classList.add('lg:col-span-6');
+        }
+        
+        if (!gameHistoryScrollStarted) {
+          startGameHistoryAutoScroll();
+        }
+      }
+    }
+  }
+
+  function updateGamechangerDisplayFromAPI(gamechangerData) {
+    console.log('Updating Gamechanger display from API:', gamechangerData);
+    
+    // Aktueller Spieler
+    const currentPlayerName = document.getElementById('current-player-name');
+    const currentPlayerPoints = document.getElementById('current-player-points');
+    
+    if (gamechangerData.next_player) {
+      if (currentPlayerName) {
+        currentPlayerName.textContent = gamechangerData.next_player.name || 'Unbekannt';
+      }
+      if (currentPlayerPoints) {
+        currentPlayerPoints.textContent = 'Ist am Zug';
+      }
+    } else {
+      if (currentPlayerName) {
+        currentPlayerName.textContent = gamechangerData.is_game_complete ? 'Spiel beendet' : 'Wartend...';
+      }
+      if (currentPlayerPoints) {
+        currentPlayerPoints.textContent = gamechangerData.is_game_complete ? 'Alle haben geworfen' : 'Lade Daten...';
+      }
+    }
+    
+    // Statistiken
+    if (gamechangerData.stats) {
+      const stats = gamechangerData.stats;
+      
+      const bonusHits = document.getElementById('stat-bonus-hits');
+      const penaltyHits = document.getElementById('stat-penalty-hits');
+      const normalThrows = document.getElementById('stat-normal-throws');
+      const totalThrows = document.getElementById('stat-total-throws');
+      
+      if (bonusHits) bonusHits.textContent = stats.bonusHits || 0;
+      if (penaltyHits) penaltyHits.textContent = stats.penaltyHits || 0;
+      if (normalThrows) normalThrows.textContent = stats.normalThrows || 0;
+      if (totalThrows) totalThrows.textContent = stats.totalThrows || 0;
+    }
+    
+    // Würfe anzeigen
+    if (gamechangerData.throws && gamechangerData.throws.length > 0) {
+      updateGamechangerThrows(gamechangerData.throws);
+    } else {
+      updateGamechangerThrows([]);
     }
   }
 
@@ -900,7 +1293,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     
-    // Spiel um Platz 3
     if (bracketData.thirdPlaceMatch) {
       const match = bracketData.thirdPlaceMatch;
       const isCompleted = match.completed || false;
@@ -935,7 +1327,106 @@ document.addEventListener('DOMContentLoaded', () => {
     bracketContent.innerHTML = html;
   }
 
-  // VERBESSERTE REFRESH FUNKTION
+  function updateGamechangerThrows(throws) {
+    const throwsContainer = document.getElementById('gamechanger-throws');
+    if (!throwsContainer) return;
+    
+    if (!throws || throws.length === 0) {
+      throwsContainer.innerHTML = `
+        <div class="text-center text-slate-400 py-12">
+          <div class="w-16 h-16 mx-auto mb-4 bg-slate-800/50 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <p class="text-lg font-medium text-slate-300 mb-2">Gamechanger läuft</p>
+          <p class="text-sm">Warten auf die ersten Würfe...</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    const sortedThrows = [...throws].sort((a, b) => b.player_order - a.player_order);
+    
+    sortedThrows.forEach((throw_, index) => {
+      const isBonus = throw_.scoring_reason && throw_.scoring_reason.includes('Eigene Punkte');
+      const isPenalty = throw_.scoring_reason && throw_.scoring_reason.includes('getroffen') && !isBonus;
+      
+      let bgClass = 'bg-slate-800/40';
+      let borderClass = 'border-slate-700/30';
+      let icon = '';
+      let statusBadge = '';
+      
+      if (isBonus) {
+        bgClass = 'bg-emerald-500/10';
+        borderClass = 'border-emerald-500/30';
+        icon = '🎯';
+        statusBadge = '<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-500/30">BONUS +8</span>';
+      } else if (isPenalty) {
+        bgClass = 'bg-red-500/10';
+        borderClass = 'border-red-500/30';
+        icon = '💥';
+        statusBadge = '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">TREFFER -4</span>';
+      } else {
+        icon = '🎲';
+        statusBadge = '<span class="px-2 py-1 bg-slate-700/50 text-slate-400 text-xs rounded-full border border-slate-600/30">NORMAL</span>';
+      }
+      
+      const playerName = throw_.player?.name || 'Unbekannt';
+      const thrownPoints = throw_.thrown_points || 0;
+      const pointsScored = throw_.points_scored || 0;
+      const scoringReason = throw_.scoring_reason || 'Normaler Wurf';
+      const thrownAt = throw_.thrown_at || '';
+      const playerOrder = throw_.player_order || index + 1;
+      
+      html += `
+        <div class="flex items-start space-x-2 p-2 ${bgClass} rounded-lg border ${borderClass} hover:bg-slate-700/20 transition-all">
+          <div class="flex-shrink-0 text-center">
+            <div class="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center text-sm mb-1">
+              ${icon}
+            </div>
+            <div class="text-xs text-slate-500 font-mono">#${playerOrder}</div>
+          </div>
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <h5 class="font-bold text-slate-100 text-sm">${playerName}</h5>
+              ${statusBadge}
+            </div>
+            
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-slate-300">Wurf: <strong>${thrownPoints}</strong></span>
+              <span class="text-slate-300">Effekt: <strong>${pointsScored > 0 ? '+' : ''}${pointsScored}</strong></span>
+            </div>
+            
+            <div class="text-xs text-slate-400 mb-1">${scoringReason}</div>
+            
+            <div class="text-xs text-slate-500">
+              ${thrownAt ? `⏰ ${thrownAt}` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    throwsContainer.innerHTML = html;
+  }
+
+  function createMockGamechangerData() {
+    return {
+      stats: {
+        totalThrows: 0,
+        bonusHits: 0,
+        penaltyHits: 0,
+        normalThrows: 0
+      },
+      throws: [],
+      next_player: null,
+      is_game_complete: false
+    };
+  }
+
   async function refresh() {
     try {
       const response = await fetch('/api/olympix/{{ olympix.id }}/status', {
@@ -952,39 +1443,59 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = await response.json();
       
-      console.log('API Response:', data); // Debug: Komplette API Response
-      
       if (data.error) {
         throw new Error('API Error: ' + data.error);
       }
       
-      // Update all components
-      if (data.players) updateRanking(data.players);
+      // Update components
+      if (data.players) {
+        updateRanking(data.players);
+        // Store previous data for position change detection
+        previousPlayersData = data.players;
+      }
+      
       if (data.games) {
-        console.log('Updating game history with', data.games.length, 'games');
         updateGameHistory(data.games);
       } else {
-        console.log('No games data in API response');
-        // Auto-Scroll trotzdem versuchen mit initial geladenen Daten (nur beim ersten Mal)
         if (!gameHistoryScrollStarted) {
           startGameHistoryAutoScroll();
         }
       }
       
-      // Tournament-Ansicht IMMER aktualisieren
-      updateTournamentBracket(data.current_game);
+      // Check for Gamechanger
+      const isGamechanger = data.current_game && (
+        data.current_game.is_gamechanger_game || 
+        data.current_game.isGamechangerGame || 
+        data.current_game.gamechanger_game ||
+        (data.current_game.type && (
+          data.current_game.type.includes('gamechanger') ||
+          data.current_game.type === 'gamechanger'
+        )) ||
+        (data.current_game.name && data.current_game.name.toLowerCase().includes('gamechanger'))
+      );
       
-      // Aktuelles Spiel aktualisieren
+      // Update Gamechanger view
+      updateGamechangerView(data.current_game);
+      
+      // Update Gamechanger player list if active
+      if (isGamechanger && data.players) {
+        updateGamechangerPlayerList(data.players);
+      }
+      
+      // Update Tournament view (only if not Gamechanger)
+      if (!isGamechanger) {
+        updateTournamentBracket(data.current_game);
+      }
+      
+      // Update current game
       updateCurrentGame(data.current_game);
       
-      // Spiel-Ergebnisse aktualisieren
+      // Update game results
       updateGameResults(data.game_results);
       
     } catch (error) {
       console.error('Refresh error:', error);
-      // Bei API-Fehlern: Auto-Scroll trotzdem am Laufen halten (nur beim ersten Mal)
       if (!gameHistoryScrollInterval && !gameHistoryScrollStarted) {
-        console.log('API failed, but keeping auto-scroll active');
         startGameHistoryAutoScroll();
       }
     }
@@ -994,12 +1505,11 @@ document.addEventListener('DOMContentLoaded', () => {
   refresh();
   setupGameHistoryHoverPause();
   
-  // Auto-Scroll initial starten (auch ohne API-Updates) mit mehr Debug
   setTimeout(() => {
     startGameHistoryAutoScroll();
   }, 500);
   
-  refreshInterval = setInterval(refresh, 2000); // Häufiger aktualisieren für bessere Reaktionszeit
+  refreshInterval = setInterval(refresh, 2000);
 });
 
 // Cleanup

@@ -53,12 +53,16 @@ class Game
     #[ORM\OneToMany(mappedBy: 'game', targetEntity: SplitOrStealMatch::class, orphanRemoval: true)]
     private Collection $splitOrStealMatches;
 
+    #[ORM\OneToMany(mappedBy: 'game', targetEntity: GamechangerThrow::class, orphanRemoval: true)]
+    private Collection $gamechangerThrows;
+
     public function __construct()
     {
         $this->gameResults = new ArrayCollection();
         $this->quizQuestions = new ArrayCollection();
         $this->jokers = new ArrayCollection();
         $this->splitOrStealMatches = new ArrayCollection();
+        $this->gamechangerThrows = new ArrayCollection();
         $this->status = 'pending';
         $this->orderPosition = 0;
     }
@@ -165,7 +169,6 @@ class Game
     public function removeGameResult(GameResult $gameResult): static
     {
         if ($this->gameResults->removeElement($gameResult)) {
-            // set the owning side to null (unless already changed)
             if ($gameResult->getGame() === $this) {
                 $gameResult->setGame(null);
             }
@@ -193,7 +196,6 @@ class Game
     public function removeQuizQuestion(QuizQuestion $quizQuestion): static
     {
         if ($this->quizQuestions->removeElement($quizQuestion)) {
-            // set the owning side to null (unless already changed)
             if ($quizQuestion->getGame() === $this) {
                 $quizQuestion->setGame(null);
             }
@@ -221,7 +223,6 @@ class Game
     public function removeJoker(Joker $joker): static
     {
         if ($this->jokers->removeElement($joker)) {
-            // set the owning side to null (unless already changed)
             if ($joker->getGame() === $this) {
                 $joker->setGame(null);
             }
@@ -236,7 +237,6 @@ class Game
 
     public function setTournament(Tournament $tournament): static
     {
-        // set the owning side of the relation if necessary
         if ($tournament->getGame() !== $this) {
             $tournament->setGame($this);
         }
@@ -264,13 +264,41 @@ class Game
     public function removeSplitOrStealMatch(SplitOrStealMatch $splitOrStealMatch): static
     {
         if ($this->splitOrStealMatches->removeElement($splitOrStealMatch)) {
-            // set the owning side to null (unless already changed)
             if ($splitOrStealMatch->getGame() === $this) {
                 $splitOrStealMatch->setGame(null);
             }
         }
         return $this;
     }
+
+    /**
+     * @return Collection<int, GamechangerThrow>
+     */
+    public function getGamechangerThrows(): Collection
+    {
+        return $this->gamechangerThrows;
+    }
+
+    public function addGamechangerThrow(GamechangerThrow $gamechangerThrow): static
+    {
+        if (!$this->gamechangerThrows->contains($gamechangerThrow)) {
+            $this->gamechangerThrows->add($gamechangerThrow);
+            $gamechangerThrow->setGame($this);
+        }
+        return $this;
+    }
+
+    public function removeGamechangerThrow(GamechangerThrow $gamechangerThrow): static
+    {
+        if ($this->gamechangerThrows->removeElement($gamechangerThrow)) {
+            if ($gamechangerThrow->getGame() === $this) {
+                $gamechangerThrow->setGame(null);
+            }
+        }
+        return $this;
+    }
+
+    // *** GAME TYPE CHECK METHODS ***
 
     public function isQuizGame(): bool
     {
@@ -292,49 +320,12 @@ class Game
         return $this->gameType === 'split_or_steal';
     }
 
-public function getDefaultPointsDistribution(): array
-{
-    // Use custom points distribution if set
-    if ($this->pointsDistribution) {
-        return $this->pointsDistribution;
+    public function isGamechangerGame(): bool
+    {
+        return $this->gameType === 'gamechanger';
     }
 
-    // FIXED: Use dynamic values for tournaments based on player count
-    if ($this->isTournamentGame()) {
-        $playerCount = $this->olympix->getPlayers()->count();
-        
-        // Dynamische Punkteverteilung basierend auf Spieleranzahl
-        $points = [];
-        for ($i = 1; $i <= $playerCount; $i++) {
-            if ($i == 1) {
-                $points[] = 8; // 1. Platz
-            } elseif ($i == 2) {
-                $points[] = 6; // 2. Platz
-            } elseif ($i == 3) {
-                $points[] = 4; // 3. Platz
-            } elseif ($i == 4) {
-                $points[] = 2; // 4. Platz
-            } else {
-                $points[] = 0; // Alle anderen: 0 Punkte
-            }
-        }
-        
-        return $points;
-    }
-
-    // Split or Steal - default points per match
-    if ($this->isSplitOrStealGame()) {
-        return [50]; // Default 50 points per match
-    }
-
-    // Free for all - points based on number of players (descending)
-    $playerCount = $this->olympix->getPlayers()->count();
-    $points = [];
-    for ($i = $playerCount; $i >= 1; $i--) {
-        $points[] = $i;
-    }
-    return $points;
-}
+    // *** STATUS CHECK METHODS ***
 
     public function isCompleted(): bool
     {
@@ -389,40 +380,89 @@ public function getDefaultPointsDistribution(): array
             'tournament_single' => 'Turnier (Einzel)',
             'quiz' => 'Quiz',
             'split_or_steal' => 'Split or Steal',
+            'gamechanger' => 'Gamechanger',
             default => 'Unbekannt'
         };
     }
 
     public function getExpectedDuration(): int
     {
-        // Return expected duration in minutes
         return match($this->gameType) {
             'free_for_all' => 30,
             'tournament_team' => 60,
             'tournament_single' => 45,
             'quiz' => 15,
             'split_or_steal' => 10,
+            'gamechanger' => 15,
             default => 30
         };
     }
 
+    public function getDefaultPointsDistribution(): array
+    {
+        if ($this->pointsDistribution) {
+            return $this->pointsDistribution;
+        }
+
+        if ($this->isGamechangerGame()) {
+            return []; // Leer, da Punkte während des Spiels dynamisch vergeben werden
+        }
+
+        if ($this->isTournamentGame()) {
+            $playerCount = $this->olympix->getPlayers()->count();
+            
+            $points = [];
+            for ($i = 1; $i <= $playerCount; $i++) {
+                if ($i == 1) {
+                    $points[] = 8;
+                } elseif ($i == 2) {
+                    $points[] = 6;
+                } elseif ($i == 3) {
+                    $points[] = 4;
+                } elseif ($i == 4) {
+                    $points[] = 2;
+                } else {
+                    $points[] = 0;
+                }
+            }
+            
+            return $points;
+        }
+
+        if ($this->isSplitOrStealGame()) {
+            return [50];
+        }
+
+        $playerCount = $this->olympix->getPlayers()->count();
+        $points = [];
+        for ($i = $playerCount; $i >= 1; $i--) {
+            $points[] = $i;
+        }
+        return $points;
+    }
+
+    // *** UTILITY METHODS ***
+
     public function getMaxPlayers(): ?int
     {
         if ($this->isTournamentGame() && $this->teamSize) {
-            return 16; // Max 16 players for tournaments
+            return 16;
         }
-        return null; // No limit for other game types
+        return null;
     }
 
     public function getMinPlayers(): int
     {
         if ($this->gameType === 'tournament_team' && $this->teamSize) {
-            return $this->teamSize * 2; // At least 2 teams
+            return $this->teamSize * 2;
         }
         if ($this->gameType === 'split_or_steal') {
-            return 2; // At least 2 players for split or steal
+            return 2;
         }
-        return 2; // At least 2 players for all other games
+        if ($this->gameType === 'gamechanger') {
+            return 2;
+        }
+        return 2;
     }
 
     public function canStart(): bool
@@ -446,41 +486,21 @@ public function getDefaultPointsDistribution(): array
         return $this->jokers->count();
     }
 
-    public function getActiveJokersCount(): int
+    public function hasMatches(): bool
     {
-        $count = 0;
-        foreach ($this->jokers as $joker) {
-            if ($joker->isIsUsed()) {
-                $count++;
-            }
-        }
-        return $count;
-    }
-
-    public function getSplitOrStealMatchesCount(): int
-    {
-        return $this->splitOrStealMatches->count();
-    }
-
-    public function getCompletedSplitOrStealMatchesCount(): int
-    {
-        return $this->splitOrStealMatches->filter(fn($match) => $match->getIsCompleted())->count();
+        return $this->splitOrStealMatches->count() > 0;
     }
 
     public function canBeEvaluated(): bool
     {
-        if (!$this->isActive()) {
+        if (!$this->isSplitOrStealGame()) {
             return false;
         }
 
-        if ($this->isSplitOrStealGame()) {
-            // Check if all matches have both players chosen
-            foreach ($this->splitOrStealMatches as $match) {
-                if (!$match->bothPlayersHaveChosen()) {
-                    return false;
-                }
+        foreach ($this->splitOrStealMatches as $match) {
+            if (!$match->isIsCompleted()) {
+                return false;
             }
-            return $this->splitOrStealMatches->count() > 0;
         }
 
         return true;
@@ -488,63 +508,83 @@ public function getDefaultPointsDistribution(): array
 
     public function needsSetup(): bool
     {
+        if ($this->isTournamentGame()) {
+            return !$this->tournament || !$this->tournament->isInitialized();
+        }
+
         if ($this->isSplitOrStealGame()) {
             return $this->splitOrStealMatches->count() === 0;
         }
-        
-        if ($this->isTournamentGame()) {
-            return $this->tournament === null;
+
+        if ($this->isGamechangerGame()) {
+            return $this->gamechangerThrows->count() === 0;
         }
-        
-        if ($this->isQuizGame()) {
-            return $this->quizQuestions->count() === 0;
-        }
-        
+
         return false;
     }
 
     public function getSetupUrl(): ?string
     {
+        if ($this->isTournamentGame()) {
+            return '/tournament/setup/' . $this->id;
+        }
+
         if ($this->isSplitOrStealGame()) {
             return '/split-or-steal/setup/' . $this->id;
         }
-        
-        if ($this->isQuizGame()) {
-            return '/quiz/questions/' . $this->id;
+
+        if ($this->isGamechangerGame()) {
+            return '/gamechanger/setup/' . $this->id;
         }
-        
+
         return null;
     }
 
-    public function getWinner(): ?string
+    public function getPlayUrl(): ?string
     {
-        if (!$this->isCompleted() || $this->gameResults->isEmpty()) {
-            return null;
+        if ($this->isActive()) {
+            if ($this->isTournamentGame()) {
+                return '/game/bracket/' . $this->id;
+            }
+
+            if ($this->isSplitOrStealGame()) {
+                return '/split-or-steal/manage/' . $this->id;
+            }
+
+            if ($this->isQuizGame()) {
+                return '/quiz/manage/' . $this->id;
+            }
+
+            if ($this->isGamechangerGame()) {
+                return '/gamechanger/play/' . $this->id;
+            }
+
+            return '/game/results/' . $this->id;
         }
 
-        $results = $this->gameResults->toArray();
-        usort($results, function($a, $b) {
-            return $a->getPosition() - $b->getPosition();
-        });
-
-        return $results[0]->getPlayer()->getName();
+        return null;
     }
 
-    public function getTopPlayers(int $limit = 3): array
+    public function getParticipantCount(): int
     {
-        if (!$this->isCompleted() || $this->gameResults->isEmpty()) {
-            return [];
-        }
-
-        $results = $this->gameResults->toArray();
-        usort($results, function($a, $b) {
-            return $a->getPosition() - $b->getPosition();
-        });
-
-        return array_slice($results, 0, $limit);
+        return $this->olympix->getPlayers()->count();
     }
 
-    public function getProgress(): int
+    public function getFormattedPointsDistribution(): string
+    {
+        $distribution = $this->getDefaultPointsDistribution();
+        return empty($distribution) ? 'Dynamisch' : implode(',', $distribution);
+    }
+
+    public function isStartable(): bool
+    {
+        return $this->canStart() && !$this->needsSetup();
+    }
+
+    /**
+     * GEFIXT: Gamechanger Progress Percentage
+     */
+    public function getProgressPercentage(): int
     {
         if ($this->isCompleted()) {
             return 100;
@@ -552,80 +592,41 @@ public function getDefaultPointsDistribution(): array
 
         if ($this->isActive()) {
             if ($this->isTournamentGame() && $this->tournament) {
-                $bracketData = $this->tournament->getBracketData();
-                $totalMatches = 0;
-                $completedMatches = 0;
-
-                foreach ($bracketData['rounds'] as $round) {
-                    foreach ($round as $match) {
-                        $totalMatches++;
-                        if ($match['completed']) {
-                            $completedMatches++;
-                        }
-                    }
-                }
-
-                if (isset($bracketData['thirdPlaceMatch'])) {
-                    $totalMatches++;
-                    if ($bracketData['thirdPlaceMatch']['completed']) {
-                        $completedMatches++;
-                    }
-                }
-
-                return $totalMatches > 0 ? round(($completedMatches / $totalMatches) * 100) : 0;
+                return $this->tournament->getProgressPercentage();
             }
 
             if ($this->isSplitOrStealGame()) {
-                $totalMatches = $this->splitOrStealMatches->count();
-                $completedMatches = $this->getCompletedSplitOrStealMatchesCount();
-                return $totalMatches > 0 ? round(($completedMatches / $totalMatches) * 100) : 0;
+                $total = $this->splitOrStealMatches->count();
+                if ($total === 0) return 0;
+                
+                $completed = 0;
+                foreach ($this->splitOrStealMatches as $match) {
+                    if ($match->isIsCompleted()) {
+                        $completed++;
+                    }
+                }
+                
+                return round(($completed / $total) * 100);
             }
 
-            return 50; // 50% for active non-tournament games
+            if ($this->isGamechangerGame()) {
+                $totalPlayers = $this->olympix->getPlayers()->count();
+                if ($totalPlayers === 0) return 0;
+                
+                // GEFIXT: Zähle nur echte Würfe (thrownPoints > 0)
+                $realThrows = 0;
+                foreach ($this->gamechangerThrows as $throw) {
+                    if ($throw->getThrownPoints() > 0) {
+                        $realThrows++;
+                    }
+                }
+                
+                return round(($realThrows / $totalPlayers) * 100);
+            }
+
+            return 50;
         }
 
-        return 0; // Pending games
-    }
-
-    public function requiresQuestions(): bool
-    {
-        return $this->isQuizGame();
-    }
-
-    public function hasSufficientQuestions(): bool
-    {
-        if (!$this->requiresQuestions()) {
-            return true;
-        }
-
-        return $this->quizQuestions->count() >= 3; // At least 3 questions for quiz
-    }
-
-    public function getValidationErrors(): array
-    {
-        $errors = [];
-
-        if (empty($this->name)) {
-            $errors[] = 'Spielname ist erforderlich';
-        }
-
-        if ($this->requiresQuestions() && !$this->hasSufficientQuestions()) {
-            $errors[] = 'Quiz benötigt mindestens 3 Fragen';
-        }
-
-        if (!$this->canStart()) {
-            $errors[] = 'Zu wenig Spieler für diesen Spieltyp';
-        }
-
-        if ($this->isSplitOrStealGame() && $this->splitOrStealMatches->count() === 0) {
-            $errors[] = 'Split or Steal benötigt mindestens ein Match';
-        }
-
-        return $errors;
-    }
-
-    public function isValid(): bool
-    {
-        return empty($this->getValidationErrors());
+        return 0;
     }
 }

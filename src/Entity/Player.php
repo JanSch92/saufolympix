@@ -43,12 +43,17 @@ class Player
     #[ORM\OneToMany(mappedBy: 'targetPlayer', targetEntity: Joker::class)]
     private Collection $targetJokers;
 
+    // *** NEU: GAMECHANGER RELATIONSHIP ***
+    #[ORM\OneToMany(mappedBy: 'player', targetEntity: GamechangerThrow::class, orphanRemoval: true)]
+    private Collection $gamechangerThrows;
+
     public function __construct()
     {
         $this->gameResults = new ArrayCollection();
         $this->quizAnswers = new ArrayCollection();
         $this->jokers = new ArrayCollection();
         $this->targetJokers = new ArrayCollection();
+        $this->gamechangerThrows = new ArrayCollection(); // *** NEU ***
         $this->totalPoints = 0;
         $this->jokerDoubleUsed = false;
         $this->jokerSwapUsed = false;
@@ -246,6 +251,78 @@ class Player
         return $this;
     }
 
+    // *** NEUE GAMECHANGER METHODEN ***
+
+    /**
+     * @return Collection<int, GamechangerThrow>
+     */
+    public function getGamechangerThrows(): Collection
+    {
+        return $this->gamechangerThrows;
+    }
+
+    public function addGamechangerThrow(GamechangerThrow $gamechangerThrow): static
+    {
+        if (!$this->gamechangerThrows->contains($gamechangerThrow)) {
+            $this->gamechangerThrows->add($gamechangerThrow);
+            $gamechangerThrow->setPlayer($this);
+        }
+        return $this;
+    }
+
+    public function removeGamechangerThrow(GamechangerThrow $gamechangerThrow): static
+    {
+        if ($this->gamechangerThrows->removeElement($gamechangerThrow)) {
+            if ($gamechangerThrow->getPlayer() === $this) {
+                $gamechangerThrow->setPlayer(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getGamechangerThrowsForGame(int $gameId): Collection
+    {
+        return $this->gamechangerThrows->filter(function(GamechangerThrow $throw) use ($gameId) {
+            return $throw->getGame()->getId() === $gameId;
+        });
+    }
+
+    public function hasGamechangerThrowForGame(int $gameId): bool
+    {
+        return !$this->getGamechangerThrowsForGame($gameId)->isEmpty();
+    }
+
+    public function getGamechangerStats(): array
+    {
+        $totalThrows = $this->gamechangerThrows->count();
+        $bonusHits = 0;
+        $penaltyHits = 0;
+        $totalBonusPoints = 0;
+        $totalPenaltyPoints = 0;
+
+        foreach ($this->gamechangerThrows as $throw) {
+            $reason = $throw->getScoringReason() ?? '';
+            if (str_contains($reason, 'Eigene Punkte')) {
+                $bonusHits++;
+                $totalBonusPoints += $throw->getPointsScored();
+            } elseif (str_contains($reason, 'getroffen')) {
+                $penaltyHits++;
+                $totalPenaltyPoints += abs($throw->getPointsScored());
+            }
+        }
+
+        return [
+            'totalThrows' => $totalThrows,
+            'bonusHits' => $bonusHits,
+            'penaltyHits' => $penaltyHits,
+            'totalBonusPoints' => $totalBonusPoints,
+            'totalPenaltyPoints' => $totalPenaltyPoints,
+            'accuracy' => $totalThrows > 0 ? round(($bonusHits / $totalThrows) * 100, 1) : 0
+        ];
+    }
+
+    // *** BESTEHENDE JOKER AVAILABILITY METHODS ***
+
     public function hasJokerDoubleAvailable(): bool
     {
         return !$this->jokerDoubleUsed;
@@ -256,14 +333,72 @@ class Player
         return !$this->jokerSwapUsed;
     }
 
-public function calculateTotalPoints(): int
-{
-    $total = 0;
-    foreach ($this->gameResults as $result) {
-        $total += $result->getFinalPoints(); // Verwendet getFinalPoints() statt getPoints()
+    // *** BESTEHENDE POINT CALCULATION METHODS ***
+
+    public function calculateTotalPoints(): void
+    {
+        $totalPoints = 0;
+        
+        foreach ($this->gameResults as $gameResult) {
+            $totalPoints += $gameResult->getFinalPoints();
+        }
+        
+        $this->totalPoints = $totalPoints;
     }
-    
-    $this->totalPoints = $total;
-    return $total;
-}
+
+    public function addPointsFromGame(int $points): void
+    {
+        $this->totalPoints += $points;
+    }
+
+    public function subtractPointsFromGame(int $points): void
+    {
+        $this->totalPoints = max(0, $this->totalPoints - $points);
+    }
+
+    // *** BESTEHENDE UTILITY METHODS ***
+
+    public function __toString(): string
+    {
+        return $this->name ?? '';
+    }
+
+    public function getDisplayName(): string
+    {
+        return $this->name;
+    }
+
+    public function getRanking(): int
+    {
+        // This would typically be calculated in a service or repository
+        // based on comparison with other players in the same olympix
+        return 1;
+    }
+
+    public function getCompletedGamesCount(): int
+    {
+        return $this->gameResults->filter(function(GameResult $result) {
+            return $result->getGame()->isCompleted();
+        })->count();
+    }
+
+    public function getPendingGamesCount(): int
+    {
+        $olympixGames = $this->olympix->getGames();
+        $completedGameIds = $this->gameResults->map(function(GameResult $result) {
+            return $result->getGame()->getId();
+        })->toArray();
+
+        return $olympixGames->filter(function(Game $game) use ($completedGameIds) {
+            return !in_array($game->getId(), $completedGameIds) && $game->isPending();
+        })->count();
+    }
+
+    public function getActiveGamesCount(): int
+    {
+        $olympixGames = $this->olympix->getGames();
+        return $olympixGames->filter(function(Game $game) {
+            return $game->isActive();
+        })->count();
+    }
 }

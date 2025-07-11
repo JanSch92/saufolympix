@@ -11,6 +11,7 @@ use App\Repository\PlayerRepository;
 use App\Repository\GameResultRepository;
 use App\Repository\JokerRepository;
 use App\Repository\SplitOrStealMatchRepository;
+use App\Repository\GamechangerThrowRepository; // *** NEU HINZUGEFÜGT ***
 use App\Service\TournamentService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +30,8 @@ class GameController extends AbstractController
         private GameResultRepository $gameResultRepository,
         private JokerRepository $jokerRepository,
         private TournamentService $tournamentService,
-        private SplitOrStealMatchRepository $splitOrStealMatchRepository
+        private SplitOrStealMatchRepository $splitOrStealMatchRepository,
+        private GamechangerThrowRepository $gamechangerThrowRepository // *** NEU HINZUGEFÜGT ***
     ) {}
 
     #[Route('/game/create/{olympixId}', name: 'app_game_create')]
@@ -52,8 +54,8 @@ class GameController extends AbstractController
                 return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
             }
 
-            // Validate game type
-            $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal'];
+            // Validate game type - *** ERWEITERT UM GAMECHANGER ***
+            $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal', 'gamechanger'];
             if (!in_array($gameType, $validGameTypes)) {
                 $this->addFlash('error', 'Ungültiger Spieltyp');
                 return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
@@ -68,34 +70,36 @@ class GameController extends AbstractController
                 return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
             }
 
+            // Create game
             $game = new Game();
             $game->setName($name);
             $game->setGameType($gameType);
             $game->setOlympix($olympix);
             $game->setOrderPosition($this->gameRepository->getNextOrderPosition($olympixId));
 
-            if ($gameType === 'tournament_team' && $teamSize) {
-                $game->setTeamSize((int)$teamSize);
+            // Set team size for team tournaments
+            if ($gameType === 'tournament_team' && !empty($teamSize)) {
+                $teamSize = (int) $teamSize;
+                if ($teamSize < 2) {
+                    $this->addFlash('error', 'Teamgröße muss mindestens 2 sein');
+                    return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
+                }
+                $game->setTeamSize($teamSize);
             }
 
-            if ($pointsDistribution) {
-                $points = array_map('intval', explode(',', $pointsDistribution));
-                $game->setPointsDistribution($points);
+            // Set custom points distribution
+            if (!empty($pointsDistribution)) {
+                $points = array_map('intval', array_filter(explode(',', $pointsDistribution)));
+                if (!empty($points)) {
+                    $game->setPointsDistribution($points);
+                }
             }
 
             $this->entityManager->persist($game);
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Spiel "' . $name . '" wurde erstellt!');
-
-            // Redirect to appropriate setup page
-            if ($gameType === 'split_or_steal') {
-                return $this->redirectToRoute('app_split_or_steal_setup', ['gameId' => $game->getId()]);
-            } elseif ($gameType === 'quiz') {
-                return $this->redirectToRoute('app_quiz_questions', ['gameId' => $game->getId()]);
-            } else {
-                return $this->redirectToRoute('app_game_admin', ['id' => $olympixId]);
-            }
+            return $this->redirectToRoute('app_game_admin', ['id' => $olympixId]);
         }
 
         return $this->render('game/create.html.twig', [
@@ -112,17 +116,22 @@ class GameController extends AbstractController
             throw $this->createNotFoundException('Spiel nicht gefunden');
         }
 
-        if ($game->getStatus() !== 'pending') {
-            $this->addFlash('error', 'Spiel kann nicht gestartet werden (Status: ' . $game->getStatus() . ')');
+        if (!$game->canBeStarted()) {
+            $this->addFlash('error', 'Spiel kann nicht gestartet werden');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
+        // *** ERWEITERT UM GAMECHANGER ***
+        if ($game->isGamechangerGame()) {
+            // Für Gamechanger: Weiterleitung zum Setup
+            return $this->redirectToRoute('app_gamechanger_setup', ['gameId' => $id]);
+        }
+
+        // BESTEHENDE LOGIK FÜR ANDERE SPIELTYPEN:
         // Special handling for Split or Steal games
         if ($game->isSplitOrStealGame()) {
-            $matches = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($game->getId());
-            
-            if (empty($matches)) {
-                $this->addFlash('error', 'Keine Paarungen für Split or Steal vorhanden. Bitte konfiguriere das Spiel erst.');
+            if (!$game->hasMatches()) {
+                $this->addFlash('error', 'Split or Steal Spiel hat keine konfigurierten Paarungen. Bitte konfiguriere das Spiel erst.');
                 return $this->redirectToRoute('app_split_or_steal_setup', ['gameId' => $game->getId()]);
             }
         }
@@ -275,6 +284,81 @@ class GameController extends AbstractController
         ]);
     }
 
+    #[Route('/game/manage/{id}', name: 'app_game_manage')]
+    public function manage(int $id): Response
+    {
+        $game = $this->gameRepository->find($id);
+
+        if (!$game) {
+            throw $this->createNotFoundException('Spiel nicht gefunden');
+        }
+
+        $data = [
+            'game' => $game,
+            'olympix' => $game->getOlympix(),
+        ];
+
+        // *** ERWEITERT UM GAMECHANGER-SPEZIFISCHE DATEN ***
+        if ($game->isGamechangerGame()) {
+            $throws = $this->gamechangerThrowRepository->findByGameOrderedByPlayerOrder($id);
+            $stats = $this->gamechangerThrowRepository->getGamechangerStatistics($id);
+            $isComplete = $this->gamechangerThrowRepository->isGameComplete($id);
+            
+            $data['gamechanger_throws'] = $throws;
+            $data['gamechanger_stats'] = $stats;
+            $data['gamechanger_complete'] = $isComplete;
+        }
+        
+        // BESTEHENDE LOGIK FÜR ANDERE SPIELTYPEN
+        if ($game->isTournamentGame()) {
+            $tournament = $game->getTournament();
+            if ($tournament) {
+                $data['tournament'] = $tournament;
+            }
+        }
+
+        if ($game->isSplitOrStealGame()) {
+            $matches = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($id);
+            $data['split_or_steal_matches'] = $matches;
+        }
+
+        return $this->render('game/manage.html.twig', $data);
+    }
+
+    #[Route('/game/edit/{id}', name: 'app_game_edit')]
+    public function edit(int $id, Request $request): Response
+    {
+        $game = $this->gameRepository->find($id);
+
+        if (!$game) {
+            throw $this->createNotFoundException('Spiel nicht gefunden');
+        }
+
+        if ($game->isCompleted()) {
+            $this->addFlash('error', 'Abgeschlossene Spiele können nicht bearbeitet werden');
+            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
+        }
+
+        if ($request->isMethod('POST')) {
+            $name = $request->request->get('name');
+            
+            if (empty($name)) {
+                $this->addFlash('error', 'Name ist erforderlich');
+                return $this->redirectToRoute('app_game_edit', ['id' => $id]);
+            }
+
+            $game->setName($name);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Spiel wurde bearbeitet');
+            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
+        }
+
+        return $this->render('game/edit.html.twig', [
+            'game' => $game,
+        ]);
+    }
+
     #[Route('/game/delete/{id}', name: 'app_game_delete')]
     public function delete(int $id): Response
     {
@@ -316,75 +400,7 @@ class GameController extends AbstractController
         $this->entityManager->flush();
 
         $this->addFlash('success', 'Spiel "' . $gameName . '" wurde gelöscht!');
-
         return $this->redirectToRoute('app_game_admin', ['id' => $olympixId]);
-    }
-
-    #[Route('/game/edit/{id}', name: 'app_game_edit')]
-    public function edit(int $id, Request $request): Response
-    {
-        $game = $this->gameRepository->find($id);
-
-        if (!$game) {
-            throw $this->createNotFoundException('Spiel nicht gefunden');
-        }
-
-        if ($game->getStatus() === 'completed') {
-            $this->addFlash('error', 'Abgeschlossene Spiele können nicht bearbeitet werden');
-            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
-        }
-
-        if ($request->isMethod('POST')) {
-            $name = $request->request->get('name');
-            $gameType = $request->request->get('game_type');
-            $teamSize = $request->request->get('team_size');
-            $pointsDistribution = $request->request->get('points_distribution');
-
-            if (empty($name) || empty($gameType)) {
-                $this->addFlash('error', 'Name und Spieltyp sind erforderlich');
-                return $this->redirectToRoute('app_game_edit', ['id' => $id]);
-            }
-
-            // Validate game type
-            $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal'];
-            if (!in_array($gameType, $validGameTypes)) {
-                $this->addFlash('error', 'Ungültiger Spieltyp');
-                return $this->redirectToRoute('app_game_edit', ['id' => $id]);
-            }
-
-            // Check if game type changed and if it has results
-            if ($gameType !== $game->getGameType() && ($game->hasResults() || $game->getStatus() === 'active')) {
-                $this->addFlash('error', 'Spieltyp kann nicht geändert werden, wenn das Spiel bereits gestartet wurde oder Ergebnisse hat');
-                return $this->redirectToRoute('app_game_edit', ['id' => $id]);
-            }
-
-            $game->setName($name);
-            $game->setGameType($gameType);
-
-            if ($gameType === 'tournament_team' && $teamSize) {
-                $game->setTeamSize((int)$teamSize);
-            } else {
-                $game->setTeamSize(null);
-            }
-
-            if ($pointsDistribution) {
-                $points = array_map('intval', explode(',', $pointsDistribution));
-                $game->setPointsDistribution($points);
-            } else {
-                $game->setPointsDistribution(null);
-            }
-
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'Spiel "' . $name . '" wurde aktualisiert!');
-
-            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
-        }
-
-        return $this->render('game/edit.html.twig', [
-            'game' => $game,
-        ]);
     }
 
     #[Route('/game/reset/{id}', name: 'app_game_reset')]
@@ -396,67 +412,30 @@ class GameController extends AbstractController
             throw $this->createNotFoundException('Spiel nicht gefunden');
         }
 
-        if ($game->getStatus() === 'pending') {
-            $this->addFlash('error', 'Spiel ist bereits im Ausgangszustand');
+        if (!$game->isCompleted()) {
+            $this->addFlash('error', 'Nur abgeschlossene Spiele können zurückgesetzt werden');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Remove game results and update player points
-        if ($game->getStatus() === 'completed') {
-            $gameResults = $this->gameResultRepository->findByGameOrderedByPosition($id);
-            foreach ($gameResults as $result) {
-                $player = $result->getPlayer();
-                $player->setTotalPoints($player->getTotalPoints() - $result->getFinalPoints());
-                $this->entityManager->persist($player);
-                $this->entityManager->remove($result);
-            }
-        }
-
-        // Remove split or steal matches if any
-        if ($game->isSplitOrStealGame()) {
-            $matches = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($id);
-            foreach ($matches as $match) {
-                $this->entityManager->remove($match);
-            }
+        // Remove all game results
+        $gameResults = $this->gameResultRepository->findBy(['game' => $game]);
+        foreach ($gameResults as $result) {
+            $this->entityManager->remove($result);
         }
 
         // Reset game status
         $game->setStatus('pending');
-        $this->entityManager->persist($game);
         $this->entityManager->flush();
 
-        $this->addFlash('success', 'Spiel "' . $game->getName() . '" wurde zurückgesetzt!');
+        // Update all player total points
+        $this->updatePlayerTotalPoints($game->getOlympix());
 
-        return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
-    }
-
-    #[Route('/game/duplicate/{id}', name: 'app_game_duplicate')]
-    public function duplicate(int $id): Response
-    {
-        $game = $this->gameRepository->find($id);
-
-        if (!$game) {
-            throw $this->createNotFoundException('Spiel nicht gefunden');
-        }
-
-        $newGame = new Game();
-        $newGame->setName($game->getName() . ' (Kopie)');
-        $newGame->setGameType($game->getGameType());
-        $newGame->setTeamSize($game->getTeamSize());
-        $newGame->setPointsDistribution($game->getPointsDistribution());
-        $newGame->setOlympix($game->getOlympix());
-        $newGame->setOrderPosition($this->gameRepository->getNextOrderPosition($game->getOlympix()->getId()));
-
-        $this->entityManager->persist($newGame);
-        $this->entityManager->flush();
-
-        $this->addFlash('success', 'Spiel "' . $game->getName() . '" wurde dupliziert!');
-
+        $this->addFlash('success', 'Spiel "' . $game->getName() . '" wurde zurückgesetzt');
         return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
     }
 
     #[Route('/game/bracket/{id}', name: 'app_game_bracket')]
-    public function bracket(int $id): Response
+    public function bracket(int $id, Request $request): Response
     {
         $game = $this->gameRepository->find($id);
 
@@ -465,29 +444,29 @@ class GameController extends AbstractController
         }
 
         if (!$game->isTournamentGame()) {
-            $this->addFlash('error', 'Bracket ist nur für Turnierspiele verfügbar');
+            $this->addFlash('error', 'Nur Turnier-Spiele haben ein Bracket');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
         $tournament = $game->getTournament();
         if (!$tournament) {
-            $this->addFlash('error', 'Turnier wurde noch nicht initialisiert');
+            $this->addFlash('error', 'Turnier nicht initialisiert');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        return $this->render('game/bracket.html.twig', [
+        return $this->render('tournament/bracket.html.twig', [
             'game' => $game,
             'tournament' => $tournament,
         ]);
     }
 
-    #[Route('/game/match-result/{gameId}/{matchId}', name: 'app_game_match_result')]
-    public function matchResult(int $gameId, string $matchId, Request $request): Response
+    #[Route('/game/bracket/{gameId}/update-match', name: 'app_game_bracket_update_match', methods: ['POST'])]
+    public function updateBracketMatch(int $gameId, Request $request): Response
     {
         $game = $this->gameRepository->find($gameId);
 
-        if (!$game) {
-            throw $this->createNotFoundException('Spiel nicht gefunden');
+        if (!$game || !$game->isTournamentGame()) {
+            throw $this->createNotFoundException('Turnier-Spiel nicht gefunden');
         }
 
         $tournament = $game->getTournament();
@@ -495,53 +474,61 @@ class GameController extends AbstractController
             throw $this->createNotFoundException('Turnier nicht gefunden');
         }
 
-        if ($request->isMethod('POST')) {
-            $winnerId = $request->request->get('winner_id');
-            $winnerType = $request->request->get('winner_type', 'player');
-            
-            if ($winnerId) {
-                // Handle both player and team winners
-                if ($winnerType === 'team') {
-                    // Find team data from bracket
-                    $winnerData = $this->findTeamDataInBracket($tournament, $winnerId);
-                } else {
-                    // Single player
-                    $winner = $this->playerRepository->find($winnerId);
-                    if ($winner) {
-                        $winnerData = [
-                            'id' => $winner->getId(),
-                            'name' => $winner->getName(),
-                            'total_points' => $winner->getTotalPoints(),
-                            'type' => 'player'
-                        ];
-                    }
-                }
-                
-                if (isset($winnerData)) {
-                    $tournament->updateMatchResult($matchId, $winnerData);
-                    
-                    // Check if tournament is complete
-                    if ($this->tournamentService->isTournamentComplete($tournament)) {
-                        $tournament->setIsCompleted(true);
-                        
-                        // Create tournament results with jokers
-                        $this->createTournamentResultsWithJokers($game);
-                        
-                        // Complete game
-                        $game->setStatus('completed');
-                        
-                        // Update player total points
-                        foreach ($game->getOlympix()->getPlayers() as $player) {
-                            $player->calculateTotalPoints();
-                        }
-                        
-                        $this->addFlash('success', 'Turnier abgeschlossen! Ergebnisse wurden automatisch erstellt.');
-                    } else {
-                        $this->addFlash('success', 'Match-Ergebnis wurde gespeichert');
-                    }
+        $matchId = $request->request->get('match_id');
+        $winnerId = $request->request->get('winner_id');
+        $winnerType = $request->request->get('winner_type'); // 'player' or 'team'
 
-                    $this->entityManager->flush();
+        if ($matchId && $winnerId && $winnerType) {
+            $winnerData = null;
+            
+            if ($winnerType === 'team') {
+                // Find team data in bracket
+                $teamData = $this->findTeamDataInBracket($tournament, (int)$winnerId);
+                if ($teamData) {
+                    $winnerData = [
+                        'id' => $teamData['id'],
+                        'name' => $teamData['name'],
+                        'type' => 'team',
+                        'players' => $teamData['players']
+                    ];
                 }
+            } else {
+                // Single player
+                $winner = $this->playerRepository->find($winnerId);
+                if ($winner) {
+                    $winnerData = [
+                        'id' => $winner->getId(),
+                        'name' => $winner->getName(),
+                        'total_points' => $winner->getTotalPoints(),
+                        'type' => 'player'
+                    ];
+                }
+            }
+            
+            if (isset($winnerData)) {
+                $tournament->updateMatchResult($matchId, $winnerData);
+                
+                // Check if tournament is complete
+                if ($this->tournamentService->isTournamentComplete($tournament)) {
+                    $tournament->setIsCompleted(true);
+                    
+                    // Create tournament results with jokers
+                    $this->createTournamentResultsWithJokers($game);
+                    
+                    // Complete game
+                    $game->setStatus('completed');
+                    
+                    // Update player total points
+                    foreach ($game->getOlympix()->getPlayers() as $player) {
+                        $player->calculateTotalPoints();
+                    }
+                    
+                    $this->addFlash('success', 'Turnier abgeschlossen! Ergebnisse wurden automatisch erstellt.');
+                } else {
+                    $this->addFlash('success', 'Match-Ergebnis wurde gespeichert');
+                }
+
+                $this->entityManager->flush();
             }
         }
 
@@ -626,6 +613,39 @@ class GameController extends AbstractController
         return new JsonResponse($response);
     }
 
+    #[Route('/api/games/{olympixId}/reorder', name: 'app_api_games_reorder', methods: ['POST'])]
+    public function reorderGames(int $olympixId, Request $request): JsonResponse
+    {
+        $olympix = $this->olympixRepository->find($olympixId);
+        
+        if (!$olympix) {
+            return new JsonResponse(['success' => false, 'message' => 'Olympix nicht gefunden'], 404);
+        }
+
+        $gameIds = $request->request->all('game_ids');
+        
+        if (empty($gameIds)) {
+            return new JsonResponse(['success' => false, 'message' => 'Keine Spiel-IDs übermittelt'], 400);
+        }
+
+        try {
+            foreach ($gameIds as $position => $gameId) {
+                $game = $this->gameRepository->find($gameId);
+                if ($game && $game->getOlympix()->getId() === $olympixId) {
+                    $game->setOrderPosition($position + 1);
+                }
+            }
+
+            $this->entityManager->flush();
+
+            return new JsonResponse(['success' => true, 'message' => 'Reihenfolge gespeichert']);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Fehler beim Speichern der Reihenfolge'], 500);
+        }
+    }
+
+    // *** ALLE PRIVATE METHODEN BEIBEHALTEN ***
+
     private function processGameResults(Game $game, Request $request): void
     {
         if ($game->isFreeForAllGame()) {
@@ -684,44 +704,61 @@ class GameController extends AbstractController
         $this->createTournamentResultsWithJokers($game);
     }
 
-private function createTournamentResultsWithJokers(Game $game): void
-{
-    $tournament = $game->getTournament();
-    if (!$tournament || !$tournament->isIsCompleted()) {
-        return;
-    }
+    private function createTournamentResultsWithJokers(Game $game): void
+    {
+        $tournament = $game->getTournament();
+        if (!$tournament || !$tournament->isIsCompleted()) {
+            return;
+        }
 
-    // Get pending jokers BEFORE creating results
-    $pendingDoubleJokers = $this->jokerRepository->findBy([
-        'game' => $game,
-        'jokerType' => 'double',
-        'isUsed' => false
-    ]);
+        // Get pending jokers BEFORE creating results
+        $pendingDoubleJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'double',
+            'isUsed' => false
+        ]);
 
-    $pendingSwapJokers = $this->jokerRepository->findBy([
-        'game' => $game,
-        'jokerType' => 'swap',
-        'isUsed' => false
-    ]);
+        $pendingSwapJokers = $this->jokerRepository->findBy([
+            'game' => $game,
+            'jokerType' => 'swap',
+            'isUsed' => false
+        ]);
 
-    $results = $tournament->getTournamentResults();
-    
-    // CHANGED: Use dynamic points distribution instead of fixed [8, 6, 4, 2]
-    $pointsDistribution = $game->getDefaultPointsDistribution();
+        $results = $tournament->getTournamentResults();
+        
+        // CHANGED: Use dynamic points distribution instead of fixed [8, 6, 4, 2]
+        $pointsDistribution = $game->getDefaultPointsDistribution();
 
-    // Clear existing results
-    foreach ($game->getGameResults() as $result) {
-        $this->entityManager->remove($result);
-    }
+        // Clear existing results
+        foreach ($game->getGameResults() as $result) {
+            $this->entityManager->remove($result);
+        }
 
-    // Create GameResults array to track who gets what
-    $gameResults = [];
+        // Create GameResults array to track who gets what
+        $gameResults = [];
 
-    foreach ($results as $position => $participantData) {
-        if ($participantData['type'] === 'team') {
-            // Handle team results - distribute points to all team members
-            foreach ($participantData['players'] as $playerData) {
-                $player = $this->playerRepository->find($playerData['id']);
+        foreach ($results as $position => $participantData) {
+            if ($participantData['type'] === 'team') {
+                // Handle team results - distribute points to all team members
+                foreach ($participantData['players'] as $playerData) {
+                    $player = $this->playerRepository->find($playerData['id']);
+                    if ($player) {
+                        $result = new GameResult();
+                        $result->setGame($game);
+                        $result->setPlayer($player);
+                        $result->setPosition($position);
+                        
+                        // CHANGED: Use dynamic points distribution
+                        $points = $pointsDistribution[$position - 1] ?? 0;
+                        $result->setPoints($points);
+
+                        $gameResults[$player->getId()] = $result;
+                        $this->entityManager->persist($result);
+                    }
+                }
+            } else {
+                // Handle single player results
+                $player = $this->playerRepository->find($participantData['id']);
                 if ($player) {
                     $result = new GameResult();
                     $result->setGame($game);
@@ -736,24 +773,7 @@ private function createTournamentResultsWithJokers(Game $game): void
                     $this->entityManager->persist($result);
                 }
             }
-        } else {
-            // Handle single player results
-            $player = $this->playerRepository->find($participantData['id']);
-            if ($player) {
-                $result = new GameResult();
-                $result->setGame($game);
-                $result->setPlayer($player);
-                $result->setPosition($position);
-                
-                // CHANGED: Use dynamic points distribution
-                $points = $pointsDistribution[$position - 1] ?? 0;
-                $result->setPoints($points);
-
-                $gameResults[$player->getId()] = $result;
-                $this->entityManager->persist($result);
-            }
         }
-    }
 
         // Flush - save GameResults in DB
         $this->entityManager->flush();
@@ -838,8 +858,20 @@ private function createTournamentResultsWithJokers(Game $game): void
             }
         }
 
-        // Final flush
         $this->entityManager->flush();
+    }
+
+    private function findTeamDataInBracket(Tournament $tournament, int $teamId): ?array
+    {
+        $bracketData = $tournament->getBracketData();
+        
+        foreach ($bracketData['participants'] as $participant) {
+            if ($participant['type'] === 'team' && $participant['id'] === $teamId) {
+                return $participant;
+            }
+        }
+        
+        return null;
     }
 
     private function applyJokersForGame(Game $game): void
@@ -926,7 +958,7 @@ private function createTournamentResultsWithJokers(Game $game): void
                 continue;
             }
 
-            // Find results directly in database
+            // Find both player results
             $sourceResult = $this->gameResultRepository->findByPlayerAndGame($sourcePlayer->getId(), $game->getId());
             $targetResult = $this->gameResultRepository->findByPlayerAndGame($targetPlayer->getId(), $game->getId());
 
@@ -949,7 +981,6 @@ private function createTournamentResultsWithJokers(Game $game): void
                 $swapJoker->setUsedAt(new \DateTime());
                 $this->entityManager->persist($swapJoker);
 
-                // Log the swap for admin view
                 $this->addFlash('info', 
                     'Swap-Joker angewendet: ' . $sourcePlayer->getName() . ' ↔ ' . $targetPlayer->getName() . 
                     ' für Spiel "' . $game->getName() . '" (Positionen getauscht)'
@@ -970,17 +1001,21 @@ private function createTournamentResultsWithJokers(Game $game): void
         $this->entityManager->flush();
     }
 
-    private function findTeamDataInBracket(Tournament $tournament, int $teamId): ?array
+    private function updatePlayerTotalPoints($olympix): void
     {
-        $bracketData = $tournament->getBracketData();
+        $players = $olympix->getPlayers();
         
-        foreach ($bracketData['participants'] as $participant) {
-            if ($participant['type'] === 'team' && $participant['id'] === $teamId) {
-                return $participant;
+        foreach ($players as $player) {
+            $totalPoints = 0;
+            
+            foreach ($player->getGameResults() as $gameResult) {
+                $totalPoints += $gameResult->getFinalPoints();
             }
+            
+            $player->setTotalPoints($totalPoints);
         }
         
-        return null;
+        $this->entityManager->flush();
     }
 
     private function getMinPlayersForGameType(string $gameType): int
@@ -991,6 +1026,7 @@ private function createTournamentResultsWithJokers(Game $game): void
             'tournament_single' => 2,
             'quiz' => 1,
             'split_or_steal' => 2,
+            'gamechanger' => 2, // *** NEU HINZUGEFÜGT ***
             default => 2
         };
     }

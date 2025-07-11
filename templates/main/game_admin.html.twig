@@ -148,7 +148,7 @@
                 
                 <div id="gamesList" class="space-y-4">
                     {% for game in games %}
-                        <div class="game-item game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %} p-4 rounded-lg" 
+                        <div class="game-item game-card {% if game.status == 'active' %}active{% elseif game.status == 'completed' %}completed{% endif %}{% if game.isGamechangerGame() %} gamechanger-card{% endif %} p-4 rounded-lg" 
                              data-game-id="{{ game.id }}" 
                              data-order="{{ game.orderPosition }}">
                             <div class="flex items-center">
@@ -163,11 +163,19 @@
                                             <h3 class="text-lg font-semibold text-gray-800">{{ game.name }}</h3>
                                             <div class="flex items-center space-x-2 mt-1">
                                                 <span class="text-sm text-gray-600 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
+                                                
                                                 {% if game.gameType == 'tournament_team' and game.teamSize %}
                                                     <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
                                                         {{ game.teamSize }}er Teams
                                                     </span>
                                                 {% endif %}
+                                                
+                                                {% if game.gameType == 'gamechanger' %}
+                                                    <span class="gamechanger-badge">
+                                                        🎯 GameChanger
+                                                    </span>
+                                                {% endif %}
+                                                
                                                 {% if game.status == 'active' %}
                                                     <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded animate-pulse">
                                                         🔴 LIVE
@@ -205,7 +213,24 @@
                                         </div>
                                         
                                         <div class="flex items-center space-x-2">
-                                            {% if game.status == 'pending' %}
+                                            {% if game.isGamechangerGame() %}
+                                                {% if game.status == 'pending' %}
+                                                    <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}" 
+                                                       class="btn-primary text-sm">
+                                                        🚀 Starten
+                                                    </a>
+                                                {% elseif game.status == 'active' %}
+                                                    <a href="{{ path('app_gamechanger_play', {gameId: game.id}) }}" 
+                                                       class="btn-success text-sm">
+                                                        ▶️ Spielen
+                                                    </a>
+                                                {% elseif game.status == 'completed' %}
+                                                    <a href="{{ path('app_gamechanger_play', {gameId: game.id}) }}" 
+                                                       class="btn-secondary text-sm">
+                                                        📊 Ergebnisse
+                                                    </a>
+                                                {% endif %}
+                                            {% elseif game.status == 'pending' %}
                                                 <a href="{{ path('app_game_start', {id: game.id}) }}" class="btn-success text-sm">
                                                     ▶️ Start
                                                 </a>
@@ -262,6 +287,69 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- GameChanger Details -->
+                            {% if game.isGamechangerGame() and gamechanger_throws is defined %}
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+                                    <h4 class="font-semibold text-purple-800 mb-3">🎯 GameChanger Details</h4>
+                                    
+                                    {% if gamechanger_throws|length > 0 %}
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div class="text-center">
+                                                <div class="text-2xl font-bold text-purple-600">{{ gamechanger_throws|length }}</div>
+                                                <div class="text-sm text-purple-600">Würfe gesamt</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-2xl font-bold text-green-600">{{ gamechanger_stats.bonusHits|default(0) }}</div>
+                                                <div class="text-sm text-green-600">Bonus-Treffer</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-2xl font-bold text-red-600">{{ gamechanger_stats.penaltyHits|default(0) }}</div>
+                                                <div class="text-sm text-red-600">Strafen-Treffer</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Letzte Würfe -->
+                                        <div class="bg-white rounded-lg p-3">
+                                            <h5 class="font-medium text-gray-800 mb-2">📋 Letzte Würfe:</h5>
+                                            <div class="space-y-1 text-sm max-h-32 overflow-y-auto">
+                                                {% for throw in gamechanger_throws|filter(t => t.thrownPoints > 0)|slice(-5)|reverse %}
+                                                    <div class="flex justify-between items-center py-1 border-b border-gray-100 last:border-b-0">
+                                                        <span class="font-medium">{{ throw.player.name }}</span>
+                                                        <span class="font-mono">{{ throw.thrownPoints }}</span>
+                                                        <span class="text-xs {% if throw.pointsScored > 0 %}text-green-600{% elseif throw.pointsScored < 0 %}text-red-600{% else %}text-gray-500{% endif %}">
+                                                            {{ throw.scoringReason|slice(0, 25) }}{% if throw.scoringReason|length > 25 %}...{% endif %}
+                                                        </span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        
+                                        {% if gamechanger_complete %}
+                                            <div class="mt-3 text-center">
+                                                <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                                    ✅ Spiel beendet - Alle haben geworfen
+                                                </span>
+                                            </div>
+                                        {% else %}
+                                            <div class="mt-3 text-center">
+                                                <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                                    ⏳ {{ olympix.players|length - gamechanger_throws|filter(t => t.thrownPoints > 0)|length }} Spieler noch ausstehend
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        
+                                    {% else %}
+                                        <div class="text-center text-purple-600">
+                                            <p class="mb-2">Noch nicht gestartet</p>
+                                            <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}" 
+                                               class="btn-primary text-sm">
+                                                Setup starten
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         </div>
                     {% else %}
                         <div class="text-center text-gray-500 py-8">
@@ -374,6 +462,47 @@
                 {% endif %}
             </div>
             
+            <!-- GameChanger Quick Stats Widget -->
+            {% set gamechangerGame = null %}
+            {% for game in games %}
+                {% if game.isGamechangerGame() and game.status == 'active' %}
+                    {% set gamechangerGame = game %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if gamechangerGame and gamechanger_stats is defined %}
+                <div class="gamechanger-card bg-white rounded-lg shadow-sm p-4 border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-gray-800">🎯 GameChanger Stats</h4>
+                        <span class="gamechanger-badge">AKTIV</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                            <div class="text-lg font-bold text-gray-800">{{ gamechanger_stats.totalThrows|default(0) }}</div>
+                            <div class="text-xs text-gray-500">Würfe</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-green-600">+{{ gamechanger_stats.totalBonusPoints|default(0) }}</div>
+                            <div class="text-xs text-gray-500">Bonus</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-red-600">-{{ gamechanger_stats.totalPenaltyPoints|default(0) }}</div>
+                            <div class="text-xs text-gray-500">Strafen</div>
+                        </div>
+                    </div>
+                    
+                    {% if not gamechanger_complete and gamechangerGame.status == 'active' %}
+                        <div class="mt-3">
+                            <a href="{{ path('app_gamechanger_play', {gameId: gamechangerGame.id}) }}" 
+                               class="block text-center bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors">
+                                ▶️ Weiter spielen
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
             <!-- Quick Actions -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">⚡ Schnellaktionen</h3>
@@ -404,6 +533,63 @@
 <!-- External Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<style>
+.gamechanger-highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.gamechanger-card {
+    border-left: 4px solid #667eea;
+}
+
+.gamechanger-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.game-card {
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.game-card.active {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.game-card.completed {
+    border-color: #6b7280;
+    background-color: #f9fafb;
+}
+
+.ranking-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.ranking-1 { background-color: #fbbf24; }
+.ranking-2 { background-color: #9ca3af; }
+.ranking-3 { background-color: #f59e0b; }
+.ranking-default { background-color: #6b7280; }
+</style>
 
 <script>
 // QR-Code für Spieler-Zugang
