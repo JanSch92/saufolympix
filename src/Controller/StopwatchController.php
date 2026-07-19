@@ -184,7 +184,7 @@ class StopwatchController extends AbstractController
     }
 
     #[Route('/stopwatch/results/{gameId}', name: 'app_stopwatch_results')]
-    public function results(int $gameId): Response
+    public function results(int $gameId, Request $request): Response
     {
         $game = $this->gameRepository->find($gameId);
 
@@ -196,9 +196,20 @@ class StopwatchController extends AbstractController
         $target = (float) $game->getStopwatchTarget();
         $ranked = $this->stopwatchEvaluationService->rankAttempts($attempts, $target);
 
+        // Spieleransicht (?player=ID): zeigt Dashboard-Link statt Admin-Link
+        $viewerPlayer = null;
+        $viewerId = $request->query->getInt('player');
+        if ($viewerId > 0) {
+            $candidate = $this->playerRepository->find($viewerId);
+            if ($candidate && $candidate->getOlympix()->getId() === $game->getOlympix()->getId()) {
+                $viewerPlayer = $candidate;
+            }
+        }
+
         return $this->render('stopwatch/results.html.twig', [
             'game' => $game,
             'ranked_attempts' => $ranked,
+            'viewer_player' => $viewerPlayer,
         ]);
     }
 

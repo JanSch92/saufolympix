@@ -181,7 +181,12 @@
 
         function showResultsLink() {
             document.getElementById('waiting-info').classList.add('hidden');
-            document.getElementById('results-link').classList.remove('hidden');
+            const resultsLink = document.getElementById('results-link');
+            // Spieler-Kontext mitgeben: Ergebnisseite zeigt dann den Dashboard-Link statt Admin
+            if (selectedPlayerId && !resultsLink.href.includes('player=')) {
+                resultsLink.href += '?player=' + selectedPlayerId;
+            }
+            resultsLink.classList.remove('hidden');
 
             // Automatisch zurück zum Dashboard — dort erscheint das nächste Spiel von selbst
             if (selectedPlayerId) {

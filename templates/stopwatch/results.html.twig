@@ -63,7 +63,21 @@
     {% endif %}
 
     <div class="text-center">
-        <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" class="btn-primary">← Zurück zum Admin</a>
+        {% if viewer_player is defined and viewer_player %}
+            {# Spieleransicht: niemals ein Admin-Link #}
+            <a href="{{ path('app_player_dashboard', {olympixId: game.olympix.id, playerId: viewer_player.id}) }}" class="btn-primary">Zurück zu deinem Dashboard</a>
+        {% else %}
+            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" class="btn-primary">← Zurück zum Admin</a>
+        {% endif %}
     </div>
 </div>
+
+{% if viewer_player is defined and viewer_player %}
+<script>
+    // Spieler automatisch zurück zum Dashboard — dort erscheint das nächste Spiel von selbst
+    setTimeout(() => {
+        window.location.href = '{{ path('app_player_dashboard', {olympixId: game.olympix.id, playerId: viewer_player.id}) }}';
+    }, 10000);
+</script>
+{% endif %}
 {% endblock %}

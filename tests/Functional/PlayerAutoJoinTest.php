@@ -122,6 +122,35 @@ class PlayerAutoJoinTest extends FunctionalTestCase
         $this->assertStringContainsString('type="hidden" id="player_id" name="player_id" value="' . $players[0]->getId() . '"', $content);
     }
 
+    public function testStopwatchResultsPlayerViewHasNoAdminLink(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'stopwatch');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        foreach ($players as $i => $player) {
+            $this->client->request(
+                'POST',
+                '/stopwatch/submit/' . $game->getId(),
+                server: ['CONTENT_TYPE' => 'application/json'],
+                content: json_encode(['player_id' => $player->getId(), 'elapsed_seconds' => 10.0 + $i])
+            );
+        }
+
+        // Spieleransicht: Dashboard-Link, NIEMALS Admin-Link
+        $this->client->request('GET', '/stopwatch/results/' . $game->getId() . '?player=' . $players[0]->getId());
+        $this->assertResponseIsSuccessful();
+        $content = $this->client->getResponse()->getContent();
+        $this->assertStringContainsString('/player-dashboard/' . $olympix->getId() . '/' . $players[0]->getId(), $content);
+        $this->assertStringNotContainsString('Zurück zum Admin', $content);
+        $this->assertStringNotContainsString('/gameadmin/', $content);
+
+        // Adminansicht (ohne player-Parameter): Admin-Link vorhanden
+        $this->client->request('GET', '/stopwatch/results/' . $game->getId());
+        $this->assertStringContainsString('Zurück zum Admin', $this->client->getResponse()->getContent());
+    }
+
     public function testStopwatchMobilePreselectSkipsPlayerStep(): void
     {
         $olympix = $this->createOlympix();
