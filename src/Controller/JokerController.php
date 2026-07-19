@@ -47,8 +47,7 @@ class JokerController extends AbstractController
         $existingDoubleJoker = $this->jokerRepository->findOneBy([
             'player' => $player,
             'game' => $game,
-            'jokerType' => 'double',
-            'isUsed' => true
+            'jokerType' => 'double'
         ]);
 
         if ($existingDoubleJoker) {
@@ -56,12 +55,14 @@ class JokerController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Create joker record for this specific game
+        // Joker VORMERKEN (isUsed=false): angewendet wird er automatisch,
+        // sobald die Ergebnisse des Spiels feststehen (JokerApplicationService)
         $joker = new Joker();
         $joker->setPlayer($player);
         $joker->setGame($game);
         $joker->setJokerType('double');
-        $joker->use();
+        $joker->setIsUsed(false);
+        $joker->setUsedAt(new \DateTime());
 
         // Mark global joker as used
         $player->setJokerDoubleUsed(true);
@@ -95,8 +96,7 @@ class JokerController extends AbstractController
         $existingSwapJoker = $this->jokerRepository->findOneBy([
             'player' => $player,
             'game' => $game,
-            'jokerType' => 'swap',
-            'isUsed' => true
+            'jokerType' => 'swap'
         ]);
 
         if ($existingSwapJoker) {
@@ -129,13 +129,15 @@ class JokerController extends AbstractController
                 return $this->redirectToRoute('app_game_admin', ['id' => $olympix->getId()]);
             }
 
-            // Create joker record for this specific game
+            // Joker VORMERKEN (isUsed=false): angewendet wird er automatisch,
+            // sobald die Ergebnisse des Spiels feststehen (JokerApplicationService)
             $joker = new Joker();
             $joker->setPlayer($player);
             $joker->setGame($game);
             $joker->setTargetPlayer($targetPlayer);
             $joker->setJokerType('swap');
-            $joker->use();
+            $joker->setIsUsed(false);
+            $joker->setUsedAt(new \DateTime());
 
             // Mark global joker as used
             $player->setJokerSwapUsed(true);
