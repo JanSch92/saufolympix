@@ -56,6 +56,12 @@ class Game
     #[ORM\OneToMany(mappedBy: 'game', targetEntity: GamechangerThrow::class, orphanRemoval: true)]
     private Collection $gamechangerThrows;
 
+    #[ORM\OneToMany(mappedBy: 'game', targetEntity: StopwatchAttempt::class, orphanRemoval: true)]
+    private Collection $stopwatchAttempts;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2, nullable: true)]
+    private ?string $stopwatchTarget = null;
+
     public function __construct()
     {
         $this->gameResults = new ArrayCollection();
@@ -63,6 +69,7 @@ class Game
         $this->jokers = new ArrayCollection();
         $this->splitOrStealMatches = new ArrayCollection();
         $this->gamechangerThrows = new ArrayCollection();
+        $this->stopwatchAttempts = new ArrayCollection();
         $this->status = 'pending';
         $this->orderPosition = 0;
     }
@@ -298,11 +305,54 @@ class Game
         return $this;
     }
 
+    /**
+     * @return Collection<int, StopwatchAttempt>
+     */
+    public function getStopwatchAttempts(): Collection
+    {
+        return $this->stopwatchAttempts;
+    }
+
+    public function addStopwatchAttempt(StopwatchAttempt $stopwatchAttempt): static
+    {
+        if (!$this->stopwatchAttempts->contains($stopwatchAttempt)) {
+            $this->stopwatchAttempts->add($stopwatchAttempt);
+            $stopwatchAttempt->setGame($this);
+        }
+        return $this;
+    }
+
+    public function removeStopwatchAttempt(StopwatchAttempt $stopwatchAttempt): static
+    {
+        if ($this->stopwatchAttempts->removeElement($stopwatchAttempt)) {
+            if ($stopwatchAttempt->getGame() === $this) {
+                $stopwatchAttempt->setGame(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getStopwatchTarget(): ?string
+    {
+        return $this->stopwatchTarget;
+    }
+
+    public function setStopwatchTarget(?string $stopwatchTarget): static
+    {
+        $this->stopwatchTarget = $stopwatchTarget;
+        return $this;
+    }
+
     // *** GAME TYPE CHECK METHODS ***
 
     public function isQuizGame(): bool
     {
         return $this->gameType === 'quiz';
+    }
+
+    public function isStopwatchGame(): bool
+    {
+        return $this->gameType === 'stopwatch';
     }
 
     public function isTournamentGame(): bool
@@ -381,7 +431,21 @@ class Game
             'quiz' => 'Quiz',
             'split_or_steal' => 'Split or Steal',
             'gamechanger' => 'Gamechanger',
+            'stopwatch' => 'Stoppuhr',
             default => 'Unbekannt'
+        };
+    }
+
+    public function getGameTypeEmoji(): string
+    {
+        return match($this->gameType) {
+            'free_for_all' => '⚔️',
+            'tournament_team', 'tournament_single' => '🏆',
+            'quiz' => '🧠',
+            'split_or_steal' => '🤝',
+            'gamechanger' => '🎯',
+            'stopwatch' => '⏱️',
+            default => '🎲'
         };
     }
 
@@ -394,6 +458,7 @@ class Game
             'quiz' => 15,
             'split_or_steal' => 10,
             'gamechanger' => 15,
+            'stopwatch' => 10,
             default => 30
         };
     }
@@ -552,11 +617,15 @@ class Game
             }
 
             if ($this->isQuizGame()) {
-                return '/quiz/manage/' . $this->id;
+                return '/quiz/' . $this->id;
             }
 
             if ($this->isGamechangerGame()) {
                 return '/gamechanger/play/' . $this->id;
+            }
+
+            if ($this->isStopwatchGame()) {
+                return '/stopwatch/manage/' . $this->id;
             }
 
             return '/game/results/' . $this->id;
@@ -612,7 +681,7 @@ class Game
             if ($this->isGamechangerGame()) {
                 $totalPlayers = $this->olympix->getPlayers()->count();
                 if ($totalPlayers === 0) return 0;
-                
+
                 // GEFIXT: Zähle nur echte Würfe (thrownPoints > 0)
                 $realThrows = 0;
                 foreach ($this->gamechangerThrows as $throw) {
@@ -620,8 +689,15 @@ class Game
                         $realThrows++;
                     }
                 }
-                
+
                 return round(($realThrows / $totalPlayers) * 100);
+            }
+
+            if ($this->isStopwatchGame()) {
+                $totalPlayers = $this->olympix->getPlayers()->count();
+                if ($totalPlayers === 0) return 0;
+
+                return round(($this->stopwatchAttempts->count() / $totalPlayers) * 100);
             }
 
             return 50;

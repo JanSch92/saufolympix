@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}⏱️ Stoppuhr verwalten – {{ game.name }}{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-100">⏱️ {{ game.name }}</h1>
+            <p class="text-gray-400 mt-1">Stoppuhr-Spiel · {{ game.olympix.name }}</p>
+        </div>
+        <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" class="btn-secondary">← Zurück zum Admin</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Zielzeit -->
+        <div class="card card-highlight p-6 text-center">
+            <div class="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-1">🎯 Zielzeit</div>
+            <div class="text-5xl font-black text-amber-400">
+                {{ game.stopwatchTarget ? game.stopwatchTarget|number_format(2, ',', '') : '–' }}<span class="text-2xl text-amber-300"> s</span>
+            </div>
+        </div>
+
+        <!-- QR / Link -->
+        <div class="card p-6 text-center">
+            <div class="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-3">📱 Spieler-Link</div>
+            <div id="qr-code" class="qr-code-container inline-block !p-3"></div>
+            <p class="text-gray-500 text-xs mt-2 break-all">{{ url('app_stopwatch_mobile', {gameId: game.id}) }}</p>
+        </div>
+    </div>
+
+    <!-- Fortschritt -->
+    <div class="card p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-100">👥 Abgaben</h2>
+            <span class="text-sm font-semibold px-3 py-1 rounded-full bg-party-purple/20 text-purple-300" id="progress-badge">
+                {{ attempts|length }} / {{ players|length }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="player-status-grid">
+            {% for player in players %}
+                <div class="rounded-xl p-3 flex items-center gap-2 {{ player.id in submitted_player_ids ? 'bg-emerald-500/15 border border-emerald-500/40' : 'bg-night-700/40 border border-gray-700' }}"
+                     data-player-status="{{ player.id }}">
+                    <span>{{ player.id in submitted_player_ids ? '✅' : '⏳' }}</span>
+                    <span class="font-medium text-gray-200 truncate">{{ player.name }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Aktionen -->
+    <div class="card p-6 text-center">
+        {% if game.isCompleted %}
+            <a href="{{ path('app_stopwatch_results', {gameId: game.id}) }}" class="btn-primary">🏁 Ergebnisse ansehen</a>
+        {% elseif all_submitted and attempts|length > 0 %}
+            <p class="text-emerald-300 font-semibold mb-4">✅ Alle Spieler haben abgegeben!</p>
+            <a href="{{ path('app_stopwatch_evaluate', {gameId: game.id}) }}" class="btn-success">🏆 Jetzt auswerten</a>
+        {% else %}
+            <p class="text-gray-400 mb-4">Warte auf die Abgaben der Spieler… Das Spiel wird automatisch ausgewertet, sobald alle fertig sind.</p>
+            {% if attempts|length > 0 %}
+                <a href="{{ path('app_stopwatch_evaluate', {gameId: game.id}) }}" class="btn-secondary"
+                   onclick="return confirm('Es haben noch nicht alle Spieler abgegeben. Trotzdem auswerten?')">
+                    ⚡ Vorzeitig auswerten ({{ attempts|length }} Abgaben)
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    generateQRCode('{{ url('app_stopwatch_mobile', {gameId: game.id})|e('js') }}', 'qr-code');
+
+    {% if not game.isCompleted %}
+    (function () {
+        const interval = setInterval(() => {
+            fetch(`/api/stopwatch/{{ game.id }}/status`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('progress-badge').textContent =
+                        `${data.submitted_count} / ${data.total_players}`;
+
+                    data.submitted.forEach(entry => {
+                        const el = document.querySelector(`[data-player-status="${entry.player_id}"]`);
+                        if (el && el.querySelector('span').textContent !== '✅') {
+                            el.className = 'rounded-xl p-3 flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/40';
+                            el.querySelector('span').textContent = '✅';
+                        }
+                    });
+
+                    if (data.is_completed) {
+                        clearInterval(interval);
+                        window.location.href = '{{ path('app_stopwatch_results', {gameId: game.id}) }}';
+                    }
+                })
+                .catch(() => {});
+        }, 3000);
+    })();
+    {% endif %}
+</script>
+{% endblock %}

@@ -12,6 +12,11 @@ use App\Repository\GameResultRepository;
 use App\Repository\JokerRepository;
 use App\Repository\SplitOrStealMatchRepository;
 use App\Repository\GamechangerThrowRepository; // *** NEU HINZUGEFÜGT ***
+use App\Entity\QuizQuestion;
+use App\Repository\QuizQuestionRepository;
+use App\Service\JokerApplicationService;
+use App\Service\QuizQuestionGeneratorService;
+use App\Service\StopwatchEvaluationService;
 use App\Service\TournamentService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,7 +36,10 @@ class GameController extends AbstractController
         private JokerRepository $jokerRepository,
         private TournamentService $tournamentService,
         private SplitOrStealMatchRepository $splitOrStealMatchRepository,
-        private GamechangerThrowRepository $gamechangerThrowRepository // *** NEU HINZUGEFÜGT ***
+        private GamechangerThrowRepository $gamechangerThrowRepository, // *** NEU HINZUGEFÜGT ***
+        private QuizQuestionRepository $quizQuestionRepository,
+        private QuizQuestionGeneratorService $quizQuestionGeneratorService,
+        private JokerApplicationService $jokerApplicationService
     ) {}
 
     #[Route('/game/create/{olympixId}', name: 'app_game_create')]
@@ -54,8 +62,8 @@ class GameController extends AbstractController
                 return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
             }
 
-            // Validate game type - *** ERWEITERT UM GAMECHANGER ***
-            $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal', 'gamechanger'];
+            // Validate game type - *** ERWEITERT UM GAMECHANGER + STOPPUHR ***
+            $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal', 'gamechanger', 'stopwatch'];
             if (!in_array($gameType, $validGameTypes)) {
                 $this->addFlash('error', 'Ungültiger Spieltyp');
                 return $this->redirectToRoute('app_game_create', ['olympixId' => $olympixId]);
@@ -158,6 +166,29 @@ class GameController extends AbstractController
             $this->tournamentService->initializeTournament($game);
         }
 
+        // Quiz: Fragen automatisch generieren, falls noch keine vorhanden sind
+        if ($game->isQuizGame() && $game->getQuizQuestions()->count() === 0) {
+            $generated = $this->quizQuestionGeneratorService->generateQuestions(10);
+
+            $position = 1;
+            foreach ($generated as $entry) {
+                $question = new QuizQuestion();
+                $question->setQuestion($entry['question']);
+                $question->setCorrectAnswer($entry['answer']);
+                $question->setGame($game);
+                $question->setOrderPosition($position++);
+                $this->entityManager->persist($question);
+            }
+
+            $source = $this->quizQuestionGeneratorService->isOpenAiConfigured() ? 'ChatGPT' : 'Fragenpool';
+            $this->addFlash('success', count($generated) . ' Quizfragen wurden automatisch generiert (' . $source . ')');
+        }
+
+        // Stoppuhr: Zufällige Zielzeit zwischen 5 und 60 Sekunden festlegen
+        if ($game->isStopwatchGame() && $game->getStopwatchTarget() === null) {
+            $game->setStopwatchTarget(StopwatchEvaluationService::randomTarget());
+        }
+
         $this->entityManager->persist($game);
         $this->entityManager->flush();
 
@@ -187,6 +218,11 @@ class GameController extends AbstractController
                 return $this->redirectToRoute('app_split_or_steal_setup', ['gameId' => $game->getId()]);
             }
             return $this->redirectToRoute('app_split_or_steal_evaluate', ['gameId' => $game->getId()]);
+        }
+
+        // Stoppuhr-Spiele werden über die Auswertung abgeschlossen
+        if ($game->isStopwatchGame()) {
+            return $this->redirectToRoute('app_stopwatch_evaluate', ['gameId' => $game->getId()]);
         }
 
         $game->setStatus('completed');
@@ -221,6 +257,11 @@ class GameController extends AbstractController
         // Special handling for Split or Steal games
         if ($game->isSplitOrStealGame()) {
             return $this->redirectToRoute('app_split_or_steal_evaluate', ['gameId' => $game->getId()]);
+        }
+
+        // Stoppuhr-Spiele haben eine eigene Verwaltungsseite
+        if ($game->isStopwatchGame()) {
+            return $this->redirectToRoute('app_stopwatch_manage', ['gameId' => $game->getId()]);
         }
 
         if ($request->isMethod('POST')) {
@@ -454,7 +495,7 @@ class GameController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        return $this->render('tournament/bracket.html.twig', [
+        return $this->render('game/bracket.html.twig', [
             'game' => $game,
             'tournament' => $tournament,
         ]);
@@ -650,12 +691,14 @@ class GameController extends AbstractController
     {
         if ($game->isFreeForAllGame()) {
             $this->processFreeForAllResults($game, $request);
-            
+
             // Flush first, then apply jokers
             $this->entityManager->flush();
-            
-            // Apply both joker types
-            $this->applyJokersForGame($game);
+
+            // Apply both joker types (gemeinsamer Service)
+            foreach ($this->jokerApplicationService->applyJokersForGame($game) as $message) {
+                $this->addFlash($message['type'], $message['message']);
+            }
         } elseif ($game->isTournamentGame()) {
             $this->processTournamentResults($game);
             // For tournament games: Jokers are already applied in createTournamentResultsWithJokers()
@@ -874,133 +917,6 @@ class GameController extends AbstractController
         return null;
     }
 
-    private function applyJokersForGame(Game $game): void
-    {
-        // Apply double jokers first
-        $this->applyDoubleJokersForGame($game);
-        
-        // Then apply swap jokers
-        $this->applySwapJokersForGame($game);
-    }
-
-    private function applyDoubleJokersForGame(Game $game): void
-    {
-        // Get all pending double jokers for this game
-        $doubleJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'double',
-            'isUsed' => false
-        ]);
-
-        if (empty($doubleJokers)) {
-            return; // No double jokers for this game
-        }
-
-        foreach ($doubleJokers as $doubleJoker) {
-            $player = $doubleJoker->getPlayer();
-            
-            if (!$player) {
-                continue;
-            }
-
-            // Find player result directly in database
-            $playerResult = $this->gameResultRepository->findByPlayerAndGame($player->getId(), $game->getId());
-
-            if ($playerResult) {
-                // Apply double joker - mark in GameResult
-                $playerResult->setJokerDoubleApplied(true);
-                $this->entityManager->persist($playerResult);
-                
-                // Mark the double joker as used
-                $doubleJoker->setIsUsed(true);
-                $doubleJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($doubleJoker);
-                
-                // Log the double joker application
-                $this->addFlash('info', 
-                    'Doppelte-Punkte-Joker angewendet: ' . $player->getName() . 
-                    ' für Spiel "' . $game->getName() . '" (Punkte: ' . $playerResult->getPoints() . ' → ' . $playerResult->getFinalPoints() . ')'
-                );
-            } else {
-                // If player didn't participate, the joker is wasted but mark as used
-                $doubleJoker->setIsUsed(true);
-                $doubleJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($doubleJoker);
-                
-                $this->addFlash('warning', 
-                    'Doppelte-Punkte-Joker verfallen: ' . $player->getName() . 
-                    ' hat nicht an "' . $game->getName() . '" teilgenommen'
-                );
-            }
-        }
-
-        $this->entityManager->flush();
-    }
-
-    private function applySwapJokersForGame(Game $game): void
-    {
-        // Get all pending swap jokers for this game
-        $swapJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'swap',
-            'isUsed' => false
-        ]);
-
-        if (empty($swapJokers)) {
-            return; // No swap jokers for this game
-        }
-
-        foreach ($swapJokers as $swapJoker) {
-            $sourcePlayer = $swapJoker->getPlayer();
-            $targetPlayer = $swapJoker->getTargetPlayer();
-            
-            if (!$sourcePlayer || !$targetPlayer) {
-                continue;
-            }
-
-            // Find both player results
-            $sourceResult = $this->gameResultRepository->findByPlayerAndGame($sourcePlayer->getId(), $game->getId());
-            $targetResult = $this->gameResultRepository->findByPlayerAndGame($targetPlayer->getId(), $game->getId());
-
-            if ($sourceResult && $targetResult) {
-                // Swap the positions and points
-                $tempPosition = $sourceResult->getPosition();
-                $tempPoints = $sourceResult->getPoints();
-
-                $sourceResult->setPosition($targetResult->getPosition());
-                $sourceResult->setPoints($targetResult->getPoints());
-
-                $targetResult->setPosition($tempPosition);
-                $targetResult->setPoints($tempPoints);
-
-                $this->entityManager->persist($sourceResult);
-                $this->entityManager->persist($targetResult);
-
-                // Mark the swap joker as used
-                $swapJoker->setIsUsed(true);
-                $swapJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($swapJoker);
-
-                $this->addFlash('info', 
-                    'Swap-Joker angewendet: ' . $sourcePlayer->getName() . ' ↔ ' . $targetPlayer->getName() . 
-                    ' für Spiel "' . $game->getName() . '" (Positionen getauscht)'
-                );
-            } else {
-                // If one or both players didn't participate, the joker is wasted but mark as used
-                $swapJoker->setIsUsed(true);
-                $swapJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($swapJoker);
-                
-                $this->addFlash('warning', 
-                    'Swap-Joker verfallen: ' . $sourcePlayer->getName() . ' oder ' . $targetPlayer->getName() . 
-                    ' haben nicht an "' . $game->getName() . '" teilgenommen'
-                );
-            }
-        }
-
-        $this->entityManager->flush();
-    }
-
     private function updatePlayerTotalPoints($olympix): void
     {
         $players = $olympix->getPlayers();
@@ -1027,6 +943,7 @@ class GameController extends AbstractController
             'quiz' => 1,
             'split_or_steal' => 2,
             'gamechanger' => 2, // *** NEU HINZUGEFÜGT ***
+            'stopwatch' => 2,
             default => 2
         };
     }

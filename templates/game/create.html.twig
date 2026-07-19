@@ -48,12 +48,13 @@
                         onchange="updateGameTypeOptions()"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Bitte wählen</option>
-                    <option value="free_for_all">Free For All</option>
-                    <option value="tournament_team">Turnier (Team)</option>
-                    <option value="tournament_single">Turnier (Einzel)</option>
-                    <option value="quiz">Quiz</option>
-                    <option value="split_or_steal">Split or Steal</option>
-                    <option value="gamechanger">Gamechanger</option> <!-- *** NEU HINZUGEFÜGT *** -->
+                    <option value="free_for_all">⚔️ Free For All</option>
+                    <option value="tournament_team">🏆 Turnier (Team)</option>
+                    <option value="tournament_single">🏆 Turnier (Einzel)</option>
+                    <option value="quiz">🧠 Quiz</option>
+                    <option value="split_or_steal">🤝 Split or Steal</option>
+                    <option value="gamechanger">🎯 Gamechanger</option> <!-- *** NEU HINZUGEFÜGT *** -->
+                    <option value="stopwatch">⏱️ Stoppuhr</option>
                 </select>
             </div>
             
@@ -177,7 +178,23 @@
                             <strong>Besonderheit:</strong> Schnelles Spiel (10-20 Min), jeder wirft nur einmal, strategisches Element durch aktuelle Punktestände.
                         </p>
                     </div>
-                    
+
+                    <!-- *** NEU: STOPPUHR HELP *** -->
+                    <div id="help-stopwatch" class="game-type-help hidden">
+                        <h4 class="font-semibold text-gray-800 mb-2">⏱️ Stoppuhr</h4>
+                        <p class="text-gray-600 mb-2">
+                            Beim Start wird eine zufällige Zielzeit zwischen 5 und 60 Sekunden gewählt (z.B. 20,86 s).
+                            Jeder Spieler startet und stoppt blind eine Stoppuhr auf dem Handy und versucht,
+                            möglichst nah an die Zielzeit zu kommen. Die laufende Zeit ist dabei unsichtbar!
+                        </p>
+                        <p class="text-blue-600 text-xs">
+                            <strong>Beispiel:</strong> Zielzeit 20,86 s – wer am nächsten dran stoppt, gewinnt
+                        </p>
+                        <p class="text-green-600 text-xs mt-1">
+                            <strong>Standardpunkte:</strong> Nach Platzierung der Abweichungen (wie beim Quiz)
+                        </p>
+                    </div>
+
                     <!-- Default -->
                     <div id="help-default" class="game-type-help">
                         <p class="text-gray-500 text-center">Wähle einen Spieltyp aus, um Details zu sehen</p>
@@ -257,7 +274,7 @@
         }
         
         // Update points distribution placeholder and visibility
-        if (gameType === 'quiz' || gameType === 'split_or_steal' || gameType === 'gamechanger') { // *** ERWEITERT UM GAMECHANGER ***
+        if (gameType === 'quiz' || gameType === 'split_or_steal' || gameType === 'gamechanger' || gameType === 'stopwatch') { // *** ERWEITERT UM GAMECHANGER + STOPPUHR ***
             pointsDistribution.style.display = 'none';
             pointsDistribution.previousElementSibling.style.display = 'none'; // Hide label
         } else {
@@ -302,7 +319,8 @@
                 'tournament_single': { min: 2, max: 16 },
                 'quiz': { min: 1 },
                 'split_or_steal': { min: 2 },
-                'gamechanger': { min: 2 } // *** NEU HINZUGEFÜGT ***
+                'gamechanger': { min: 2 }, // *** NEU HINZUGEFÜGT ***
+                'stopwatch': { min: 2 }
             };
             
             const req = requirements[gameType];

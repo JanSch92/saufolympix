@@ -243,6 +243,11 @@
                                                         📱 QR-Code
                                                     </a>
                                                 {% endif %}
+                                                {% if game.isStopwatchGame %}
+                                                    <a href="{{ path('app_stopwatch_manage', {gameId: game.id}) }}" class="btn-secondary text-sm">
+                                                        ⏱️ Verwalten
+                                                    </a>
+                                                {% endif %}
                                                 {% if game.isTournamentGame %}
                                                     <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary text-sm">
                                                         🏆 Bracket

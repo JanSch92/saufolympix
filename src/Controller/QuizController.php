@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Game;
 use App\Entity\QuizQuestion;
 use App\Entity\QuizAnswer;
 use App\Entity\GameResult;
@@ -10,7 +11,8 @@ use App\Repository\QuizQuestionRepository;
 use App\Repository\QuizAnswerRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\GameResultRepository;
-use App\Repository\JokerRepository;
+use App\Service\JokerApplicationService;
+use App\Service\QuizQuestionGeneratorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,8 +28,56 @@ class QuizController extends AbstractController
         private QuizAnswerRepository $quizAnswerRepository,
         private PlayerRepository $playerRepository,
         private GameResultRepository $gameResultRepository,
-        private JokerRepository $jokerRepository
+        private JokerApplicationService $jokerApplicationService,
+        private QuizQuestionGeneratorService $quizQuestionGeneratorService
     ) {}
+
+    #[Route('/quiz/generate/{gameId}', name: 'app_quiz_generate', methods: ['POST'])]
+    public function generate(int $gameId): Response
+    {
+        $game = $this->gameRepository->find($gameId);
+
+        if (!$game) {
+            throw $this->createNotFoundException('Spiel nicht gefunden');
+        }
+
+        if (!$game->isQuizGame()) {
+            $this->addFlash('error', 'Nur Quiz-Spiele können Fragen generieren');
+            return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
+        }
+
+        // Vorhandene Fragen nur löschen, wenn noch keine Antworten existieren
+        foreach ($game->getQuizQuestions() as $question) {
+            if ($question->getQuizAnswers()->count() > 0) {
+                $this->addFlash('error', 'Fragen können nicht neu generiert werden, da bereits Antworten vorhanden sind');
+                return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
+            }
+        }
+
+        foreach ($game->getQuizQuestions() as $question) {
+            $this->entityManager->remove($question);
+        }
+        $this->entityManager->flush();
+
+        $generated = $this->quizQuestionGeneratorService->generateQuestions(10);
+
+        $position = 1;
+        foreach ($generated as $entry) {
+            $question = new QuizQuestion();
+            $question->setQuestion($entry['question']);
+            $question->setCorrectAnswer($entry['answer']);
+            $question->setGame($game);
+            $question->setOrderPosition($position++);
+            $this->entityManager->persist($question);
+        }
+
+        $this->entityManager->flush();
+
+        $source = $this->quizQuestionGeneratorService->isOpenAiConfigured() ? 'ChatGPT' : 'Fragenpool';
+        $this->addFlash('success', count($generated) . ' Fragen wurden automatisch generiert (' . $source . ')');
+
+        return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
+    }
 
     #[Route('/quiz/questions/{gameId}', name: 'app_quiz_questions')]
     public function questions(int $gameId, Request $request): Response
@@ -394,140 +444,11 @@ class QuizController extends AbstractController
         }
 
         $this->entityManager->flush();
-        
-        // WICHTIG: Nach dem Erstellen der Quiz-Ergebnisse, JOKER anwenden!
-        $this->applyJokersForQuizGame($game);
-    }
 
-    /**
-     * NEUE METHODE: Apply jokers for quiz games
-     * Similar to GameController but for quiz games
-     */
-    private function applyJokersForQuizGame(Game $game): void
-    {
-        // Apply double jokers first
-        $this->applyDoubleJokersForQuizGame($game);
-        
-        // Then apply swap jokers
-        $this->applySwapJokersForQuizGame($game);
-    }
-
-    /**
-     * Apply double jokers for a quiz game
-     */
-    private function applyDoubleJokersForQuizGame(Game $game): void
-    {
-        // Get all pending double jokers for this game
-        $doubleJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'double',
-            'isUsed' => false
-        ]);
-
-        if (empty($doubleJokers)) {
-            return; // No double jokers for this game
+        // WICHTIG: Nach dem Erstellen der Quiz-Ergebnisse, JOKER anwenden (gemeinsamer Service)!
+        foreach ($this->jokerApplicationService->applyJokersForGame($game) as $message) {
+            $this->addFlash($message['type'], $message['message']);
         }
-
-        foreach ($doubleJokers as $doubleJoker) {
-            $player = $doubleJoker->getPlayer();
-            
-            if (!$player) {
-                continue;
-            }
-
-            // Get game result for this player
-            $playerResult = null;
-            foreach ($game->getGameResults() as $result) {
-                if ($result->getPlayer()->getId() === $player->getId()) {
-                    $playerResult = $result;
-                    break;
-                }
-            }
-
-            if ($playerResult) {
-                // Apply double joker - mark in GameResult
-                $playerResult->setJokerDoubleApplied(true);
-                $this->entityManager->persist($playerResult);
-                
-                // Mark the double joker as used
-                $doubleJoker->setIsUsed(true);
-                $doubleJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($doubleJoker);
-            } else {
-                // If player didn't participate, the joker is wasted but mark as used
-                $doubleJoker->setIsUsed(true);
-                $doubleJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($doubleJoker);
-            }
-        }
-
-        $this->entityManager->flush();
-    }
-
-    /**
-     * Apply swap jokers for a quiz game
-     */
-    private function applySwapJokersForQuizGame(Game $game): void
-    {
-        // Get all pending swap jokers for this game
-        $swapJokers = $this->jokerRepository->findBy([
-            'game' => $game,
-            'jokerType' => 'swap',
-            'isUsed' => false
-        ]);
-
-        if (empty($swapJokers)) {
-            return; // No swap jokers for this game
-        }
-
-        foreach ($swapJokers as $swapJoker) {
-            $sourcePlayer = $swapJoker->getPlayer();
-            $targetPlayer = $swapJoker->getTargetPlayer();
-            
-            if (!$sourcePlayer || !$targetPlayer) {
-                continue;
-            }
-
-            // Get game results for both players
-            $sourceResult = null;
-            $targetResult = null;
-
-            foreach ($game->getGameResults() as $result) {
-                if ($result->getPlayer()->getId() === $sourcePlayer->getId()) {
-                    $sourceResult = $result;
-                }
-                if ($result->getPlayer()->getId() === $targetPlayer->getId()) {
-                    $targetResult = $result;
-                }
-            }
-
-            if ($sourceResult && $targetResult) {
-                // Swap the positions and points
-                $tempPosition = $sourceResult->getPosition();
-                $tempPoints = $sourceResult->getPoints();
-
-                $sourceResult->setPosition($targetResult->getPosition());
-                $sourceResult->setPoints($targetResult->getPoints());
-
-                $targetResult->setPosition($tempPosition);
-                $targetResult->setPoints($tempPoints);
-
-                $this->entityManager->persist($sourceResult);
-                $this->entityManager->persist($targetResult);
-
-                // Mark the swap joker as used
-                $swapJoker->setIsUsed(true);
-                $swapJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($swapJoker);
-            } else {
-                // If one or both players didn't participate, the joker is wasted but mark as used
-                $swapJoker->setIsUsed(true);
-                $swapJoker->setUsedAt(new \DateTime());
-                $this->entityManager->persist($swapJoker);
-            }
-        }
-
-        $this->entityManager->flush();
     }
 
     private function getQuizStats(Game $game): array
