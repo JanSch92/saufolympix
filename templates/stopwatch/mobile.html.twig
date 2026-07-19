@@ -111,14 +111,54 @@
         const stopwatchBtn = document.getElementById('stopwatch-btn');
         const errorBox = document.getElementById('submit-error');
 
+        // Geräte-Identität: einmal Namen gewählt = dieses Handy IST dieser Spieler (24h)
+        const identityKey = 'olympix_{{ game.olympix.id }}_selected_player';
+
+        function saveIdentity(id, name) {
+            localStorage.setItem(identityKey, JSON.stringify({ id: parseInt(id, 10), name: name, points: 0, timestamp: Date.now() }));
+        }
+
+        function readIdentity() {
+            try {
+                const d = JSON.parse(localStorage.getItem(identityKey) || 'null');
+                if (d && d.id && d.timestamp && d.timestamp > Date.now() - 24 * 60 * 60 * 1000) return d;
+            } catch (e) {}
+            return null;
+        }
+
+        function activatePlayer(id, name) {
+            selectedPlayerId = parseInt(id, 10);
+            document.getElementById('active-player-name').textContent = name;
+            stepPlayer.classList.add('hidden');
+            stepPlay.classList.remove('hidden');
+        }
+
         document.querySelectorAll('.player-select-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                selectedPlayerId = parseInt(btn.dataset.playerId, 10);
-                document.getElementById('active-player-name').textContent = btn.dataset.playerName;
-                stepPlayer.classList.add('hidden');
-                stepPlay.classList.remove('hidden');
+                saveIdentity(btn.dataset.playerId, btn.dataset.playerName);
+                activatePlayer(btn.dataset.playerId, btn.dataset.playerName);
             });
         });
+
+        if (selectedPlayerId) {
+            // Server-seitig vorausgewählt (Auto-Join): Identität auffrischen
+            saveIdentity(selectedPlayerId, document.getElementById('active-player-name').textContent);
+        } else {
+            // Gespeicherte Geräte-Identität anwenden — Namensauswahl überspringen
+            const identity = readIdentity();
+            if (identity) {
+                const btn = document.querySelector(`.player-select-btn[data-player-id="${identity.id}"]`);
+                if (btn) {
+                    activatePlayer(identity.id, btn.dataset.playerName);
+                } else if (document.querySelector(`[data-player-id]`) || document.getElementById('step-player')) {
+                    // Spieler hat schon abgegeben (kein aktiver Button mehr) -> zurück zum Dashboard
+                    const submitted = {{ submitted_player_ids|json_encode }};
+                    if (submitted.includes(identity.id)) {
+                        window.location.href = '/player-dashboard/{{ game.olympix.id }}/' + identity.id;
+                    }
+                }
+            }
+        }
 
         stopwatchBtn.addEventListener('click', () => {
             if (!running) {

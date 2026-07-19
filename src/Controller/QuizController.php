@@ -326,6 +326,182 @@ class QuizController extends AbstractController
         return $this->redirectToRoute('app_quiz_results', ['gameId' => $gameId]);
     }
 
+    /**
+     * Frage-für-Frage-Modus: liefert die aktuell offene Frage (erste Frage,
+     * die noch nicht von allen Spielern beantwortet wurde).
+     */
+    #[Route('/api/quiz/{gameId}/current', name: 'app_api_quiz_current')]
+    public function apiCurrentQuestion(int $gameId, Request $request): Response
+    {
+        $game = $this->gameRepository->find($gameId);
+
+        if (!$game || !$game->isQuizGame()) {
+            return $this->json(['error' => 'Quiz nicht gefunden'], 404);
+        }
+
+        $questions = $this->quizQuestionRepository->findByGameOrdered($gameId);
+        $totalPlayers = $game->getOlympix()->getPlayers()->count();
+        $playerId = $request->query->getInt('player');
+
+        $current = null;
+        $index = 0;
+        foreach ($questions as $i => $question) {
+            if (count($this->quizAnswerRepository->findByQuestion($question->getId())) < $totalPlayers) {
+                $current = $question;
+                $index = $i;
+                break;
+            }
+        }
+
+        if (!$current) {
+            // Alle Fragen komplett beantwortet: Quiz abschließen (idempotent)
+            if ($game->isActive() && count($questions) > 0 && $this->allPlayersAnswered($game)) {
+                $this->calculateQuizResults($game);
+                $game->setStatus('completed');
+                foreach ($game->getOlympix()->getPlayers() as $p) {
+                    $p->calculateTotalPoints();
+                }
+                $this->entityManager->flush();
+            }
+
+            return $this->json([
+                'quiz_completed' => true,
+                'total' => count($questions),
+                'dashboard_url' => $playerId > 0
+                    ? $this->generateUrl('app_player_dashboard', ['olympixId' => $game->getOlympix()->getId(), 'playerId' => $playerId])
+                    : null,
+            ]);
+        }
+
+        $answers = $this->quizAnswerRepository->findByQuestion($current->getId());
+        $playerAnswered = false;
+        foreach ($answers as $answer) {
+            if ($answer->getPlayer()->getId() === $playerId) {
+                $playerAnswered = true;
+                break;
+            }
+        }
+
+        return $this->json([
+            'quiz_completed' => false,
+            'question' => [
+                'id' => $current->getId(),
+                'text' => $current->getQuestion(),
+                'index' => $index + 1,
+                'total' => count($questions),
+            ],
+            'answered' => count($answers),
+            'total_players' => $totalPlayers,
+            'player_answered' => $playerAnswered,
+        ]);
+    }
+
+    /**
+     * Frage-für-Frage-Modus: Auswertung einer fertig beantworteten Frage
+     * (korrekte Antwort + Rangliste nach Nähe, Punkte wie beim Endergebnis).
+     */
+    #[Route('/api/quiz/question/{questionId}/result', name: 'app_api_quiz_question_result')]
+    public function apiQuestionResult(int $questionId): Response
+    {
+        $question = $this->quizQuestionRepository->find($questionId);
+
+        if (!$question) {
+            return $this->json(['error' => 'Frage nicht gefunden'], 404);
+        }
+
+        $answers = $question->getQuizAnswers()->toArray();
+        $correct = (float) $question->getCorrectAnswer();
+
+        usort($answers, function ($a, $b) use ($correct) {
+            return abs((float) $a->getAnswer() - $correct) <=> abs((float) $b->getAnswer() - $correct);
+        });
+
+        $total = count($answers);
+        $entries = [];
+        foreach ($answers as $i => $answer) {
+            $entries[] = [
+                'name' => $answer->getPlayer()->getName(),
+                'player_id' => $answer->getPlayer()->getId(),
+                'answer' => (float) $answer->getAnswer(),
+                'points' => $total - $i,
+            ];
+        }
+
+        return $this->json([
+            'question' => $question->getQuestion(),
+            'correct_answer' => (float) $question->getCorrectAnswer(),
+            'entries' => $entries,
+        ]);
+    }
+
+    /**
+     * Frage-für-Frage-Modus: einzelne Antwort eines Spielers speichern.
+     */
+    #[Route('/quiz/answer/{gameId}', name: 'app_quiz_answer', methods: ['POST'])]
+    public function submitAnswer(int $gameId, Request $request): Response
+    {
+        $game = $this->gameRepository->find($gameId);
+
+        if (!$game || !$game->isQuizGame()) {
+            return $this->json(['success' => false, 'error' => 'Quiz nicht gefunden'], 404);
+        }
+
+        if (!$game->isActive()) {
+            return $this->json(['success' => false, 'error' => 'Das Quiz ist nicht aktiv'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $playerId = $data['player_id'] ?? null;
+        $questionId = $data['question_id'] ?? null;
+        $answerValue = $data['answer'] ?? null;
+
+        if (!$playerId || !$questionId || $answerValue === null || $answerValue === '' || !is_numeric($answerValue)) {
+            return $this->json(['success' => false, 'error' => 'Ungültige Daten'], 400);
+        }
+
+        $player = $this->playerRepository->find($playerId);
+        $question = $this->quizQuestionRepository->find($questionId);
+
+        if (!$player || !$question
+            || $question->getGame()->getId() !== $game->getId()
+            || $player->getOlympix()->getId() !== $game->getOlympix()->getId()) {
+            return $this->json(['success' => false, 'error' => 'Spieler oder Frage nicht gefunden'], 404);
+        }
+
+        $existing = $this->quizAnswerRepository->findByPlayerAndQuestion($player->getId(), $question->getId());
+        if ($existing) {
+            return $this->json(['success' => false, 'error' => 'Du hast diese Frage bereits beantwortet'], 409);
+        }
+
+        $answer = new QuizAnswer();
+        $answer->setPlayer($player);
+        $answer->setQuizQuestion($question);
+        $answer->setAnswer((string) $answerValue);
+        $this->entityManager->persist($answer);
+        $this->entityManager->flush();
+
+        $totalPlayers = $game->getOlympix()->getPlayers()->count();
+        $answeredCount = count($this->quizAnswerRepository->findByQuestion($question->getId()));
+
+        // Letzte Frage von allen beantwortet? Dann Quiz automatisch abschließen
+        if ($this->allPlayersAnswered($game)) {
+            $this->calculateQuizResults($game);
+            $game->setStatus('completed');
+            foreach ($game->getOlympix()->getPlayers() as $p) {
+                $p->calculateTotalPoints();
+            }
+            $this->entityManager->flush();
+        }
+
+        return $this->json([
+            'success' => true,
+            'answered' => $answeredCount,
+            'total_players' => $totalPlayers,
+            'question_complete' => $answeredCount >= $totalPlayers,
+            'quiz_completed' => $game->isCompleted(),
+        ]);
+    }
+
     #[Route('/api/quiz/{gameId}/status', name: 'app_api_quiz_status')]
     public function apiQuizStatus(int $gameId): Response
     {

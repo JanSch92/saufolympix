@@ -7,93 +7,267 @@
     <div class="quiz-card w-full max-w-md p-6">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-extrabold gradient-text">{{ game.name }}</h1>
-            <p class="text-gray-400 mt-2">Quiz-Teilnahme</p>
+            <p class="text-gray-400 mt-2" id="q-progress">Quiz-Teilnahme</p>
         </div>
 
-        <form method="POST" id="quizForm">
-            <!-- Player Selection -->
-            {% if preselected_player is defined and preselected_player %}
-                <div class="mb-6 bg-night-700/40 border border-gray-700/60 rounded-xl p-4 text-center">
-                    <div class="text-sm text-gray-400">Du spielst als</div>
-                    <div class="text-lg font-bold text-gray-100">{{ preselected_player.name }}</div>
-                    <input type="hidden" id="player_id" name="player_id" value="{{ preselected_player.id }}">
-                </div>
-            {% else %}
-                <div class="mb-6">
-                    <label for="player_id" class="block text-sm font-medium text-gray-300 mb-2">
-                        Wähle deinen Namen
-                    </label>
-                    <select id="player_id"
-                            name="player_id"
-                            required
-                            class="w-full">
-                        <option value="">Bitte wählen</option>
-                        {% for player in players %}
-                            <option value="{{ player.id }}">{{ player.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            {% endif %}
-
-            <!-- Questions -->
-            <div class="space-y-6">
-                {% for question in questions %}
-                    <div class="bg-night-700/40 border border-gray-700/60 rounded-xl p-4">
-                        <label for="answer_{{ question.id }}" class="block text-sm font-medium text-gray-300 mb-2">
-                            {{ loop.index }}. {{ question.question }}
-                        </label>
-                        <input type="number"
-                               id="answer_{{ question.id }}"
-                               name="answer_{{ question.id }}"
-                               step="0.01"
-                               required
-                               placeholder="Deine Schätzung"
-                               class="w-full text-lg">
-                    </div>
-                {% endfor %}
+        {% if preselected_player is defined and preselected_player %}
+            <div class="mb-6 bg-night-700/40 border border-gray-700/60 rounded-xl p-4 text-center">
+                <div class="text-sm text-gray-400">Du spielst als</div>
+                <div class="text-lg font-bold text-gray-100">{{ preselected_player.name }}</div>
+                <input type="hidden" id="player_id" name="player_id" value="{{ preselected_player.id }}">
             </div>
-
-            <!-- Submit Button -->
-            <div class="mt-8">
-                <button type="submit"
-                        class="btn-primary w-full text-lg"
-                        onclick="return validateQuizForm()">
-                    Antworten abschicken
-                </button>
+        {% else %}
+            <div class="mb-6 hidden bg-night-700/40 border border-gray-700/60 rounded-xl p-4 text-center" id="playing-as-block">
+                <div class="text-sm text-gray-400">Du spielst als</div>
+                <div class="text-lg font-bold text-gray-100" id="playing-as-name"></div>
             </div>
-        </form>
-
-        <div class="mt-4 text-center">
-            <div class="text-sm text-gray-400">
-                Tipp: Je näher deine Schätzung an der korrekten Antwort liegt, desto mehr Punkte erhältst du!
+            <div class="mb-6" id="player-select-block">
+                <label for="player_id" class="block text-sm font-medium text-gray-300 mb-2">
+                    Wähle deinen Namen
+                </label>
+                <select id="player_id" name="player_id" class="w-full">
+                    <option value="">Bitte wählen</option>
+                    {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="confirm-player" class="btn-primary w-full mt-4">Los geht's</button>
             </div>
+        {% endif %}
+
+        <!-- Aktuelle Frage -->
+        <div id="q-screen" class="hidden">
+            <div class="bg-night-700/40 border border-gray-700/60 rounded-xl p-4 mb-4">
+                <div class="text-lg font-semibold text-gray-100" id="q-text"></div>
+            </div>
+            <input type="number" id="q-answer" step="0.01" placeholder="Deine Schätzung" class="w-full text-lg mb-4">
+            <button type="button" id="q-submit" class="btn-primary w-full text-lg">Antwort abschicken</button>
+            <div id="q-error" class="hidden flash-message flash-error mt-4"></div>
+        </div>
+
+        <!-- Warten auf andere -->
+        <div id="wait-screen" class="hidden text-center py-6">
+            <div class="loading-spinner mx-auto mb-3"></div>
+            <div class="text-gray-200 font-medium">Antwort gespeichert</div>
+            <div class="text-gray-400 text-sm mt-1"><span id="wait-count">–</span> haben geantwortet …</div>
+        </div>
+
+        <!-- Auswertung der Frage -->
+        <div id="result-screen" class="hidden">
+            <div class="bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-4 text-center mb-4">
+                <div class="text-sm text-emerald-300">Richtige Antwort</div>
+                <div class="text-3xl font-extrabold text-emerald-400" id="result-correct">–</div>
+            </div>
+            <div class="space-y-2 mb-4" id="result-list"></div>
+            <div class="text-center text-gray-500 text-sm">Nächste Frage in <span id="result-countdown">8</span> s …</div>
+        </div>
+
+        <!-- Quiz beendet -->
+        <div id="done-screen" class="hidden text-center py-6">
+            <h2 class="text-xl font-bold text-gray-100 mb-2">Quiz beendet!</h2>
+            <p class="text-gray-400 mb-4">Die Punkte wurden gewertet — gleich geht's zurück zu deinem Dashboard.</p>
+            <a id="done-dashboard-link" href="#" class="btn-primary w-full">Zum Dashboard</a>
         </div>
     </div>
 </div>
 
 <script>
-function validateQuizForm() {
-    const playerId = document.getElementById('player_id').value;
-    const answerInputs = document.querySelectorAll('input[name^="answer_"]');
+(function () {
+    const gameId = {{ game.id }};
+    const olympixId = {{ game.olympix.id }};
+    const identityKey = `olympix_${olympixId}_selected_player`;
+    const RESULT_SECONDS = 8;
 
-    if (!playerId) {
-        alert('Bitte wähle deinen Namen aus!');
-        return false;
+    let playerId = null;
+    let lastQuestionId = null;
+    let currentQuestion = null;
+    let busy = false;          // Auswertung läuft gerade — Polling pausieren
+    let pollTimer = null;
+
+    // ---------- Geräte-Identität ----------
+    function saveIdentity(id, name) {
+        localStorage.setItem(identityKey, JSON.stringify({ id: parseInt(id, 10), name: name, points: 0, timestamp: Date.now() }));
     }
 
-    let allAnswered = true;
-    answerInputs.forEach(input => {
-        if (!input.value.trim()) {
-            allAnswered = false;
+    function readIdentity() {
+        try {
+            const d = JSON.parse(localStorage.getItem(identityKey) || 'null');
+            if (d && d.id && d.timestamp && d.timestamp > Date.now() - 24 * 60 * 60 * 1000) return d;
+        } catch (e) {}
+        return null;
+    }
+
+    function show(id) {
+        ['q-screen', 'wait-screen', 'result-screen', 'done-screen'].forEach(s =>
+            document.getElementById(s).classList.toggle('hidden', s !== id));
+    }
+
+    function start(id) {
+        playerId = parseInt(id, 10);
+        poll();
+        pollTimer = setInterval(poll, 2000);
+    }
+
+    // Identität bestimmen: Server-Vorauswahl > localStorage > manuelle Wahl
+    const hiddenField = document.getElementById('player_id');
+    if (hiddenField && hiddenField.tagName === 'INPUT') {
+        saveIdentity(hiddenField.value, {{ (preselected_player is defined and preselected_player ? preselected_player.name : '')|json_encode|raw }});
+        start(hiddenField.value);
+    } else {
+        const identity = readIdentity();
+        const select = document.getElementById('player_id');
+        if (identity && [...select.options].some(o => parseInt(o.value, 10) === identity.id)) {
+            document.getElementById('player-select-block').classList.add('hidden');
+            document.getElementById('playing-as-block').classList.remove('hidden');
+            document.getElementById('playing-as-name').textContent = identity.name;
+            start(identity.id);
+        } else {
+            document.getElementById('confirm-player').addEventListener('click', () => {
+                if (!select.value) { alert('Bitte wähle deinen Namen aus!'); return; }
+                const name = select.options[select.selectedIndex].textContent.trim();
+                saveIdentity(select.value, name);
+                document.getElementById('player-select-block').classList.add('hidden');
+                document.getElementById('playing-as-block').classList.remove('hidden');
+                document.getElementById('playing-as-name').textContent = name;
+                start(select.value);
+            });
         }
-    });
-
-    if (!allAnswered) {
-        alert('Bitte beantworte alle Fragen!');
-        return false;
     }
 
-    return confirm('Antworten wirklich abschicken? Sie können nicht mehr geändert werden.');
-}
+    // ---------- Frage-für-Frage-Ablauf ----------
+    function poll() {
+        if (busy || !playerId) return;
+        fetch(`/api/quiz/${gameId}/current?player=${playerId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (busy) return;
+
+                if (data.quiz_completed) {
+                    if (lastQuestionId) {
+                        const qid = lastQuestionId;
+                        lastQuestionId = null;
+                        showResult(qid, showDone);
+                    } else {
+                        showDone();
+                    }
+                    return;
+                }
+
+                if (data.question.id !== lastQuestionId) {
+                    // Neue Frage: falls vorher eine lief, erst deren Auswertung zeigen
+                    const prev = lastQuestionId;
+                    lastQuestionId = data.question.id;
+                    currentQuestion = data.question;
+                    if (prev) {
+                        showResult(prev, () => showQuestion(data));
+                    } else {
+                        showQuestion(data);
+                    }
+                    return;
+                }
+
+                if (data.player_answered) {
+                    document.getElementById('wait-count').textContent = `${data.answered}/${data.total_players}`;
+                    show('wait-screen');
+                }
+            })
+            .catch(() => {});
+    }
+
+    function showQuestion(data) {
+        currentQuestion = data.question;
+        document.getElementById('q-progress').textContent = `Frage ${data.question.index} von ${data.question.total}`;
+        document.getElementById('q-text').textContent = data.question.text;
+        document.getElementById('q-answer').value = '';
+        document.getElementById('q-error').classList.add('hidden');
+        document.getElementById('q-submit').disabled = false;
+        if (data.player_answered) {
+            document.getElementById('wait-count').textContent = `${data.answered}/${data.total_players}`;
+            show('wait-screen');
+        } else {
+            show('q-screen');
+            document.getElementById('q-answer').focus();
+        }
+    }
+
+    function showResult(questionId, next) {
+        busy = true;
+        fetch(`/api/quiz/question/${questionId}/result`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('result-correct').textContent = data.correct_answer.toLocaleString('de-DE');
+                const list = document.getElementById('result-list');
+                list.innerHTML = '';
+                data.entries.forEach((entry, i) => {
+                    const mine = entry.player_id === playerId;
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between px-3 py-2 rounded-lg ' +
+                        (mine ? 'bg-party-purple/15 border border-party-purple/40' : 'bg-night-700/30');
+                    row.innerHTML = `<span class="text-gray-200">${i + 1}. ${entry.name}${mine ? ' (du)' : ''}` +
+                        ` <span class="text-gray-500 text-sm">${entry.answer.toLocaleString('de-DE')}</span></span>` +
+                        `<span class="font-bold text-amber-400">+${entry.points}</span>`;
+                    list.appendChild(row);
+                });
+                show('result-screen');
+
+                let left = RESULT_SECONDS;
+                document.getElementById('result-countdown').textContent = left;
+                const cd = setInterval(() => {
+                    left--;
+                    document.getElementById('result-countdown').textContent = Math.max(left, 0);
+                    if (left <= 0) {
+                        clearInterval(cd);
+                        busy = false;
+                        next();
+                        poll();
+                    }
+                }, 1000);
+            })
+            .catch(() => { busy = false; next(); });
+    }
+
+    function showDone() {
+        clearInterval(pollTimer);
+        const url = `/player-dashboard/${olympixId}/${playerId}`;
+        document.getElementById('done-dashboard-link').href = url;
+        show('done-screen');
+        setTimeout(() => { window.location.href = url; }, 5000);
+    }
+
+    document.getElementById('q-submit').addEventListener('click', () => {
+        const value = document.getElementById('q-answer').value;
+        if (value === '' || value === null) { alert('Bitte gib deine Schätzung ein!'); return; }
+        document.getElementById('q-submit').disabled = true;
+
+        fetch(`/quiz/answer/${gameId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player_id: playerId, question_id: currentQuestion.id, answer: value }),
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    const err = document.getElementById('q-error');
+                    err.textContent = data.error || 'Fehler beim Speichern';
+                    err.classList.remove('hidden');
+                    document.getElementById('q-submit').disabled = false;
+                    return;
+                }
+                document.getElementById('wait-count').textContent = `${data.answered}/${data.total_players}`;
+                if (data.quiz_completed) {
+                    const qid = lastQuestionId;
+                    lastQuestionId = null;
+                    showResult(qid, showDone);
+                } else if (data.question_complete) {
+                    poll();
+                } else {
+                    show('wait-screen');
+                }
+            })
+            .catch(() => {
+                document.getElementById('q-submit').disabled = false;
+            });
+    });
+})();
 </script>
 {% endblock %}

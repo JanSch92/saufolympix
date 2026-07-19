@@ -62,12 +62,22 @@
         </div>
     {% endif %}
 
-    <div class="text-center">
+    <div class="text-center" id="results-footer">
         {% if viewer_player is defined and viewer_player %}
             {# Spieleransicht: niemals ein Admin-Link #}
             <a href="{{ path('app_player_dashboard', {olympixId: game.olympix.id, playerId: viewer_player.id}) }}" class="btn-primary">Zurück zu deinem Dashboard</a>
         {% else %}
-            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" class="btn-primary">← Zurück zum Admin</a>
+            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" class="btn-primary" id="admin-back-link">← Zurück zum Admin</a>
+            <script>
+                // Geräte-Identität vorhanden? Dann ist das ein SPIELER-Handy: nie einen Admin-Link zeigen
+                try {
+                    const d = JSON.parse(localStorage.getItem('olympix_{{ game.olympix.id }}_selected_player') || 'null');
+                    if (d && d.id && d.timestamp && d.timestamp > Date.now() - 24 * 60 * 60 * 1000) {
+                        document.getElementById('admin-back-link').outerHTML =
+                            '<a href="/player-dashboard/{{ game.olympix.id }}/' + d.id + '" class="btn-primary">Zurück zu deinem Dashboard</a>';
+                    }
+                } catch (e) {}
+            </script>
         {% endif %}
     </div>
 </div>
