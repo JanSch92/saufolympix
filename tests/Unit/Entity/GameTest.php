@@ -65,16 +65,15 @@ class GameTest extends TestCase
         }
     }
 
-    public function testStopwatchGameTypeLabelAndEmoji(): void
+    public function testStopwatchGameTypeLabel(): void
     {
         $game = new Game();
         $game->setGameType('stopwatch');
 
         $this->assertSame('Stoppuhr', $game->getGameTypeLabel());
-        $this->assertSame('⏱️', $game->getGameTypeEmoji());
     }
 
-    public function testEveryGameTypeHasLabelAndEmoji(): void
+    public function testEveryGameTypeHasLabel(): void
     {
         $types = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal', 'gamechanger', 'stopwatch'];
 
@@ -82,7 +81,6 @@ class GameTest extends TestCase
             $game = new Game();
             $game->setGameType($type);
             $this->assertNotSame('Unbekannt', $game->getGameTypeLabel(), "Label fehlt für $type");
-            $this->assertNotSame('🎲', $game->getGameTypeEmoji(), "Emoji fehlt für $type");
         }
     }
 

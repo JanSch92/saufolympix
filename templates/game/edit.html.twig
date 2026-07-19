@@ -8,8 +8,8 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-100">✏️ Spiel bearbeiten</h1>
-                <p class="text-gray-400 mt-1">{{ game.getGameTypeEmoji() }} {{ game.name }}</p>
+                <h1 class="text-2xl font-bold text-gray-100">Spiel bearbeiten</h1>
+                <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
             <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                class="btn-secondary">
@@ -48,10 +48,10 @@
                         onchange="updateGameTypeOptions()"
                         class="w-full">
                     <option value="">Bitte wählen</option>
-                    <option value="free_for_all" {% if game.gameType == 'free_for_all' %}selected{% endif %}>⚔️ Free For All</option>
-                    <option value="tournament_team" {% if game.gameType == 'tournament_team' %}selected{% endif %}>🏆 Turnier (Team)</option>
-                    <option value="tournament_single" {% if game.gameType == 'tournament_single' %}selected{% endif %}>🏆 Turnier (Einzel)</option>
-                    <option value="quiz" {% if game.gameType == 'quiz' %}selected{% endif %}>🧠 Quiz</option>
+                    <option value="free_for_all" {% if game.gameType == 'free_for_all' %}selected{% endif %}>Free For All</option>
+                    <option value="tournament_team" {% if game.gameType == 'tournament_team' %}selected{% endif %}>Turnier (Team)</option>
+                    <option value="tournament_single" {% if game.gameType == 'tournament_single' %}selected{% endif %}>Turnier (Einzel)</option>
+                    <option value="quiz" {% if game.gameType == 'quiz' %}selected{% endif %}>Quiz</option>
                 </select>
             </div>
 
@@ -92,7 +92,7 @@
                     Abbrechen
                 </a>
                 <button type="submit" class="btn-primary">
-                    💾 Spiel speichern
+                    Spiel speichern
                 </button>
             </div>
         </form>

@@ -8,18 +8,18 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-extrabold gradient-text">🍻 {{ olympix.name }}</h1>
-                <p class="text-gray-400 mt-2">⚙️ Admin-Bereich</p>
+                <h1 class="text-3xl font-extrabold gradient-text">{{ olympix.name }}</h1>
+                <p class="text-gray-400 mt-2">Admin-Bereich</p>
             </div>
             <div class="flex space-x-4">
                 <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
                    class="btn-secondary" 
                    target="_blank">
-                    📺 Live-Anzeige
+                    Live-Anzeige
                 </a>
                 <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
                    class="btn-primary">
-                    👥 Spieler verwalten
+                    Spieler verwalten
                 </a>
             </div>
         </div>
@@ -28,17 +28,19 @@
     <!-- QR-Code für Spieler-Zugang -->
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-100">📱 Spieler-Zugang</h2>
+            <h2 class="text-xl font-bold text-gray-100">Spieler-Zugang</h2>
             <button onclick="showQRCode()" class="btn-primary">
-                📱 QR-Code anzeigen
+                QR-Code anzeigen
             </button>
         </div>
         
         <div id="qrCodeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="card card-highlight p-8 max-w-md w-full">
                 <div class="text-center">
-                    <h3 class="text-lg font-bold text-gray-100 mb-4">📱 Spieler-Zugang QR-Code</h3>
-                    <div id="playerQRCode" class="mb-4 qr-code-container"></div>
+                    <h3 class="text-lg font-bold text-gray-100 mb-4">Spieler-Zugang QR-Code</h3>
+                    <div class="mb-4 qr-code-container inline-block">
+                        <img src="{{ path('app_qr_code', {olympixId: olympix.id}) }}" alt="QR-Code für Spieler-Zugang" width="240" height="240">
+                    </div>
                     <p class="text-sm text-gray-400 mb-4">
                         Spieler können diesen Code scannen um ihre Punkte zu sehen und Joker zu verwenden
                     </p>
@@ -64,7 +66,6 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="card p-6">
             <div class="flex items-center">
-                <div class="text-2xl mr-3">👥</div>
                 <div>
                     <div class="text-2xl font-bold text-gray-100">{{ players|length }}</div>
                     <div class="text-sm text-gray-400">Spieler</div>
@@ -74,7 +75,6 @@
         
         <div class="card p-6">
             <div class="flex items-center">
-                <div class="text-2xl mr-3">🎮</div>
                 <div>
                     <div class="text-2xl font-bold text-gray-100">{{ games|length }}</div>
                     <div class="text-sm text-gray-400">Spiele</div>
@@ -84,7 +84,6 @@
         
         <div class="card p-6">
             <div class="flex items-center">
-                <div class="text-2xl mr-3">✅</div>
                 <div>
                     <div class="text-2xl font-bold text-gray-100">
                         {{ games|filter(game => game.status == 'completed')|length }}
@@ -96,7 +95,6 @@
         
         <div class="card p-6">
             <div class="flex items-center">
-                <div class="text-2xl mr-3">🏆</div>
                 <div>
                     <div class="text-2xl font-bold text-gray-100">
                         {% if players|length > 0 %}
@@ -114,7 +112,7 @@
     <!-- Progress Bar -->
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-100">📊 Fortschritt</h2>
+            <h2 class="text-xl font-bold text-gray-100">Fortschritt</h2>
             <div class="text-sm text-gray-400">
                 {{ games|filter(game => game.status == 'completed')|length }} von {{ games|length }} Spielen
             </div>
@@ -125,7 +123,7 @@
         {% set progressPercentage = totalGames > 0 ? (completedGames / totalGames * 100)|round : 0 %}
         
         <div class="w-full bg-night-700 rounded-full h-4">
-            <div class="bg-gradient-to-r from-party-purple via-party-pink to-party-amber h-4 rounded-full transition-all duration-300" style="width: {{ progressPercentage }}%"></div>
+            <div class="bg-party-purple h-4 rounded-full transition-all duration-300" style="width: {{ progressPercentage }}%"></div>
         </div>
         <div class="text-center text-sm text-gray-400 mt-2">{{ progressPercentage }}% abgeschlossen</div>
     </div>
@@ -135,13 +133,13 @@
         <div class="lg:col-span-2">
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-100">🎮 Spiele</h2>
+                    <h2 class="text-2xl font-bold text-gray-100">Spiele</h2>
                     <div class="flex space-x-2">
                         <button onclick="saveGamesOrder()" class="btn-success" id="saveOrderBtn" style="display: none;">
-                            💾 Reihenfolge speichern
+                            Reihenfolge speichern
                         </button>
                         <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary">
-                            ➕ Spiel erstellen
+                            Spiel erstellen
                         </a>
                     </div>
                 </div>
@@ -160,7 +158,7 @@
                                 <div class="flex-1">
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
-                                            <h3 class="text-lg font-semibold text-gray-100">{{ game.getGameTypeEmoji() }} {{ game.name }}</h3>
+                                            <h3 class="text-lg font-semibold text-gray-100">{{ game.name }}</h3>
                                             <div class="flex items-center space-x-2 mt-1">
                                                 <span class="text-sm text-gray-400 capitalize">{{ game.gameType|replace({'_': ' '}) }}</span>
                                                 
@@ -172,13 +170,13 @@
                                                 
                                                 {% if game.gameType == 'gamechanger' %}
                                                     <span class="gamechanger-badge">
-                                                        🎯 GameChanger
+                                                        GameChanger
                                                     </span>
                                                 {% endif %}
                                                 
                                                 {% if game.status == 'active' %}
                                                     <span class="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-300 rounded animate-pulse">
-                                                        🔴 LIVE
+                                                        LIVE
                                                     </span>
                                                 {% endif %}
                                             </div>
@@ -199,7 +197,7 @@
                                                     {% endfor %}
                                                     
                                                     {% if doubleJokers > 0 or swapJokers > 0 %}
-                                                        🃏 Aktive Joker: 
+                                                        Aktive Joker: 
                                                         {% if doubleJokers > 0 %}
                                                             <span class="text-pink-400">{{ doubleJokers }}x Doppelt</span>
                                                         {% endif %}
@@ -217,46 +215,46 @@
                                                 {% if game.status == 'pending' %}
                                                     <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}" 
                                                        class="btn-primary text-sm">
-                                                        🚀 Starten
+                                                        Starten
                                                     </a>
                                                 {% elseif game.status == 'active' %}
                                                     <a href="{{ path('app_gamechanger_play', {gameId: game.id}) }}" 
                                                        class="btn-success text-sm">
-                                                        ▶️ Spielen
+                                                        Spielen
                                                     </a>
                                                 {% elseif game.status == 'completed' %}
                                                     <a href="{{ path('app_gamechanger_play', {gameId: game.id}) }}" 
                                                        class="btn-secondary text-sm">
-                                                        📊 Ergebnisse
+                                                        Ergebnisse
                                                     </a>
                                                 {% endif %}
                                             {% elseif game.status == 'pending' %}
                                                 <a href="{{ path('app_game_start', {id: game.id}) }}" class="btn-success text-sm">
-                                                    ▶️ Start
+                                                    Start
                                                 </a>
                                             {% elseif game.status == 'active' %}
                                                 <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-primary text-sm">
-                                                    📊 Ergebnisse
+                                                    Ergebnisse
                                                 </a>
                                                 {% if game.isQuizGame %}
                                                     <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}" class="btn-secondary text-sm">
-                                                        📱 QR-Code
+                                                        QR-Code
                                                     </a>
                                                 {% endif %}
                                                 {% if game.isStopwatchGame %}
                                                     <a href="{{ path('app_stopwatch_manage', {gameId: game.id}) }}" class="btn-secondary text-sm">
-                                                        ⏱️ Verwalten
+                                                        Verwalten
                                                     </a>
                                                 {% endif %}
                                                 {% if game.isTournamentGame %}
                                                     <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary text-sm">
-                                                        🏆 Bracket
+                                                        Bracket
                                                     </a>
                                                 {% endif %}
                                             {% else %}
-                                                <span class="text-sm text-emerald-400 font-medium">✅ Abgeschlossen</span>
+                                                <span class="text-sm text-emerald-400 font-medium">Abgeschlossen</span>
                                                 <a href="{{ path('app_game_results', {id: game.id}) }}" class="btn-secondary text-sm">
-                                                    📊 Ergebnisse
+                                                    Ergebnisse
                                                 </a>
                                             {% endif %}
                                             
@@ -267,23 +265,23 @@
                                                 <div id="game-{{ game.id }}" class="hidden absolute right-0 mt-2 w-48 bg-night-800 border border-party-purple/30 rounded-md shadow-xl z-10">
                                                     <div class="py-1">
                                                         <a href="{{ path('app_game_edit', {id: game.id}) }}" class="block px-4 py-2 text-sm text-gray-200 hover:bg-night-700">
-                                                            ✏️ Bearbeiten
+                                                            Bearbeiten
                                                         </a>
                                                         {% if game.isQuizGame %}
                                                             <a href="{{ path('app_quiz_questions', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-200 hover:bg-night-700">
-                                                                ❓ Fragen
+                                                                Fragen
                                                             </a>
                                                         {% endif %}
                                                         <a href="{{ path('app_joker_manage', {gameId: game.id}) }}" class="block px-4 py-2 text-sm text-gray-200 hover:bg-night-700">
-                                                            🃏 Joker
+                                                            Joker
                                                         </a>
                                                         {% if game.status == 'active' %}
                                                             <a href="{{ path('app_game_complete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-amber-300 hover:bg-night-700">
-                                                                🏁 Abschließen
+                                                                Abschließen
                                                             </a>
                                                         {% endif %}
                                                         <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-pink-400 hover:bg-night-700" onclick="return confirmDelete('Spiel wirklich löschen?')">
-                                                            🗑️ Löschen
+                                                            Löschen
                                                         </a>
                                                     </div>
                                                 </div>
@@ -296,7 +294,7 @@
                             <!-- GameChanger Details -->
                             {% if game.isGamechangerGame() and gamechanger_throws is defined %}
                                 <div class="bg-party-purple/10 border border-party-purple/30 rounded-lg p-4 mt-4">
-                                    <h4 class="font-semibold text-purple-300 mb-3">🎯 GameChanger Details</h4>
+                                    <h4 class="font-semibold text-purple-300 mb-3">GameChanger Details</h4>
                                     
                                     {% if gamechanger_throws|length > 0 %}
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -316,7 +314,7 @@
                                         
                                         <!-- Letzte Würfe -->
                                         <div class="bg-night-800/60 rounded-lg p-3">
-                                            <h5 class="font-medium text-gray-100 mb-2">📋 Letzte Würfe:</h5>
+                                            <h5 class="font-medium text-gray-100 mb-2">Letzte Würfe:</h5>
                                             <div class="space-y-1 text-sm max-h-32 overflow-y-auto">
                                                 {% for throw in gamechanger_throws|filter(t => t.thrownPoints > 0)|slice(-5)|reverse %}
                                                     <div class="flex justify-between items-center py-1 border-b border-gray-700/60 last:border-b-0">
@@ -333,13 +331,13 @@
                                         {% if gamechanger_complete %}
                                             <div class="mt-3 text-center">
                                                 <span class="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-300 rounded-full text-sm font-medium">
-                                                    ✅ Spiel beendet - Alle haben geworfen
+                                                    Spiel beendet - Alle haben geworfen
                                                 </span>
                                             </div>
                                         {% else %}
                                             <div class="mt-3 text-center">
                                                 <span class="inline-block px-3 py-1 bg-party-purple/10 text-purple-300 rounded-full text-sm font-medium">
-                                                    ⏳ {{ olympix.players|length - gamechanger_throws|filter(t => t.thrownPoints > 0)|length }} Spieler noch ausstehend
+                                                    {{ olympix.players|length - gamechanger_throws|filter(t => t.thrownPoints > 0)|length }} Spieler noch ausstehend
                                                 </span>
                                             </div>
                                         {% endif %}
@@ -358,10 +356,9 @@
                         </div>
                     {% else %}
                         <div class="text-center text-gray-500 py-8">
-                            <div class="text-4xl mb-4">🎮</div>
                             <p>Noch keine Spiele erstellt</p>
                             <a href="{{ path('app_game_create', {olympixId: olympix.id}) }}" class="btn-primary mt-4">
-                                ➕ Erstes Spiel erstellen
+                                Erstes Spiel erstellen
                             </a>
                         </div>
                     {% endfor %}
@@ -374,10 +371,10 @@
             <!-- Player Rankings -->
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-100">🏆 Rangliste</h2>
+                    <h2 class="text-2xl font-bold text-gray-100">Rangliste</h2>
                     <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
                        class="btn-secondary">
-                        👥 Verwalten
+                        Verwalten
                     </a>
                 </div>
                 
@@ -392,7 +389,7 @@
                                     <div class="font-medium text-gray-100">{{ player.name }}</div>
                                     <div class="flex items-center space-x-2">
                                         <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-emerald-500/10 text-emerald-300{% else %}bg-night-700/40 text-gray-500{% endif %}">
-                                            🔥 2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
+                                            2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
                                         </span>
                                         <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-party-purple/10 text-purple-300{% else %}bg-night-700/40 text-gray-500{% endif %}">
                                             ⇄ Swap {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
@@ -404,11 +401,10 @@
                         </div>
                     {% else %}
                         <div class="text-center text-gray-500 py-8">
-                            <div class="text-4xl mb-4">👥</div>
                             <p>Noch keine Spieler hinzugefügt</p>
                             <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
                                class="btn-primary mt-4">
-                                ➕ Spieler hinzufügen
+                                Spieler hinzufügen
                             </a>
                         </div>
                     {% endfor %}
@@ -417,7 +413,7 @@
             
             <!-- Current Game Status -->
             <div class="card p-6">
-                <h3 class="text-lg font-bold text-gray-100 mb-4">🎯 Aktueller Status</h3>
+                <h3 class="text-lg font-bold text-gray-100 mb-4">Aktueller Status</h3>
                 
                 {% set currentGame = null %}
                 {% set nextGame = null %}
@@ -433,11 +429,11 @@
                     <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 mb-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <div class="font-semibold text-emerald-300">{{ currentGame.getGameTypeEmoji() }} {{ currentGame.name }}</div>
+                                <div class="font-semibold text-emerald-300">{{ currentGame.name }}</div>
                                 <div class="text-sm text-emerald-400">{{ currentGame.gameTypeLabel }}</div>
                             </div>
                             <div class="text-emerald-400">
-                                <span class="animate-pulse">🔴</span> LIVE
+                                <span class="animate-pulse"></span> LIVE
                             </div>
                         </div>
                     </div>
@@ -448,10 +444,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="font-semibold text-purple-300">Nächstes Spiel:</div>
-                                <div class="text-sm text-gray-300">{{ nextGame.getGameTypeEmoji() }} {{ nextGame.name }}</div>
+                                <div class="text-sm text-gray-300">{{ nextGame.name }}</div>
                             </div>
                             <div class="text-purple-300">
-                                ⏭️
+                                
                             </div>
                         </div>
                     </div>
@@ -460,7 +456,6 @@
                 {% if not currentGame and not nextGame %}
                     <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4">
                         <div class="text-center text-gray-500">
-                            <div class="text-2xl mb-2">🏁</div>
                             <div>Alle Spiele abgeschlossen</div>
                         </div>
                     </div>
@@ -478,7 +473,7 @@
             {% if gamechangerGame and gamechanger_stats is defined %}
                 <div class="gamechanger-card card p-4">
                     <div class="flex items-center justify-between mb-3">
-                        <h4 class="font-semibold text-gray-100">🎯 GameChanger Stats</h4>
+                        <h4 class="font-semibold text-gray-100">GameChanger Stats</h4>
                         <span class="gamechanger-badge">AKTIV</span>
                     </div>
                     
@@ -501,7 +496,7 @@
                         <div class="mt-3">
                             <a href="{{ path('app_gamechanger_play', {gameId: gamechangerGame.id}) }}" 
                                class="btn-primary w-full text-sm">
-                                ▶️ Weiter spielen
+                                Weiter spielen
                             </a>
                         </div>
                     {% endif %}
@@ -510,23 +505,23 @@
             
             <!-- Quick Actions -->
             <div class="card p-6">
-                <h3 class="text-lg font-bold text-gray-100 mb-4">⚡ Schnellaktionen</h3>
+                <h3 class="text-lg font-bold text-gray-100 mb-4">Schnellaktionen</h3>
                 
                 <div class="space-y-3">
                     <button onclick="refreshAllPlayerScores()" class="w-full btn-secondary text-sm">
-                        🔄 Alle Punkte neu berechnen
+                        Alle Punkte neu berechnen
                     </button>
                     
                     <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
                        class="block w-full btn-primary text-sm text-center"
                        target="_blank">
-                        📺 Live-Anzeige öffnen
+                        Live-Anzeige öffnen
                     </a>
                     
                     {% if currentGame %}
                         <a href="{{ path('app_joker_manage', {gameId: currentGame.id}) }}" 
                            class="block w-full btn-secondary text-sm text-center">
-                            🃏 Joker verwalten
+                            Joker verwalten
                         </a>
                     {% endif %}
                 </div>
@@ -536,21 +531,20 @@
 </div>
 
 <!-- External Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <style>
 .gamechanger-highlight {
-    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    background: #4f46e5;
     color: white;
 }
 
 .gamechanger-card {
-    border-left: 4px solid #8b5cf6;
+    border-left: 4px solid #6366f1;
 }
 
 .gamechanger-badge {
-    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    background: #4f46e5;
     color: white;
     padding: 2px 8px;
     border-radius: 12px;
@@ -559,24 +553,23 @@
 }
 
 .game-card {
-    background: rgba(31, 24, 54, 0.6);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    transition: all 0.3s ease;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    transition: all 0.2s ease;
 }
 
 .game-card:hover {
-    border-color: rgba(139, 92, 246, 0.5);
-    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+    border-color: rgba(99, 102, 241, 0.4);
 }
 
 .game-card.active {
-    border-color: rgba(20, 184, 166, 0.7);
-    background-color: rgba(20, 184, 166, 0.08);
+    border-color: rgba(5, 150, 105, 0.6);
+    background-color: rgba(5, 150, 105, 0.06);
 }
 
 .game-card.completed {
-    border-color: rgba(107, 114, 128, 0.4);
-    background-color: rgba(31, 24, 54, 0.4);
+    border-color: rgba(107, 114, 128, 0.35);
+    background-color: rgba(15, 23, 42, 0.4);
 }
 
 .ranking-badge {
@@ -591,27 +584,15 @@
     color: white;
 }
 
-.ranking-1 { background: linear-gradient(135deg, #fde047, #f59e0b); color: #78350f; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
-.ranking-2 { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #1f2937; }
-.ranking-3 { background: linear-gradient(135deg, #f59e0b, #92400e); }
-.ranking-default { background-color: rgba(58, 47, 92, 0.9); color: #c4b5fd; }
+.ranking-1 { background: #d3a625; color: #1c1917; }
+.ranking-2 { background: #9ca3af; color: #1f2937; }
+.ranking-3 { background: #a16207; }
+.ranking-default { background-color: rgba(41, 54, 80, 0.9); color: #94a3b8; }
 </style>
 
 <script>
-// QR-Code für Spieler-Zugang
+// QR-Code für Spieler-Zugang (serverseitig generiertes Bild, hier nur Modal-Toggle)
 function showQRCode() {
-    const playerUrl = '{{ url('app_player_access', {olympixId: olympix.id}) }}';
-    document.getElementById('playerQRCode').innerHTML = '';
-    
-    new QRCode(document.getElementById('playerQRCode'), {
-        text: playerUrl,
-        width: 256,
-        height: 256,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
-    
     document.getElementById('qrCodeModal').classList.remove('hidden');
 }
 
@@ -638,15 +619,15 @@ function refreshAllPlayerScores() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('✅ Alle Punkte wurden neu berechnet!');
+                alert('Alle Punkte wurden neu berechnet!');
                 location.reload();
             } else {
-                alert('❌ Fehler beim Berechnen der Punkte');
+                alert('Fehler beim Berechnen der Punkte');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('❌ Fehler beim Berechnen der Punkte');
+            alert('Fehler beim Berechnen der Punkte');
         });
     }
 }
@@ -720,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Success feedback
                 const btn = document.getElementById('saveOrderBtn');
                 const originalText = btn.textContent;
-                btn.textContent = '✅ Gespeichert';
+                btn.textContent = 'Gespeichert';
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-secondary');
                 
@@ -767,8 +748,11 @@ document.addEventListener('click', function(event) {
 
 // Auto-refresh every 30 seconds
 setInterval(function() {
-    // Only refresh if no forms are active
-    if (!document.querySelector('form:focus-within')) {
+    // Nicht neu laden, solange ein Formular aktiv ist oder das QR-Modal offen ist
+    const qrModal = document.getElementById('qrCodeModal');
+    const qrModalOpen = qrModal && !qrModal.classList.contains('hidden');
+
+    if (!document.querySelector('form:focus-within') && !qrModalOpen) {
         location.reload();
     }
 }, 30000);

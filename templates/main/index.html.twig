@@ -12,7 +12,7 @@
                     <div class="sm:text-center lg:text-left">
                         <h1 class="text-4xl tracking-tight font-extrabold text-gray-100 sm:text-5xl md:text-6xl">
                             <span class="block xl:inline">Willkommen bei</span>
-                            <span class="block gradient-text xl:inline">🍻 Olympix</span>
+                            <span class="block gradient-text xl:inline">Olympix</span>
                         </h1>
                         <p class="mt-3 text-base text-gray-400 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
                             Das ultimative Event-Management System für Dart, Quiz, Turniere und mehr.
@@ -22,7 +22,7 @@
                             <div>
                                 <a href="#create-olympix"
                                    class="btn-primary w-full md:py-4 md:text-lg md:px-10">
-                                    🚀 Olympix erstellen
+                                    Olympix erstellen
                                 </a>
                             </div>
                         </div>
@@ -33,7 +33,6 @@
         <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
             <div class="h-56 w-full bg-gradient-to-r from-party-purple via-party-pink to-party-amber sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
                 <div class="text-center text-white">
-                    <div class="text-6xl mb-4">🏆</div>
                     <h2 class="text-2xl font-bold">Event-Management</h2>
                     <p class="text-lg">für jeden Anlass</p>
                 </div>
@@ -45,7 +44,7 @@
     {% if recent_olympix|length > 0 %}
     <div class="max-w-7xl mx-auto px-4 py-16">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-100">🎯 Aktuelle Olympix</h2>
+            <h2 class="text-3xl font-bold text-gray-100">Aktuelle Olympix</h2>
             <p class="text-lg text-gray-400 mt-2">Springe direkt zu laufenden Events</p>
         </div>
 
@@ -77,11 +76,11 @@
                     <div class="flex space-x-2">
                         <a href="{{ path('app_show_olympix', {id: olympix.id}) }}"
                            class="btn-secondary flex-1 text-center">
-                            📺 Anzeigen
+                            Anzeigen
                         </a>
                         <a href="{{ path('app_game_admin', {id: olympix.id}) }}"
                            class="btn-primary flex-1 text-center">
-                            ⚙️ Verwalten
+                            Verwalten
                         </a>
                     </div>
                 </div>
@@ -93,44 +92,38 @@
     <!-- Features -->
     <div class="max-w-7xl mx-auto px-4 py-16">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-100">🎮 Spielmodi</h2>
+            <h2 class="text-3xl font-bold text-gray-100">Spielmodi</h2>
             <p class="text-lg text-gray-400 mt-2">Vielfältige Möglichkeiten für jeden Event</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">⚔️</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Free For All</h3>
                 <p class="text-sm text-gray-400">Alle Spieler gleichzeitig, Platzierung bestimmt Punkte</p>
             </div>
 
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">🏆</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Turniere</h3>
                 <p class="text-sm text-gray-400">Einzel oder Team-Turniere mit Bracket-System</p>
             </div>
 
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">🧠</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Quiz</h3>
                 <p class="text-sm text-gray-400">Schätzfragen mit QR-Code für mobile Teilnahme</p>
             </div>
 
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">🤝</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Split or Steal</h3>
                 <p class="text-sm text-gray-400">Psychologisches Spiel: Kooperation oder Verrat?</p>
             </div>
 
             <!-- *** NEU: GAMECHANGER FEATURE CARD *** -->
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">🎯</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Gamechanger</h3>
                 <p class="text-sm text-gray-400">Schnelles Spiel: Jeder wirft einmal, treffe deine Punkte für Bonus!</p>
             </div>
 
             <div class="card player-card p-6 text-center">
-                <div class="text-4xl mb-4">🃏</div>
                 <h3 class="text-lg font-semibold text-gray-100 mb-2">Joker</h3>
                 <p class="text-sm text-gray-400">Doppelte Punkte oder Punkte tauschen</p>
             </div>
@@ -140,7 +133,7 @@
     <!-- How it works -->
     <div class="max-w-7xl mx-auto px-4 py-16">
         <div class="card p-8">
-            <h2 class="text-2xl font-bold text-gray-100 mb-6 text-center">🍻 So funktioniert's</h2>
+            <h2 class="text-2xl font-bold text-gray-100 mb-6 text-center">So funktioniert's</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="text-center">
@@ -174,7 +167,7 @@
     <div id="create-olympix" class="max-w-7xl mx-auto px-4 py-16">
         <div class="card card-highlight p-8">
             <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-100">🚀 Neues Olympix erstellen</h2>
+                <h2 class="text-3xl font-bold text-gray-100">Neues Olympix erstellen</h2>
                 <p class="text-lg text-gray-400 mt-2">Starte jetzt dein eigenes Event</p>
             </div>
 
@@ -193,7 +186,7 @@
 
                 <button type="submit"
                         class="btn-primary w-full text-lg">
-                    🎯 Olympix erstellen
+                    Olympix erstellen
                 </button>
             </form>
 
@@ -207,31 +200,27 @@
     <div class="max-w-7xl mx-auto px-4 py-16">
         <div class="bg-gradient-to-r from-party-purple to-party-pink rounded-2xl shadow-lg p-8 text-white">
             <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold mb-4">✨ Warum Olympix?</h2>
+                <h2 class="text-3xl font-bold mb-4">Warum Olympix?</h2>
                 <p class="text-lg opacity-90">Die perfekte Lösung für deine Events</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="text-center">
-                    <div class="text-3xl mb-3">📱</div>
                     <h4 class="font-semibold mb-2">Mobile-First</h4>
                     <p class="text-sm opacity-80">Optimiert für Smartphones und Tablets</p>
                 </div>
 
                 <div class="text-center">
-                    <div class="text-3xl mb-3">⚡</div>
                     <h4 class="font-semibold mb-2">Live-Updates</h4>
                     <p class="text-sm opacity-80">Echtzeit-Ranglisten und Ergebnisse</p>
                 </div>
 
                 <div class="text-center">
-                    <div class="text-3xl mb-3">🎮</div>
                     <h4 class="font-semibold mb-2">Vielfältig</h4>
                     <p class="text-sm opacity-80">6 verschiedene Spielmodi verfügbar</p>
                 </div>
 
                 <div class="text-center">
-                    <div class="text-3xl mb-3">🔧</div>
                     <h4 class="font-semibold mb-2">Flexibel</h4>
                     <p class="text-sm opacity-80">Anpassbare Punkteverteilung und Regeln</p>
                 </div>

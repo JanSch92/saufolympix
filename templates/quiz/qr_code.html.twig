@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}📱 Quiz QR-Code - {{ game.name }}{% endblock %}
+{% block title %}Quiz QR-Code - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-2xl mx-auto">
@@ -8,13 +8,13 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-extrabold gradient-text">🧠 Quiz QR-Code</h1>
+                <h1 class="text-2xl font-extrabold gradient-text">Quiz QR-Code</h1>
                 <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
             <div class="flex space-x-4">
                 <a href="{{ path('app_quiz_results', {gameId: game.id}) }}"
                    class="btn-secondary">
-                    📊 Ergebnisse
+                    Ergebnisse
                 </a>
                 <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-primary">
@@ -28,15 +28,15 @@
     <div class="card p-8">
         <div class="text-center">
             <h2 class="text-2xl font-bold text-gray-100 mb-6">
-                📱 Scannt den QR-Code mit eurem Handy
+                Scannt den QR-Code mit eurem Handy
             </h2>
 
-            <div class="qr-code-container mb-6">
-                <div id="qrcode"></div>
+            <div class="qr-code-container mb-6 inline-block">
+                <img src="{{ path('app_qr_code_game', {gameId: game.id}) }}" alt="QR-Code zur Quiz-Teilnahme" width="240" height="240">
             </div>
 
             <div class="bg-party-purple/10 border border-party-purple/30 rounded-lg p-4 mb-6">
-                <h3 class="text-lg font-semibold text-purple-300 mb-2">✨ So funktioniert's:</h3>
+                <h3 class="text-lg font-semibold text-purple-300 mb-2">So funktioniert's:</h3>
                 <ol class="text-left text-purple-200 space-y-2">
                     <li>1. QR-Code mit dem Handy scannen</li>
                     <li>2. Euren Namen auswählen</li>
@@ -58,7 +58,7 @@
 
     <!-- Quiz Status -->
     <div class="card p-6 mt-8">
-        <h3 class="text-lg font-bold text-gray-100 mb-4">📊 Quiz-Status</h3>
+        <h3 class="text-lg font-bold text-gray-100 mb-4">Quiz-Status</h3>
 
         <div id="quizStatus" class="space-y-4">
             <!-- Status wird via JavaScript geladen -->
@@ -67,17 +67,14 @@
         <div class="mt-6 flex justify-center">
             <a href="{{ path('app_quiz_calculate', {gameId: game.id}) }}"
                class="btn-success">
-                🧮 Ergebnisse berechnen
+                Ergebnisse berechnen
             </a>
         </div>
     </div>
 </div>
 
 <script>
-// Generate QR Code
 document.addEventListener('DOMContentLoaded', function() {
-    generateQRCode('{{ quiz_url }}', 'qrcode');
-
     // Load quiz status
     loadQuizStatus();
 
@@ -143,7 +140,7 @@ function updateQuizStatus(data) {
         html += `
             <div class="bg-emerald-500/10 border border-emerald-500/40 rounded-lg p-4">
                 <div class="flex items-center">
-                    <div class="text-emerald-400 mr-3">✅</div>
+                    <div class="text-emerald-400 mr-3"></div>
                     <div>
                         <div class="font-medium text-emerald-300">Alle haben geantwortet!</div>
                         <div class="text-sm text-emerald-400">Die Ergebnisse können jetzt berechnet werden.</div>

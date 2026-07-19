@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0f0a1e">
+    <meta name="theme-color" content="#0f172a">
     <title>{% block title %}Saufolympix{% endblock %}</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍻</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%231e293b%22/><text x=%2216%22 y=%2222%22 font-family=%22Arial,sans-serif%22 font-size=%2216%22 font-weight=%22bold%22 fill=%22%23818cf8%22 text-anchor=%22middle%22>S</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -13,17 +13,35 @@
                 extend: {
                     colors: {
                         night: {
-                            950: '#0f0a1e',
-                            900: '#171129',
-                            800: '#1f1836',
-                            700: '#2a2145',
-                            600: '#3a2f5c',
+                            950: '#0b1220',
+                            900: '#0f172a',
+                            800: '#16203a',
+                            700: '#1e293b',
+                            600: '#293650',
                         },
                         party: {
-                            purple: '#8b5cf6',
-                            pink: '#ec4899',
-                            amber: '#f59e0b',
-                            teal: '#14b8a6',
+                            purple: '#6366f1',
+                            pink: '#4f46e5',
+                            amber: '#818cf8',
+                            teal: '#0ea5e9',
+                        },
+                        purple: {
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            800: '#3730a3',
+                        },
+                        pink: {
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        },
+                        rose: {
+                            500: '#ef4444',
+                            600: '#dc2626',
                         },
                     },
                     fontFamily: {
@@ -33,7 +51,6 @@
             },
         };
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -43,33 +60,30 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(1200px 600px at 80% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
-                        radial-gradient(900px 500px at -10% 110%, rgba(236, 72, 153, 0.14), transparent 60%),
-                        #0f0a1e;
-            color: #e5e7eb;
+            background: radial-gradient(1100px 500px at 75% -10%, rgba(99, 102, 241, 0.07), transparent 60%),
+                        #0b1220;
+            color: #e2e8f0;
             min-height: 100vh;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* ---------- Komponenten ---------- */
         .card {
-            background: rgba(31, 24, 54, 0.85);
-            border: 1px solid rgba(139, 92, 246, 0.18);
-            border-radius: 1rem;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(8px);
         }
 
         .card-highlight {
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.25);
+            border-color: rgba(99, 102, 241, 0.45);
+            box-shadow: 0 4px 22px rgba(99, 102, 241, 0.12);
         }
 
         .gradient-text {
-            background: linear-gradient(90deg, #a78bfa, #f472b6, #fbbf24);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            background: none;
+            color: #f8fafc;
         }
 
         .btn-primary, .btn-secondary, .btn-danger, .btn-success {
@@ -88,52 +102,48 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            background: #4f46e5;
             color: white;
-            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.45);
+            background: #6366f1;
         }
 
         .btn-secondary {
-            background: rgba(58, 47, 92, 0.6);
-            color: #e5e7eb;
-            border: 1px solid rgba(139, 92, 246, 0.35);
+            background: rgba(30, 41, 59, 0.7);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.25);
         }
 
         .btn-secondary:hover {
-            background: rgba(58, 47, 92, 0.9);
-            border-color: rgba(139, 92, 246, 0.6);
+            background: rgba(41, 54, 80, 0.9);
+            border-color: rgba(148, 163, 184, 0.45);
         }
 
         .btn-danger {
-            background: rgba(220, 38, 38, 0.85);
+            background: #b91c1c;
             color: white;
         }
 
         .btn-danger:hover {
             background: #dc2626;
-            transform: translateY(-2px);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            background: #047857;
             color: white;
         }
 
         .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            background: #059669;
         }
 
         input[type="text"], input[type="number"], input[type="email"], input[type="password"], select, textarea {
-            background: rgba(15, 10, 30, 0.6);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 0.75rem;
-            color: #f3f4f6;
+            background: rgba(11, 18, 32, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 0.5rem;
+            color: #f1f5f9;
             padding: 0.75rem 1rem;
             min-height: 44px;
             width: 100%;
@@ -142,28 +152,27 @@
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
         input::placeholder, textarea::placeholder {
-            color: #6b7280;
+            color: #64748b;
         }
 
         /* ---------- Spiel-Karten ---------- */
         .game-card {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             border: 2px solid transparent;
         }
 
         .game-card:hover {
-            border-color: rgba(139, 92, 246, 0.5);
-            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.4);
         }
 
         .game-card.active {
-            border-color: rgba(20, 184, 166, 0.7);
-            background: rgba(20, 184, 166, 0.08);
+            border-color: rgba(5, 150, 105, 0.6);
+            background: rgba(5, 150, 105, 0.06);
         }
 
         .game-card.completed {
@@ -176,8 +185,7 @@
         }
 
         .player-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.25);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
         }
 
         .ranking-badge {
@@ -191,10 +199,10 @@
             flex-shrink: 0;
         }
 
-        .ranking-1 { background: linear-gradient(135deg, #fde047, #f59e0b); color: #78350f; box-shadow: 0 0 14px rgba(245, 158, 11, 0.5); }
-        .ranking-2 { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #1f2937; }
-        .ranking-3 { background: linear-gradient(135deg, #f59e0b, #92400e); color: #ffffff; }
-        .ranking-default { background: rgba(58, 47, 92, 0.7); color: #c4b5fd; }
+        .ranking-1 { background: #d3a625; color: #1c1917; }
+        .ranking-2 { background: #9ca3af; color: #1f2937; }
+        .ranking-3 { background: #a16207; color: #ffffff; }
+        .ranking-default { background: rgba(41, 54, 80, 0.8); color: #94a3b8; }
 
         /* ---------- Turnier ---------- */
         .tournament-bracket {
@@ -212,8 +220,7 @@
         }
 
         .match:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
         }
 
         .participant {
@@ -230,9 +237,8 @@
         }
 
         .tv-display {
-            background: linear-gradient(135deg, #6d28d9 0%, #be185d 100%);
+            background: #1e293b;
             color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         /* ---------- Quiz / Mobile ---------- */
@@ -241,10 +247,10 @@
         }
 
         .quiz-card {
-            background: rgba(31, 24, 54, 0.92);
-            border: 1px solid rgba(139, 92, 246, 0.25);
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 0.75rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         }
 
         /* ---------- Flash Messages ---------- */
@@ -274,17 +280,17 @@
         }
 
         .flash-info {
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
-            border: 1px solid rgba(139, 92, 246, 0.4);
+            background: rgba(99, 102, 241, 0.12);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.35);
         }
 
         /* ---------- Sonstiges ---------- */
         .loading-spinner {
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(139, 92, 246, 0.25);
-            border-top: 2px solid #a78bfa;
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-top: 2px solid #818cf8;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -320,8 +326,8 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(23, 17, 41, 0.95);
-            border-top: 1px solid rgba(139, 92, 246, 0.25);
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
             padding: 1rem;
             padding-bottom: calc(1rem + env(safe-area-inset-bottom));
             display: flex;
@@ -359,12 +365,12 @@
 </head>
 <body class="min-h-screen">
     <!-- Navigation -->
-    <nav class="sticky top-0 z-40 bg-night-900/90 border-b border-party-purple/20 backdrop-blur-md">
+    <nav class="sticky top-0 z-40 bg-night-900/90 border-b border-slate-500/20 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="{{ path('app_index') }}" class="text-xl font-extrabold gradient-text hover:opacity-80 transition-opacity">
-                        🍻 Saufolympix
+                        Saufolympix
                     </a>
                 </div>
 
@@ -379,7 +385,7 @@
                     {% if app.request.attributes.get('olympix') is defined and app.request.attributes.get('olympix') is not null %}
     <a href="{{ path('app_game_admin', {id: app.request.attributes.get('olympix').id}) }}"
                            class="btn-secondary mobile-hidden">
-                            ⚙️ Admin
+                            Admin
                         </a>
                     {% endif %}
                 </div>
@@ -404,10 +410,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-party-purple/15 mt-16">
+    <footer class="border-t border-slate-500/15 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="text-center text-gray-500">
-                <p>&copy; {{ "now"|date("Y") }} Saufolympix – Möge der Beste gewinnen! 🍻</p>
+                <p>&copy; {{ "now"|date("Y") }} Saufolympix</p>
             </div>
         </div>
     </footer>
@@ -454,21 +460,20 @@
 
                 players.forEach((player, index) => {
                     const rankingClass = index === 0 ? 'ranking-1' : index === 1 ? 'ranking-2' : index === 2 ? 'ranking-3' : 'ranking-default';
-                    const medal = index === 0 ? '👑' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
 
                     html += `
                         <div class="player-card card p-6 flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="ranking-badge ${rankingClass}">${index + 1}</div>
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-100">${medal} ${player.name}</h3>
+                                    <h3 class="text-lg font-semibold text-gray-100">${player.name}</h3>
                                     <div class="flex items-center space-x-2 mt-1">
                                         <span class="text-sm text-gray-400">Joker:</span>
                                         <span class="text-xs px-2 py-1 rounded-full ${player.joker_double_available ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-700/50 text-gray-500'}">
-                                            🃏 2x ${player.joker_double_available ? '✓' : '✗'}
+                                            2x ${player.joker_double_available ? '✓' : '✗'}
                                         </span>
                                         <span class="text-xs px-2 py-1 rounded-full ${player.joker_swap_available ? 'bg-party-purple/20 text-purple-300' : 'bg-gray-700/50 text-gray-500'}">
-                                            🔄 ${player.joker_swap_available ? '✓' : '✗'}
+                                            ${player.joker_swap_available ? '✓' : '✗'}
                                         </span>
                                     </div>
                                 </div>
@@ -517,7 +522,7 @@
                                     <span class="text-sm text-gray-400 capitalize">${game.type.replace('_', ' ')}</span>
                                 </div>
                                 <div class="text-purple-300 font-semibold">
-                                    ⏭️ NÄCHSTES SPIEL
+                                    NÄCHSTES SPIEL
                                 </div>
                             </div>
                         </div>
@@ -545,18 +550,6 @@
                 });
             });
         });
-
-        // QR Code generation
-        function generateQRCode(text, elementId) {
-            const qr = new QRCode(document.getElementById(elementId), {
-                text: text,
-                width: 256,
-                height: 256,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
 
         // Form validation
         function validateForm(formId) {

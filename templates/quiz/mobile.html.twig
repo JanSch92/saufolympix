@@ -1,12 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🧠 {{ game.name }} - Quiz{% endblock %}
+{% block title %}{{ game.name }} - Quiz{% endblock %}
 
 {% block body %}
 <div class="quiz-mobile min-h-screen flex items-center justify-center p-4">
     <div class="quiz-card w-full max-w-md p-6">
         <div class="text-center mb-6">
-            <div class="text-5xl mb-2">🧠</div>
             <h1 class="text-2xl font-extrabold gradient-text">{{ game.name }}</h1>
             <p class="text-gray-400 mt-2">Quiz-Teilnahme</p>
         </div>
@@ -15,7 +14,7 @@
             <!-- Player Selection -->
             <div class="mb-6">
                 <label for="player_id" class="block text-sm font-medium text-gray-300 mb-2">
-                    👤 Wähle deinen Namen
+                    Wähle deinen Namen
                 </label>
                 <select id="player_id"
                         name="player_id"
@@ -51,14 +50,14 @@
                 <button type="submit"
                         class="btn-primary w-full text-lg"
                         onclick="return validateQuizForm()">
-                    ✅ Antworten abschicken
+                    Antworten abschicken
                 </button>
             </div>
         </form>
 
         <div class="mt-4 text-center">
             <div class="text-sm text-gray-400">
-                🎯 Tipp: Je näher deine Schätzung an der korrekten Antwort liegt, desto mehr Punkte erhältst du!
+                Tipp: Je näher deine Schätzung an der korrekten Antwort liegt, desto mehr Punkte erhältst du!
             </div>
         </div>
     </div>

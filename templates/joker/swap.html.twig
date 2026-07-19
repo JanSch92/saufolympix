@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🔄 Punkte tauschen - {{ player.name }}{% endblock %}
+{% block title %}Punkte tauschen - {{ player.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-2xl mx-auto">
@@ -8,7 +8,7 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-extrabold gradient-text">🔄 Punkte tauschen</h1>
+                <h1 class="text-2xl font-extrabold gradient-text">Punkte tauschen</h1>
                 <p class="text-gray-400 mt-1">{{ player.name }} - {{ game.name }}</p>
             </div>
             <a href="{{ path('app_joker_manage', {gameId: game.id}) }}"
@@ -20,7 +20,7 @@
 
     <!-- Swap Form -->
     <div class="card p-6">
-        <h2 class="text-xl font-bold text-gray-100 mb-6">🃏 Mit wem möchtest du die Punkte tauschen?</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-6">Mit wem möchtest du die Punkte tauschen?</h2>
 
         <form action="{{ path('app_joker_swap', {playerId: player.id, gameId: game.id}) }}" method="POST">
             <div class="space-y-4">
@@ -37,11 +37,11 @@
                             </div>
                             <div class="text-sm text-gray-500">
                                 {% if availablePlayer.totalPoints > player.totalPoints %}
-                                    📈 Mehr Punkte
+                                    Mehr Punkte
                                 {% elseif availablePlayer.totalPoints < player.totalPoints %}
-                                    📉 Weniger Punkte
+                                    Weniger Punkte
                                 {% else %}
-                                    📊 Gleiche Punkte
+                                    Gleiche Punkte
                                 {% endif %}
                             </div>
                         </div>
@@ -50,7 +50,7 @@
             </div>
 
             <div class="mt-8 bg-amber-500/10 border border-amber-500/40 rounded-lg p-4">
-                <h3 class="text-lg font-semibold text-amber-300 mb-2">⚠️ Wichtig:</h3>
+                <h3 class="text-lg font-semibold text-amber-300 mb-2">Wichtig:</h3>
                 <ul class="text-amber-200 text-sm space-y-1">
                     <li>• Der Tausch wird erst nach dem Spiel durchgeführt</li>
                     <li>• Wenn mehrere Spieler den gleichen Spieler als Ziel wählen, wird der Tausch blockiert</li>
@@ -64,7 +64,7 @@
                     Abbrechen
                 </a>
                 <button type="submit" class="btn-primary">
-                    🔄 Tausch aktivieren
+                    Tausch aktivieren
                 </button>
             </div>
         </form>

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🤝 Split or Steal Setup - {{ game.name }}{% endblock %}
+{% block title %}Split or Steal Setup - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-4xl mx-auto">
@@ -8,7 +8,7 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-extrabold gradient-text">🤝 Split or Steal Setup</h1>
+                <h1 class="text-2xl font-extrabold gradient-text">Split or Steal Setup</h1>
                 <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
             <div class="flex space-x-4">
@@ -20,7 +20,7 @@
                     <a href="{{ path('app_split_or_steal_reset', {gameId: game.id}) }}"
                        class="btn-danger"
                        onclick="return confirm('Alle Matches zurücksetzen?')">
-                        🔄 Zurücksetzen
+                        Zurücksetzen
                     </a>
                 {% endif %}
             </div>
@@ -30,20 +30,20 @@
     <!-- Game Info -->
     <div class="bg-party-purple/10 border border-party-purple/30 rounded-lg p-4 mb-8">
         <div class="flex items-center mb-2">
-            <div class="text-purple-300 mr-2">ℹ️</div>
-            <h3 class="font-semibold text-purple-300">🤝 Split or Steal Regeln</h3>
+            <div class="text-purple-300 mr-2"></div>
+            <h3 class="font-semibold text-purple-300">Split or Steal Regeln</h3>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-purple-200">
             <div class="bg-night-800/60 border border-gray-700/60 rounded p-3">
-                <div class="font-medium text-emerald-400">🤝 Beide Split</div>
+                <div class="font-medium text-emerald-400">Beide Split</div>
                 <div>Jeder bekommt die Hälfte der Punkte</div>
             </div>
             <div class="bg-night-800/60 border border-gray-700/60 rounded p-3">
-                <div class="font-medium text-pink-400">💰 Einer Split, einer Steal</div>
+                <div class="font-medium text-pink-400">Einer Split, einer Steal</div>
                 <div>Steal-Spieler bekommt alle Punkte</div>
             </div>
             <div class="bg-night-800/60 border border-gray-700/60 rounded p-3">
-                <div class="font-medium text-gray-300">🚫 Beide Steal</div>
+                <div class="font-medium text-gray-300">Beide Steal</div>
                 <div>Keiner bekommt Punkte</div>
             </div>
         </div>
@@ -51,7 +51,7 @@
 
     <!-- Players Overview -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">👥 Verfügbare Spieler</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Verfügbare Spieler</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for player in players %}
@@ -72,12 +72,12 @@
 
     <!-- Setup Form -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">⚙️ Spiel konfigurieren</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Spiel konfigurieren</h2>
 
         <form method="POST" class="space-y-4">
             <div>
                 <label for="points_at_stake" class="block text-sm font-medium text-gray-300 mb-2">
-                    ✨ Punkte pro Match *
+                    Punkte pro Match *
                 </label>
                 <input type="number"
                        id="points_at_stake"
@@ -107,7 +107,7 @@
                     Abbrechen
                 </a>
                 <button type="submit" class="btn-primary">
-                    🎲 Zufällige Paarungen erstellen
+                    Zufällige Paarungen erstellen
                 </button>
             </div>
         </form>
@@ -117,7 +117,7 @@
     {% if existing_matches %}
     <div class="card p-6">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-gray-100">🎯 Aktuelle Paarungen</h2>
+            <h2 class="text-lg font-bold text-gray-100">Aktuelle Paarungen</h2>
             <div class="text-sm text-gray-400">
                 {{ existing_matches|length }} Matches
             </div>
@@ -176,22 +176,22 @@
                 {% elseif match.bothPlayersHaveChosen %}
                 <div class="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                     <div class="text-sm text-amber-300 text-center">
-                        ⏳ Beide haben gewählt - Bereit für Auswertung
+                        Beide haben gewählt - Bereit für Auswertung
                     </div>
                 </div>
                 {% else %}
                 <div class="mt-4 p-3 bg-night-700/40 border border-gray-700/60 rounded-lg">
                     <div class="text-sm text-gray-300 text-center">
                         {% if match.player1Choice %}
-                            ✅ {{ match.player1.name }} hat gewählt
+                            {{ match.player1.name }} hat gewählt
                         {% else %}
-                            ⏳ {{ match.player1.name }} muss noch wählen
+                            {{ match.player1.name }} muss noch wählen
                         {% endif %}
                         <br>
                         {% if match.player2Choice %}
-                            ✅ {{ match.player2.name }} hat gewählt
+                            {{ match.player2.name }} hat gewählt
                         {% else %}
-                            ⏳ {{ match.player2.name }} muss noch wählen
+                            {{ match.player2.name }} muss noch wählen
                         {% endif %}
                     </div>
                 </div>
@@ -216,12 +216,12 @@
             {% if allCompleted %}
                 <a href="{{ path('app_split_or_steal_results', {gameId: game.id}) }}"
                    class="btn-success">
-                    📊 Ergebnisse anzeigen
+                    Ergebnisse anzeigen
                 </a>
             {% elseif allChosen %}
                 <a href="{{ path('app_split_or_steal_evaluate', {gameId: game.id}) }}"
                    class="btn-success">
-                    ✅ Jetzt auswerten
+                    Jetzt auswerten
                 </a>
             {% else %}
                 <div class="text-center">
@@ -230,7 +230,7 @@
                     </div>
                     <a href="{{ path('app_split_or_steal_admin', {gameId: game.id}) }}"
                        class="btn-secondary">
-                        📱 Admin-Übersicht
+                        Admin-Übersicht
                     </a>
                 </div>
             {% endif %}

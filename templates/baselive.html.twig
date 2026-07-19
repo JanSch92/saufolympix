@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0f0a1e">
+    <meta name="theme-color" content="#0f172a">
     <title>{% block title %}Saufolympix{% endblock %}</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍻</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%231e293b%22/><text x=%2216%22 y=%2222%22 font-family=%22Arial,sans-serif%22 font-size=%2216%22 font-weight=%22bold%22 fill=%22%23818cf8%22 text-anchor=%22middle%22>S</text></svg>">
 
-    {# TailwindCSS & QR-Code Library #}
+    {# TailwindCSS #}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,17 +16,31 @@
                 extend: {
                     colors: {
                         night: {
-                            950: '#0f0a1e',
-                            900: '#171129',
-                            800: '#1f1836',
-                            700: '#2a2145',
-                            600: '#3a2f5c',
+                            950: '#0b1220',
+                            900: '#0f172a',
+                            800: '#16203a',
+                            700: '#1e293b',
+                            600: '#293650',
                         },
                         party: {
-                            purple: '#8b5cf6',
-                            pink: '#ec4899',
-                            amber: '#f59e0b',
-                            teal: '#14b8a6',
+                            purple: '#6366f1',
+                            pink: '#4f46e5',
+                            amber: '#818cf8',
+                            teal: '#0ea5e9',
+                        },
+                        purple: {
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            800: '#3730a3',
+                        },
+                        pink: {
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
                         },
                     },
                     fontFamily: {
@@ -36,7 +50,6 @@
             },
         };
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -53,25 +66,23 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(1200px 600px at 80% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
-                        radial-gradient(900px 500px at -10% 110%, rgba(236, 72, 153, 0.14), transparent 60%),
-                        #0f0a1e;
-            color: #e5e7eb;
+            background: radial-gradient(1100px 500px at 75% -10%, rgba(99, 102, 241, 0.07), transparent 60%),
+                        #0b1220;
+            color: #e2e8f0;
             margin: 0;
             padding: 0;
             overflow: hidden;
         }
 
-        /* Party Color Palette */
+        /* Farbpalette */
         :root {
-            --primary-50: #f5f3ff;
-            --primary-500: #8b5cf6;
-            --primary-600: #7c3aed;
-            --primary-700: #6d28d9;
-            --primary-900: #4c1d95;
+            --primary-500: #6366f1;
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            --primary-900: #312e81;
 
-            --secondary-500: #ec4899;
-            --secondary-600: #db2777;
+            --secondary-500: #6366f1;
+            --secondary-600: #4f46e5;
 
             --success-500: #10b981;
             --success-600: #059669;
@@ -82,17 +93,17 @@
             --error-500: #ef4444;
             --error-600: #dc2626;
 
-            --surface-800: #1f1836;
-            --surface-700: #2a2145;
-            --surface-600: #3a2f5c;
+            --surface-800: #16203a;
+            --surface-700: #1e293b;
+            --surface-600: #293650;
         }
 
-        /* Professional Loading Spinner */
+        /* Loading Spinner */
         .professional-spinner {
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(139, 92, 246, 0.25);
-            border-top: 2px solid #a78bfa;
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-top: 2px solid #818cf8;
             border-radius: 50%;
             animation: professional-spin 1s linear infinite;
         }
@@ -101,7 +112,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Professional Flash Messages */
+        /* Flash Messages */
         .flash-message {
             max-width: 90%;
             margin: 0 auto 1rem;
@@ -143,32 +154,30 @@
         }
 
         .flash-info {
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
-            border-color: rgba(139, 92, 246, 0.4);
+            background: rgba(99, 102, 241, 0.12);
+            color: #a5b4fc;
+            border-color: rgba(99, 102, 241, 0.35);
         }
 
-        /* Professional Card Components */
+        /* Card Components */
         .professional-card {
-            background: rgba(31, 24, 54, 0.85);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(139, 92, 246, 0.18);
-            border-radius: 1rem;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
         }
 
         .professional-card:hover {
-            border-color: rgba(139, 92, 246, 0.4);
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.2);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 22px rgba(99, 102, 241, 0.12);
         }
 
-        /* Professional Gradient Text */
+        /* Ehemals Gradient-Text: jetzt solide Farbe */
         .gradient-text {
-            background: linear-gradient(90deg, #a78bfa, #f472b6, #fbbf24);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            background: none;
+            color: #f8fafc;
         }
 
         /* Mobile Navigation */
@@ -177,9 +186,9 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(23, 17, 41, 0.95);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(139, 92, 246, 0.25);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
             display: flex;
             justify-content: space-around;
             padding: 1rem;
@@ -192,7 +201,7 @@
             flex-direction: column;
             align-items: center;
             gap: 0.25rem;
-            color: #9ca3af;
+            color: #94a3b8;
             text-decoration: none;
             transition: all 0.2s ease;
             padding: 0.5rem;
@@ -201,26 +210,26 @@
 
         .mobile-nav a:hover,
         .mobile-nav a.active {
-            color: #a78bfa;
-            background: rgba(139, 92, 246, 0.1);
+            color: #818cf8;
+            background: rgba(99, 102, 241, 0.1);
         }
 
-        /* Professional Scrollbar */
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(31, 24, 54, 0.3);
+            background: rgba(15, 23, 42, 0.3);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.4);
+            background: rgba(99, 102, 241, 0.4);
             border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.6);
+            background: rgba(99, 102, 241, 0.6);
         }
 
         /* Custom scrollbar for mobile */
@@ -229,17 +238,17 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(31, 24, 54, 0.3);
+            background: rgba(15, 23, 42, 0.3);
             border-radius: 2px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.4);
+            background: rgba(99, 102, 241, 0.4);
             border-radius: 2px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.6);
+            background: rgba(99, 102, 241, 0.6);
         }
 
         /* Mobile touch scrolling */

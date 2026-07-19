@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🎯 Gamechanger - {{ game.name }}{% endblock %}
+{% block title %}Gamechanger - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="container mx-auto px-4 py-8" id="gamechangerApp">
@@ -8,13 +8,13 @@
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-extrabold gradient-text">🎯 {{ game.name }}</h1>
+                <h1 class="text-3xl font-extrabold gradient-text">{{ game.name }}</h1>
                 <p class="text-lg text-gray-400 mt-2">{{ game.olympix.name }} - Gamechanger</p>
             </div>
             <div class="flex gap-3">
                 <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}"
                    class="btn-secondary text-sm">
-                    ⚙️ Setup
+                    Setup
                 </a>
                 <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-secondary text-sm">
@@ -28,7 +28,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Aktueller Status -->
         <div class="card p-6">
-            <h2 class="text-lg font-bold text-gray-100 mb-4">📊 Spielstatus</h2>
+            <h2 class="text-lg font-bold text-gray-100 mb-4">Spielstatus</h2>
             <div class="space-y-3">
                 {% set realThrows = throws|filter(t => t.thrownPoints > 0) %}
                 <div class="flex justify-between">
@@ -38,9 +38,9 @@
                 <div class="flex justify-between">
                     <span class="text-gray-400">Status:</span>
                     {% if is_game_complete %}
-                        <span class="text-emerald-400 font-semibold">✅ Beendet</span>
+                        <span class="text-emerald-400 font-semibold">Beendet</span>
                     {% else %}
-                        <span class="text-purple-300 font-semibold">🎯 Aktiv</span>
+                        <span class="text-purple-300 font-semibold">Aktiv</span>
                     {% endif %}
                 </div>
                 {% if next_player and not is_game_complete %}
@@ -64,11 +64,11 @@
                                 </span>
                             </span>
                             {% if throw.thrownPoints > 0 %}
-                                <span class="text-emerald-400 text-xs">✅</span>
+                                <span class="text-emerald-400 text-xs"></span>
                             {% elseif next_player and throw.player.id == next_player.id %}
-                                <span class="text-purple-300 text-xs">👆</span>
+                                <span class="text-purple-300 text-xs"></span>
                             {% else %}
-                                <span class="text-gray-500 text-xs">⏳</span>
+                                <span class="text-gray-500 text-xs"></span>
                             {% endif %}
                         </div>
                         {% endfor %}
@@ -80,7 +80,7 @@
 
         <!-- Statistiken -->
         <div class="card p-6">
-            <h2 class="text-lg font-bold text-gray-100 mb-4">📈 Statistiken</h2>
+            <h2 class="text-lg font-bold text-gray-100 mb-4">Statistiken</h2>
             <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
                     <span class="text-gray-400">Bonus-Treffer:</span>
@@ -111,7 +111,7 @@
 
         <!-- Aktuelle Rangliste -->
         <div class="card p-6">
-            <h2 class="text-lg font-bold text-gray-100 mb-4">🏆 Aktuelle Rangliste</h2>
+            <h2 class="text-lg font-bold text-gray-100 mb-4">Aktuelle Rangliste</h2>
             <div class="space-y-2">
                 {% set sortedPlayers = players|sort((a, b) => b.totalPoints <=> a.totalPoints) %}
                 {% for player in sortedPlayers|slice(0, 5) %}
@@ -121,7 +121,7 @@
                         <span class="text-sm {{ next_player and player.id == next_player.id ? 'font-bold text-purple-300' : 'text-gray-300' }}">
                             {{ player.name }}
                             {% if next_player and player.id == next_player.id %}
-                                <span class="text-xs">👆</span>
+                                <span class="text-xs"></span>
                             {% endif %}
                         </span>
                     </div>
@@ -140,7 +140,7 @@
     {% if not is_game_complete %}
     <!-- Wurf eingeben -->
     <div class="card card-highlight p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">🎯 Wurf eingeben</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Wurf eingeben</h2>
 
         {% if next_player %}
         <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 mb-6">
@@ -151,7 +151,7 @@
                     Aktuelle Punkte: <span class="font-semibold text-amber-400">{{ current_player_points[next_player.id] }}</span>
                 </div>
                 <div class="text-sm text-emerald-400 mt-1 font-semibold">
-                    💡 Treffe {{ current_player_points[next_player.id] }} für +8 Punkte!
+                    Treffe {{ current_player_points[next_player.id] }} für +8 Punkte!
                 </div>
             </div>
         </div>
@@ -175,7 +175,7 @@
                 </div>
                 <button type="submit"
                         class="w-full btn-primary text-lg py-3">
-                    🎯 Wurf bestätigen
+                    Wurf bestätigen
                 </button>
             </div>
         </form>
@@ -191,7 +191,7 @@
     <!-- Wurf-Historie -->
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-100">📋 Wurf-Historie</h2>
+            <h2 class="text-xl font-bold text-gray-100">Wurf-Historie</h2>
             {% set realThrows = throws|filter(t => t.thrownPoints > 0) %}
             {% if realThrows|length > 0 and not is_game_complete %}
             <button onclick="undoLastThrow()"
@@ -269,21 +269,21 @@
     {% if is_game_complete %}
     <!-- Spiel beendet -->
     <div class="bg-emerald-500/10 border border-emerald-500/40 rounded-lg p-6">
-        <h2 class="text-xl font-bold text-emerald-300 mb-4">🎉 Spiel beendet!</h2>
+        <h2 class="text-xl font-bold text-emerald-300 mb-4">Spiel beendet!</h2>
         <p class="text-emerald-400 mb-4">Alle Spieler haben geworfen. Die Punkte sind in die Gesamtwertung eingeflossen.</p>
 
         <!-- Finale Rangliste -->
         <div class="bg-night-800/60 border border-gray-700/60 rounded-lg p-4 mb-4">
-            <h3 class="font-bold text-gray-100 mb-3">🏆 Finale Rangliste:</h3>
+            <h3 class="font-bold text-gray-100 mb-3">Finale Rangliste:</h3>
             <div class="space-y-2">
                 {% set finalPlayers = players|sort((a, b) => b.totalPoints <=> a.totalPoints) %}
                 {% for player in finalPlayers %}
                 <div class="flex items-center justify-between {{ loop.index <= 3 ? 'font-bold text-gray-100' : 'text-gray-300' }}">
                     <div class="flex items-center">
                         <span class="w-8">
-                            {% if loop.index == 1 %}👑
-                            {% elseif loop.index == 2 %}🥈
-                            {% elseif loop.index == 3 %}🥉
+                            {% if loop.index == 1 %}
+                            {% elseif loop.index == 2 %}
+                            {% elseif loop.index == 3 %}
                             {% else %}{{ loop.index }}.
                             {% endif %}
                         </span>
@@ -332,7 +332,7 @@ document.getElementById('throwForm')?.addEventListener('submit', async function(
     const submitButton = this.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
     submitButton.disabled = true;
-    submitButton.textContent = '⏳ Verarbeite...';
+    submitButton.textContent = 'Verarbeite...';
 
     try {
         const response = await fetch(`/gamechanger/throw/${gameId}`, {

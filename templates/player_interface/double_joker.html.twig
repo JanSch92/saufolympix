@@ -6,54 +6,41 @@
     {{ parent() }}
     <style>
         .game-option {
-            background: rgba(31, 24, 54, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(139, 92, 246, 0.18);
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.2s ease, background 0.2s ease;
             cursor: pointer;
             min-height: 44px;
         }
 
         .game-option:hover {
-            border-color: rgba(139, 92, 246, 0.45);
-            box-shadow: 0 8px 25px -5px rgba(139, 92, 246, 0.25);
-            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.45);
+            background: rgba(30, 41, 59, 0.85);
         }
-        
+
         .game-option.selected {
             border-color: rgba(16, 185, 129, 0.5);
             background: rgba(16, 185, 129, 0.1);
-            box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.3);
         }
-        
+
         .game-option.disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            border-color: rgba(239, 68, 68, 0.3);
-            background: rgba(239, 68, 68, 0.1);
-        }
-        
-        .game-option.disabled:hover {
-            transform: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            border-color: rgba(220, 38, 38, 0.3);
+            background: rgba(220, 38, 38, 0.08);
         }
 
-        .game-type-icon {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        .game-option.disabled:hover {
+            background: rgba(220, 38, 38, 0.08);
         }
-        
+
         .points-display {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
+            background: rgba(211, 166, 37, 0.15);
+            color: #d3a625;
+            border: 1px solid rgba(211, 166, 37, 0.35);
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.75rem;
@@ -102,16 +89,16 @@
         }
         
         .scrollable-content::-webkit-scrollbar-track {
-            background: rgba(31, 24, 54, 0.3);
+            background: rgba(15, 23, 42, 0.3);
         }
 
         .scrollable-content::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.4);
+            background: rgba(99, 102, 241, 0.4);
             border-radius: 3px;
         }
 
         .scrollable-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.6);
+            background: rgba(99, 102, 241, 0.6);
         }
 
         .mobile-nav {
@@ -120,9 +107,9 @@
             left: 0;
             right: 0;
             height: 4rem;
-            background: rgba(23, 17, 41, 0.95);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(139, 92, 246, 0.25);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
@@ -146,44 +133,38 @@
         }
 
         .mobile-nav a.active {
-            color: #a78bfa;
+            color: #818cf8;
         }
 
         .mobile-nav a:hover {
-            background: rgba(139, 92, 246, 0.1);
+            background: rgba(99, 102, 241, 0.1);
         }
 
         .mobile-nav .nav-apply {
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            background: #4f46e5;
             color: white !important;
             padding: 0.75rem 1rem;
             min-height: 44px;
             border-radius: 0.75rem;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             cursor: pointer;
             border: none;
             min-width: auto;
         }
 
         .mobile-nav .nav-apply:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.45);
-            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            background: #6366f1;
         }
 
         .mobile-nav .nav-apply:disabled {
-            background: rgba(58, 47, 92, 0.6);
-            color: #9ca3af;
+            background: rgba(41, 54, 80, 0.6);
+            color: #94a3b8;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .mobile-nav .nav-apply:disabled:hover {
-            transform: none;
-            box-shadow: none;
-            background: rgba(58, 47, 92, 0.6);
+            background: rgba(41, 54, 80, 0.6);
         }
         
         /* RESPONSIVE */
@@ -202,13 +183,7 @@
             .game-option {
                 padding: 0.75rem;
             }
-            
-            .game-type-icon {
-                width: 2.5rem;
-                height: 2.5rem;
-                font-size: 1.25rem;
-            }
-            
+
             .mobile-nav {
                 gap: 0.5rem;
             }
@@ -260,20 +235,20 @@
     <!-- Header -->
     <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-night-900/80 backdrop-blur-xl border-b border-party-purple/20">
         <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-party-purple to-party-pink rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path>
                 </svg>
             </div>
             <div>
-                <h1 class="text-lg font-bold gradient-text">🃏 Doppelte Punkte Joker</h1>
+                <h1 class="text-lg font-bold gradient-text">Doppelte Punkte Joker</h1>
                 <p class="text-xs text-gray-400">{{ player.name }}</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-2">
-            <span class="text-sm font-medium text-amber-300">✨ {{ player.totalPoints }}</span>
+            <span class="text-sm font-medium text-amber-300">{{ player.totalPoints }}</span>
             <span class="text-xs text-gray-500">Punkte</span>
         </div>
     </header>
@@ -282,7 +257,7 @@
         <!-- No Games Available -->
         <div class="flex-1 flex items-center justify-center p-4">
             <div class="professional-card p-8 text-center max-w-md w-full">
-                <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"></path>
                     </svg>
@@ -301,7 +276,7 @@
             <div class="content-wrapper">
                 <!-- Header -->
                 <div class="content-header">
-                    <h2 class="text-lg font-semibold text-gray-200 mb-1">🃏 Spiel auswählen</h2>
+                    <h2 class="text-lg font-semibold text-gray-200 mb-1">Spiel auswählen</h2>
                     <p class="text-sm text-gray-400">Wähle ein Spiel für doppelte Punkte</p>
                 </div>
                 
@@ -321,23 +296,13 @@
                                            onchange="selectGame(this, {{ gameData.game.id }})">
                                     
                                     <div class="flex items-center space-x-4">
-                                        <div class="game-type-icon">
-                                            {% if gameData.game.gameType == 'tournament_team' or gameData.game.gameType == 'tournament_single' %}
-                                                🏆
-                                            {% elseif gameData.game.gameType == 'quiz' %}
-                                                🧠
-                                            {% else %}
-                                                🎯
-                                            {% endif %}
-                                        </div>
-                                        
                                         <div class="flex-1 min-w-0">
                                             <div class="font-semibold text-gray-100 text-lg truncate">{{ gameData.game.name }}</div>
                                             <div class="text-sm text-gray-400 mt-1">{{ gameData.game.gameTypeLabel }}</div>
                                             {% if gameData.has_double_joker %}
-                                                <div class="text-sm text-pink-300 font-medium mt-1">🃏 Joker bereits verwendet</div>
+                                                <div class="text-sm text-pink-300 font-medium mt-1">Joker bereits verwendet</div>
                                             {% else %}
-                                                <div class="text-sm text-emerald-300 font-medium mt-1">🃏 Joker verfügbar</div>
+                                                <div class="text-sm text-emerald-300 font-medium mt-1">Joker verfügbar</div>
                                             {% endif %}
                                         </div>
                                         
@@ -370,7 +335,7 @@
                 id="navApplyBtn"
                 disabled
                 onclick="submitForm()">
-            <span class="text-xs">🃏 Anwenden</span>
+            <span class="text-xs">Anwenden</span>
         </button>
     </div>
 </div>

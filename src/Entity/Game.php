@@ -436,19 +436,6 @@ class Game
         };
     }
 
-    public function getGameTypeEmoji(): string
-    {
-        return match($this->gameType) {
-            'free_for_all' => '⚔️',
-            'tournament_team', 'tournament_single' => '🏆',
-            'quiz' => '🧠',
-            'split_or_steal' => '🤝',
-            'gamechanger' => '🎯',
-            'stopwatch' => '⏱️',
-            default => '🎲'
-        };
-    }
-
     public function getExpectedDuration(): int
     {
         return match($this->gameType) {

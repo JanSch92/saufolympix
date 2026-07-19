@@ -1,48 +1,45 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}⏱️ Stoppuhr – {{ game.name }}{% endblock %}
+{% block title %}Stoppuhr – {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-md mx-auto">
     <!-- Header -->
     <div class="text-center mb-6">
-        <div class="text-5xl mb-2">⏱️</div>
         <h1 class="text-2xl font-extrabold gradient-text">{{ game.name }}</h1>
         <p class="text-gray-400 mt-1">Stoppe die Zeit so genau wie möglich!</p>
     </div>
 
     <!-- Zielzeit -->
     <div class="card card-highlight p-6 text-center mb-6">
-        <div class="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-1">🎯 Zielzeit</div>
+        <div class="text-sm uppercase tracking-widest text-purple-300 font-semibold mb-1">Zielzeit</div>
         <div class="text-5xl font-black text-amber-400" id="target-display">{{ game.stopwatchTarget|number_format(2, ',', '') }}<span class="text-2xl text-amber-300"> s</span></div>
-        <p class="text-gray-500 text-sm mt-2">Die laufende Uhr ist unsichtbar – zähl im Kopf mit! 🧠</p>
+        <p class="text-gray-500 text-sm mt-2">Die laufende Uhr ist unsichtbar – zähl im Kopf mit! </p>
     </div>
 
     {% if not game.isActive %}
         <div class="card p-6 text-center">
-            <div class="text-4xl mb-2">🔒</div>
             <p class="text-gray-300">Das Spiel ist nicht aktiv.</p>
             {% if game.isCompleted %}
-                <a href="{{ path('app_stopwatch_results', {gameId: game.id}) }}" class="btn-primary mt-4">🏁 Zu den Ergebnissen</a>
+                <a href="{{ path('app_stopwatch_results', {gameId: game.id}) }}" class="btn-primary mt-4">Zu den Ergebnissen</a>
             {% endif %}
         </div>
     {% else %}
         <!-- Schritt 1: Spieler wählen -->
         <div id="step-player" class="card p-6">
-            <h2 class="text-lg font-bold text-gray-100 mb-4">👤 Wer bist du?</h2>
+            <h2 class="text-lg font-bold text-gray-100 mb-4">Wer bist du?</h2>
             <div class="grid grid-cols-1 gap-3">
                 {% for player in players %}
                     {% if player.id in submitted_player_ids %}
                         <button disabled
                                 class="w-full min-h-[52px] px-4 rounded-xl bg-night-700/40 border border-gray-700 text-gray-500 font-semibold flex items-center justify-between cursor-not-allowed">
                             <span>{{ player.name }}</span>
-                            <span class="text-emerald-400">✅ fertig</span>
+                            <span class="text-emerald-400">fertig</span>
                         </button>
                     {% else %}
                         <button data-player-id="{{ player.id }}" data-player-name="{{ player.name }}"
                                 class="player-select-btn w-full min-h-[52px] px-4 rounded-xl bg-night-700/70 border border-party-purple/30 text-gray-100 font-semibold hover:border-party-purple hover:bg-night-600/70 transition-all flex items-center justify-between">
                             <span>{{ player.name }}</span>
-                            <span>👉</span>
                         </button>
                     {% endif %}
                 {% endfor %}
@@ -59,8 +56,8 @@
             <div class="card p-8 text-center">
                 <button id="stopwatch-btn"
                         class="w-52 h-52 mx-auto rounded-full text-3xl font-black text-white transition-all duration-200 shadow-2xl
-                               bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 active:scale-95">
-                    ▶️ START
+                               bg-emerald-700 hover:bg-emerald-600 active:scale-95">
+                    START
                 </button>
                 <p id="stopwatch-hint" class="text-gray-500 text-sm mt-6">Drücke START und stoppe möglichst genau bei <strong class="text-amber-400">{{ game.stopwatchTarget|number_format(2, ',', '') }} s</strong></p>
             </div>
@@ -69,8 +66,7 @@
         <!-- Schritt 3: Ergebnis -->
         <div id="step-result" class="hidden">
             <div class="card card-highlight p-8 text-center">
-                <div class="text-5xl mb-4" id="result-emoji">🎉</div>
-                <h2 class="text-xl font-bold text-gray-100 mb-6">Deine Zeit ist gespeichert!</h2>
+                <h2 class="text-xl font-bold text-gray-100 mb-6">Deine Zeit ist gespeichert</h2>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-night-700/50 rounded-xl p-4">
@@ -89,7 +85,7 @@
                 </div>
 
                 <a id="results-link" href="{{ path('app_stopwatch_results', {gameId: game.id}) }}" class="btn-primary mt-4 hidden">
-                    🏁 Zu den Ergebnissen
+                    Zu den Ergebnissen
                 </a>
             </div>
         </div>
@@ -127,9 +123,9 @@
             if (!running) {
                 running = true;
                 startTimestamp = performance.now();
-                stopwatchBtn.textContent = '⏹️ STOP';
-                stopwatchBtn.classList.remove('from-emerald-500', 'to-teal-500');
-                stopwatchBtn.classList.add('from-pink-500', 'to-rose-600', 'animate-pulse');
+                stopwatchBtn.textContent = 'STOP';
+                stopwatchBtn.classList.remove('bg-emerald-700', 'hover:bg-emerald-600');
+                stopwatchBtn.classList.add('bg-red-700', 'hover:bg-red-600', 'animate-pulse');
             } else {
                 const elapsed = (performance.now() - startTimestamp) / 1000;
                 running = false;
@@ -164,9 +160,6 @@
                         (data.deviation >= 0 ? '±' : '') + parseFloat(data.deviation).toFixed(2).replace('.', ',') + ' s';
 
                     const deviation = parseFloat(data.deviation);
-                    document.getElementById('result-emoji').textContent =
-                        deviation < 0.3 ? '🎯' : deviation < 1 ? '🔥' : deviation < 3 ? '👍' : '😅';
-
                     if (data.game_completed) {
                         showResultsLink();
                     } else {
@@ -177,12 +170,12 @@
         }
 
         function showError(message) {
-            errorBox.textContent = '⚠️ ' + message;
+            errorBox.textContent = '' + message;
             errorBox.classList.remove('hidden');
             stopwatchBtn.disabled = false;
-            stopwatchBtn.textContent = '▶️ START';
-            stopwatchBtn.classList.add('from-emerald-500', 'to-teal-500');
-            stopwatchBtn.classList.remove('from-pink-500', 'to-rose-600');
+            stopwatchBtn.textContent = 'START';
+            stopwatchBtn.classList.add('bg-emerald-700', 'hover:bg-emerald-600');
+            stopwatchBtn.classList.remove('bg-red-700', 'hover:bg-red-600');
         }
 
         function showResultsLink() {

@@ -8,8 +8,8 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold gradient-text">👥 Spieler verwalten</h1>
-                <p class="text-gray-400 mt-1">🍻 {{ olympix.name }}</p>
+                <h1 class="text-2xl font-bold gradient-text">Spieler verwalten</h1>
+                <p class="text-gray-400 mt-1">{{ olympix.name }}</p>
             </div>
             <a href="{{ path('app_game_admin', {id: olympix.id}) }}"
                class="btn-secondary">
@@ -20,7 +20,7 @@
 
     <!-- Add Player Form -->
     <div class="card p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">➕ Neuen Spieler hinzufügen</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Neuen Spieler hinzufügen</h2>
 
         <form action="{{ path('app_player_create', {olympixId: olympix.id}) }}"
               method="POST"
@@ -37,7 +37,7 @@
                        class="w-full">
             </div>
             <button type="submit" class="btn-primary">
-                ➕ Hinzufügen
+                Hinzufügen
             </button>
         </form>
     </div>
@@ -45,10 +45,10 @@
     <!-- Players List -->
     <div class="card p-6">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-100">👥 Spieler ({{ players|length }})</h2>
+            <h2 class="text-xl font-bold text-gray-100">Spieler ({{ players|length }})</h2>
             {% if players|length > 0 %}
                 <div class="text-sm text-gray-400">
-                    ✨ Sortiert nach Punkten
+                    Sortiert nach Punkten
                 </div>
             {% endif %}
         </div>
@@ -62,15 +62,15 @@
                                 {{ loop.index }}
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-100">{% if loop.index == 1 %}👑 {% elseif loop.index == 2 %}🥈 {% elseif loop.index == 3 %}🥉 {% endif %}{{ player.name }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-100">{% if loop.index == 1 %}{% elseif loop.index == 2 %}{% elseif loop.index == 3 %}{% endif %}{{ player.name }}</h3>
                                 <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-sm text-amber-300">✨ {{ player.totalPoints }} Punkte</span>
+                                    <span class="text-sm text-amber-300">{{ player.totalPoints }} Punkte</span>
                                     <span class="text-sm text-gray-500">•</span>
                                     <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-emerald-500/10 text-emerald-300{% else %}bg-gray-700/50 text-gray-500{% endif %}">
-                                        🃏 2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
+                                        2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
                                     </span>
                                     <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-party-purple/10 text-purple-300{% else %}bg-gray-700/50 text-gray-500{% endif %}">
-                                        🔄 {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
+                                        {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
                                     </span>
                                 </div>
                             </div>
@@ -80,27 +80,27 @@
                             <!-- Edit Button -->
                             <button onclick="editPlayer({{ player.id }}, '{{ player.name }}')"
                                     class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-purple-300 hover:text-purple-200 hover:bg-party-purple/10 text-sm">
-                                ✏️ Bearbeiten
+                                Bearbeiten
                             </button>
 
                             <!-- Reset Jokers -->
                             <a href="{{ path('app_player_reset_jokers', {id: player.id}) }}"
                                class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 text-sm">
-                                🔄 Joker zurücksetzen
+                                Joker zurücksetzen
                             </a>
 
                             <!-- Reset Points -->
                             <a href="{{ path('app_player_reset_points', {id: player.id}) }}"
                                class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-teal-300 hover:text-teal-200 hover:bg-teal-500/10 text-sm"
                                onclick="return confirm('Punkte wirklich zurücksetzen?')">
-                                🔢 Punkte zurücksetzen
+                                Punkte zurücksetzen
                             </a>
 
                             <!-- Delete Button -->
                             <a href="{{ path('app_player_delete', {id: player.id}) }}"
                                class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 text-sm"
                                onclick="return confirmDelete('Spieler {{ player.name }} wirklich löschen?')">
-                                🗑️ Löschen
+                                Löschen
                             </a>
                         </div>
                     </div>
@@ -108,7 +108,6 @@
             </div>
         {% else %}
             <div class="text-center text-gray-400 py-12">
-                <div class="text-4xl mb-4">👥</div>
                 <p class="text-lg">Noch keine Spieler hinzugefügt</p>
                 <p class="text-sm mt-2 text-gray-500">Füge oben deinen ersten Spieler hinzu</p>
             </div>
@@ -119,7 +118,7 @@
 <!-- Edit Player Modal -->
 <div id="editPlayerModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50">
     <div class="card card-highlight p-6 w-full max-w-md mx-4">
-        <h3 class="text-lg font-bold text-gray-100 mb-4">✏️ Spieler bearbeiten</h3>
+        <h3 class="text-lg font-bold text-gray-100 mb-4">Spieler bearbeiten</h3>
 
         <form id="editPlayerForm" method="POST">
             <div class="mb-4">

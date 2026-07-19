@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🧠 Quiz-Fragen – {{ game.name }}{% endblock %}
+{% block title %}Quiz-Fragen – {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-4xl mx-auto">
@@ -8,13 +8,13 @@
     <div class="card p-6 mb-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-gray-100">🧠 Quiz-Fragen</h1>
+                <h1 class="text-2xl font-extrabold text-gray-100">Quiz-Fragen</h1>
                 <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ path('app_quiz_qr', {gameId: game.id}) }}"
                    class="btn-secondary">
-                    📱 QR-Code
+                    QR-Code
                 </a>
                 <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-primary">
@@ -28,7 +28,7 @@
     <div class="card card-highlight p-6 mb-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold text-gray-100">🤖 Automatisch generieren</h2>
+                <h2 class="text-xl font-bold text-gray-100">Automatisch generieren</h2>
                 <p class="text-gray-400 text-sm mt-1">
                     Erstellt 10 Allgemeinwissen-Schätzfragen mit Zahlen-Antworten
                     (via ChatGPT, mit eingebautem Fragenpool als Fallback).
@@ -38,7 +38,7 @@
             <form action="{{ path('app_quiz_generate', {gameId: game.id}) }}" method="POST"
                   onsubmit="return confirm('Vorhandene Fragen werden ersetzt. Fortfahren?')">
                 <button type="submit" class="btn-success whitespace-nowrap">
-                    ✨ 10 Fragen generieren
+                    10 Fragen generieren
                 </button>
             </form>
         </div>
@@ -46,7 +46,7 @@
 
     <!-- Add Question Form -->
     <div class="card p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">✍️ Eigene Frage hinzufügen</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Eigene Frage hinzufügen</h2>
 
         <form action="{{ path('app_quiz_questions', {gameId: game.id}) }}" method="POST">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -75,7 +75,7 @@
                     </div>
 
                     <button type="submit" class="btn-primary w-full">
-                        ➕ Frage hinzufügen
+                        Frage hinzufügen
                     </button>
                 </div>
             </div>
@@ -85,7 +85,7 @@
     <!-- Questions List -->
     <div class="card p-6">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-100">📋 Fragen ({{ questions|length }})</h2>
+            <h2 class="text-xl font-bold text-gray-100">Fragen ({{ questions|length }})</h2>
             {% if questions|length > 0 %}
                 <div class="text-sm text-gray-500">
                     Alle Fragen sind Schätzfragen mit numerischen Antworten
@@ -102,7 +102,7 @@
                                 <div class="flex items-center space-x-2 mb-2">
                                     <span class="text-sm font-medium text-purple-300">Frage {{ loop.index }}</span>
                                     <span class="text-sm text-gray-600">•</span>
-                                    <span class="text-sm text-emerald-400 font-medium">✅ Antwort: {{ question.correctAnswer }}</span>
+                                    <span class="text-sm text-emerald-400 font-medium">Antwort: {{ question.correctAnswer }}</span>
                                 </div>
                                 <p class="text-gray-100">{{ question.question }}</p>
                             </div>
@@ -111,7 +111,7 @@
                                 <a href="{{ path('app_quiz_question_delete', {id: question.id}) }}"
                                    class="text-pink-400 hover:text-pink-300 text-sm"
                                    onclick="return confirmDelete('Frage wirklich löschen?')">
-                                    🗑️ Löschen
+                                    Löschen
                                 </a>
                             </div>
                         </div>
@@ -120,7 +120,6 @@
             </div>
         {% else %}
             <div class="text-center text-gray-500 py-12">
-                <div class="text-4xl mb-4">❓</div>
                 <p class="text-lg">Noch keine Fragen erstellt</p>
                 <p class="text-sm mt-2">Generiere Fragen automatisch oder füge eigene hinzu — beim Spielstart werden sonst automatisch 10 Fragen erstellt</p>
             </div>

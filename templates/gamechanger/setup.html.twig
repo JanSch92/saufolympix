@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🎯 Gamechanger Setup - {{ game.name }}{% endblock %}
+{% block title %}Gamechanger Setup - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="container mx-auto px-4 py-8">
@@ -8,7 +8,7 @@
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-extrabold gradient-text">🎯 Gamechanger Setup</h1>
+                <h1 class="text-3xl font-extrabold gradient-text">Gamechanger Setup</h1>
                 <p class="text-lg text-gray-400 mt-2">{{ game.name }} - {{ game.olympix.name }}</p>
             </div>
             <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
@@ -20,7 +20,7 @@
 
     <!-- Spielregeln -->
     <div class="bg-party-purple/10 border border-party-purple/30 rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-bold text-purple-300 mb-4">🎲 Spielregeln Gamechanger</h2>
+        <h2 class="text-xl font-bold text-purple-300 mb-4">Spielregeln Gamechanger</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
                 <h3 class="font-semibold text-purple-300 mb-2">Spielablauf:</h3>
@@ -45,13 +45,13 @@
 
     <!-- Aktuelle Spieler & ihre Punkte -->
     <div class="card p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">👥 Spieler & aktuelle Punkte</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Spieler & aktuelle Punkte</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for player in players %}
             <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 text-center">
                 <div class="text-lg font-semibold text-gray-100">{{ player.name }}</div>
                 <div class="text-2xl font-bold text-amber-400 mt-2">{{ player.totalPoints }} Punkte</div>
-                <div class="text-sm text-emerald-400 mt-1 font-semibold">🎯 Ziel für +8 Punkte</div>
+                <div class="text-sm text-emerald-400 mt-1 font-semibold">Ziel für +8 Punkte</div>
             </div>
             {% endfor %}
         </div>
@@ -65,7 +65,7 @@
     {% if existing_throws|length > 0 %}
     <!-- Vorhandene Reihenfolge anzeigen -->
     <div class="bg-amber-500/10 border border-amber-500/40 rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-bold text-amber-300 mb-4">⚠️ Aktueller Spielstand</h2>
+        <h2 class="text-xl font-bold text-amber-300 mb-4">Aktueller Spielstand</h2>
 
         {% set realThrows = existing_throws|filter(t => t.thrownPoints > 0) %}
         {% if realThrows|length > 0 %}
@@ -81,13 +81,13 @@
                         <div class="font-semibold text-gray-100">{{ throw.player.name }}</div>
                         {% if throw.thrownPoints > 0 %}
                             <div class="text-emerald-400 text-sm mt-1 font-semibold">
-                                ✅ {{ throw.thrownPoints }} Punkte
+                                {{ throw.thrownPoints }} Punkte
                             </div>
                             <div class="text-xs text-gray-500 mt-1">
                                 {{ throw.scoringReason }}
                             </div>
                         {% else %}
-                            <div class="text-gray-500 text-sm mt-1">⏳ Wartet</div>
+                            <div class="text-gray-500 text-sm mt-1">Wartet</div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -105,7 +105,7 @@
                     <div class="bg-night-700/40 rounded-lg p-3 text-center border border-gray-700/60">
                         <div class="text-sm text-gray-500">{{ throw.playerOrder }}. Spieler</div>
                         <div class="font-semibold text-gray-100">{{ throw.player.name }}</div>
-                        <div class="text-gray-500 text-sm mt-1">⏳ Wartet</div>
+                        <div class="text-gray-500 text-sm mt-1">Wartet</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -117,12 +117,12 @@
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <a href="{{ path('app_gamechanger_play', {gameId: game.id}) }}"
                class="btn-primary inline-block text-center">
-                ▶️ Spiel fortsetzen
+                Spiel fortsetzen
             </a>
             {% if realThrows|length > 0 %}
             <button onclick="if(confirm('Wirklich alle Würfe zurücksetzen? Das Spiel startet komplett neu!')) { window.location.href = window.location.href; }"
                     class="btn-secondary">
-                🔄 Komplett neu starten
+                Komplett neu starten
             </button>
             {% endif %}
         </div>
@@ -132,7 +132,7 @@
 
     <!-- Setup Aktionen -->
     <div class="card p-6">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">🚀 Spiel starten</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Spiel starten</h2>
 
         {% if players|length < 2 %}
         <div class="bg-red-500/10 border border-red-500/40 rounded-lg p-4 mb-6">
@@ -175,9 +175,9 @@
                         class="btn-primary text-lg px-8 py-3"
                         onclick="return confirm('{% if existing_throws|length > 0 %}Wirklich neu starten? Alle bisherigen Würfe werden gelöscht!{% else %}Spiel mit zufälliger Reihenfolge starten?{% endif %}')">
                     {% if existing_throws|length > 0 %}
-                        🔄 Spiel neu starten
+                        Spiel neu starten
                     {% else %}
-                        🎲 Zufällige Reihenfolge festlegen & Starten
+                        Zufällige Reihenfolge festlegen & Starten
                     {% endif %}
                 </button>
             </div>
@@ -186,7 +186,7 @@
         <div class="mt-8 text-center text-sm text-gray-500">
             <p>Nach dem Start werden alle Spieler in zufälliger Reihenfolge sortiert.</p>
             <p>Das Spiel ist beendet, sobald jeder Spieler einmal geworfen hat.</p>
-            <p class="mt-2 font-semibold text-gray-400">✨ Die Punkte werden direkt in die Gesamtwertung eingerechnet!</p>
+            <p class="mt-2 font-semibold text-gray-400">Die Punkte werden direkt in die Gesamtwertung eingerechnet!</p>
         </div>
         {% endif %}
     </div>
@@ -194,7 +194,7 @@
     {% if existing_throws|length > 0 and existing_throws|filter(t => t.thrownPoints > 0)|length > 0 %}
     <!-- Aktuelle Punkte Übersicht -->
     <div class="card p-6 mt-8">
-        <h2 class="text-xl font-bold text-gray-100 mb-4">🏆 Aktuelle Auswirkungen</h2>
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Aktuelle Auswirkungen</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for player in players|sort((a, b) => b.totalPoints <=> a.totalPoints) %}
             <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 text-center">
@@ -205,7 +205,7 @@
                 {% for throw in existing_throws %}
                     {% if throw.player.id == player.id and throw.thrownPoints > 0 %}
                         <div class="text-sm text-emerald-400 mt-1">
-                            ✅ Geworfen: {{ throw.thrownPoints }}
+                            Geworfen: {{ throw.thrownPoints }}
                         </div>
                         <div class="text-xs text-gray-500">
                             {{ throw.scoringReason }}

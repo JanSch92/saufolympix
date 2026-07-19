@@ -11,17 +11,31 @@
                 extend: {
                     colors: {
                         night: {
-                            950: '#0f0a1e',
-                            900: '#171129',
-                            800: '#1f1836',
-                            700: '#2a2145',
-                            600: '#3a2f5c',
+                            950: '#0b1220',
+                            900: '#0f172a',
+                            800: '#16203a',
+                            700: '#1e293b',
+                            600: '#293650',
                         },
                         party: {
-                            purple: '#8b5cf6',
-                            pink: '#ec4899',
-                            amber: '#f59e0b',
-                            teal: '#14b8a6',
+                            purple: '#6366f1',
+                            pink: '#4f46e5',
+                            amber: '#818cf8',
+                            teal: '#0ea5e9',
+                        },
+                        purple: {
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            800: '#3730a3',
+                        },
+                        pink: {
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
                         },
                     },
                 },
@@ -29,41 +43,39 @@
         };
     </script>
     <style>
-        /* Party dark background for the TV display */
+        /* Dark background for the TV display */
         body {
-            background: radial-gradient(1200px 600px at 80% -10%, rgba(139, 92, 246, 0.20), transparent 60%),
-                        radial-gradient(900px 500px at -10% 110%, rgba(236, 72, 153, 0.16), transparent 60%),
-                        #0f0a1e;
-            color: #e5e7eb;
+            background: radial-gradient(1100px 500px at 75% -10%, rgba(99, 102, 241, 0.07), transparent 60%),
+                        #0b1220;
+            color: #e2e8f0;
         }
 
-        /* Professional animations */
+        /* Subtle status animation */
         @keyframes pulse-glow {
             0%, 100% {
-                box-shadow: 0 0 5px rgba(139, 92, 246, 0.45);
+                box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
             }
             50% {
-                box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+                box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
             }
         }
-        
+
         .pulse-glow {
             animation: pulse-glow 2s ease-in-out infinite;
         }
-        
-        /* Professional card hover effects */
+
+        /* Card hover effects */
         .hover-lift {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35);
         }
-        
+
         /* Progress bar animation */
         .progress-bar {
-            background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);
+            background: #4f46e5;
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -81,7 +93,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.12), transparent);
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.08), transparent);
             transition: left 0.5s ease;
         }
         
@@ -134,37 +146,36 @@
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(23, 17, 41, 0.5);
+            background: rgba(15, 23, 42, 0.5);
             border-radius: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.35);
+            background: rgba(99, 102, 241, 0.35);
             border-radius: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.55);
+            background: rgba(99, 102, 241, 0.55);
         }
 
-        /* Gradient text */
+        /* Ehemals Gradient-Text: jetzt solide Farbe */
         .gradient-text {
-            background: linear-gradient(90deg, #a78bfa, #f472b6, #fbbf24);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            background: none;
+            color: #f8fafc;
         }
 
-        /* Professional card styling */
+        /* Card styling */
         .professional-card {
-            background: rgba(31, 24, 54, 0.75);
-            border: 1px solid rgba(139, 92, 246, 0.18);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.14);
             border-radius: 0.75rem;
-            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
         }
 
         .professional-card:hover {
-            border-color: rgba(139, 92, 246, 0.45);
+            border-color: rgba(99, 102, 241, 0.4);
         }
 
         /* FIXIERTE HÖHEN FÜR SCROLL-CONTAINER - OPTIMIERT FÜR 1080px */
@@ -275,13 +286,13 @@
   <!-- PROFESSIONAL HEADER -->
   <header class="flex-none h-16 flex items-center justify-between px-8 bg-night-800/70 backdrop-blur-xl border-b border-party-purple/20">
     <div class="flex items-center space-x-4">
-      <div class="w-8 h-8 bg-gradient-to-br from-party-purple to-party-pink rounded-lg flex items-center justify-center">
+      <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
         </svg>
       </div>
       <div>
-        <p class="text-sm text-gray-400">🍻 Live Dashboard</p>
+        <p class="text-sm text-gray-400">Live Dashboard</p>
       </div>
     </div>
     
@@ -331,19 +342,19 @@
       <div class="professional-card h-full flex flex-col overflow-hidden hover-lift">
         <div class="px-6 py-4 border-b border-party-purple/20">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-100">🏆 Rangliste</h2>
-            <span class="text-sm text-gray-400">👥 {{ players|length }} Spieler</span>
+            <h2 class="text-lg font-semibold text-gray-100">Rangliste</h2>
+            <span class="text-sm text-gray-400">{{ players|length }} Spieler</span>
           </div>
         </div>
         
         <div class="overflow-y-auto custom-scrollbar p-4 space-y-3" id="players-ranking">
           {% for player in players %}
           <div class="flex items-center p-4 bg-night-800/60 hover:bg-night-700/60 rounded-lg transition-all duration-200 border border-party-purple/15 hover:border-party-purple/40">
-            <div class="flex-none w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold text-white
-              {% if loop.index == 1 %}bg-gradient-to-br from-amber-400 to-yellow-500
-              {% elseif loop.index == 2 %}bg-gradient-to-br from-gray-300 to-gray-400
-              {% elseif loop.index == 3 %}bg-gradient-to-br from-orange-400 to-amber-500
-              {% else %}bg-night-600{% endif %}">
+            <div class="flex-none w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold
+              {% if loop.index == 1 %}bg-[#d3a625] text-[#1c1917]
+              {% elseif loop.index == 2 %}bg-[#9ca3af] text-[#1f2937]
+              {% elseif loop.index == 3 %}bg-[#a16207] text-white
+              {% else %}bg-night-600/80 text-gray-400{% endif %}">
               {{ loop.index }}
             </div>
             
@@ -361,7 +372,7 @@
             
             <div class="flex-none text-right">
               <div class="text-2xl font-extrabold text-amber-400">{{ player.totalPoints }}</div>
-              <div class="text-xs text-gray-400">✨ Punkte</div>
+              <div class="text-xs text-gray-400">Punkte</div>
             </div>
           </div>
           {% endfor %}
@@ -376,14 +387,14 @@
       <div id="current-game-card" class="professional-card p-6 flex flex-col space-y-4 hover-lift">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-party-purple to-party-pink rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-2-9h-2M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
               </svg>
             </div>
             <div id="current-game-info">
               {% if current_game %}
-              <h3 class="text-xl font-semibold text-gray-100">{{ current_game.getGameTypeEmoji() }} {{ current_game.name }}</h3>
+              <h3 class="text-xl font-semibold text-gray-100">{{ current_game.name }}</h3>
               <p class="text-sm text-gray-400 uppercase tracking-wide">{{ current_game.gameType|replace({'_':' '}) }}</p>
               {% else %}
               <h3 class="text-xl font-semibold text-gray-400">Kein aktives Spiel</h3>
@@ -407,7 +418,7 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
-              <span>✨ Ergebnisse</span>
+              <span>Ergebnisse</span>
             </h4>
             <div id="game-results-list" class="space-y-2">
               <!-- Populated by JavaScript -->
@@ -419,7 +430,7 @@
       <!-- TOURNAMENT BRACKET -->
       <div id="tournament-bracket-container" class="hidden flex-1 professional-card p-6 overflow-hidden">
         <div class="flex items-center justify-center mb-6">
-          <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-lg flex items-center justify-center mr-3">
+          <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
             </svg>
@@ -434,7 +445,7 @@
 
       <!-- TOURNAMENT RESULTS -->
       <div id="tournament-results-container" class="hidden flex-1 professional-card p-6 overflow-hidden">
-        <h3 class="text-2xl font-bold gradient-text mb-6 text-center">🏆 Turnier-Ergebnisse</h3>
+        <h3 class="text-2xl font-bold gradient-text mb-6 text-center">Turnier-Ergebnisse</h3>
         <div class="overflow-auto custom-scrollbar" id="tournament-results">
           <!-- Populated by JavaScript -->
         </div>
@@ -443,7 +454,7 @@
       <!-- GAMECHANGER LIVE VIEW - VOLLSTÄNDIG ÜBERARBEITET -->
       <div id="gamechanger-container" class="hidden flex-1 professional-card p-6 overflow-hidden">
         <div class="flex items-center justify-center mb-6">
-          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+          <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
@@ -457,13 +468,13 @@
           <!-- LINKS: LIVE RANGLISTE -->
           <div class="w-72 flex-shrink-0">
             <div class="professional-card h-full flex flex-col overflow-hidden">
-              <div class="px-4 py-3 border-b border-party-purple/20 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+              <div class="px-4 py-3 border-b border-party-purple/20 bg-night-800/60">
                 <div class="flex items-center justify-between">
                   <h4 class="text-lg font-semibold text-gray-100 flex items-center space-x-2">
                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
-                    <span>🏆 Live Rangliste</span>
+                    <span>Live Rangliste</span>
                   </h4>
                   <div class="flex items-center space-x-2">
                     <div class="status-dot active"></div>
@@ -490,7 +501,7 @@
                 <span>Am Zug</span>
               </h4>
               <div class="text-center">
-                <div class="w-14 h-14 bg-gradient-to-br from-party-purple to-party-pink rounded-full flex items-center justify-center mx-auto mb-2">
+                <div class="w-14 h-14 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
                   <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                   </svg>
@@ -511,19 +522,19 @@
               <div class="grid grid-cols-2 gap-2">
                 <div class="text-center p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
                   <div class="text-xl font-bold text-emerald-400" id="stat-bonus-hits">0</div>
-                  <div class="text-xs text-emerald-300">🎯 Eigene</div>
+                  <div class="text-xs text-emerald-300">Eigene</div>
                 </div>
                 <div class="text-center p-2 bg-red-500/10 rounded-lg border border-red-500/30">
                   <div class="text-xl font-bold text-red-400" id="stat-penalty-hits">0</div>
-                  <div class="text-xs text-red-300">💥 Andere</div>
+                  <div class="text-xs text-red-300">Andere</div>
                 </div>
                 <div class="text-center p-2 bg-party-purple/10 rounded-lg border border-party-purple/40">
                   <div class="text-xl font-bold text-purple-300" id="stat-normal-throws">0</div>
-                  <div class="text-xs text-purple-300">🎲 Normal</div>
+                  <div class="text-xs text-purple-300">Normal</div>
                 </div>
                 <div class="text-center p-2 bg-night-700/60 rounded-lg border border-gray-600/40">
                   <div class="text-xl font-bold text-gray-200" id="stat-total-throws">0</div>
-                  <div class="text-xs text-gray-300">📊 Gesamt</div>
+                  <div class="text-xs text-gray-300">Gesamt</div>
                 </div>
               </div>
             </div>
@@ -539,21 +550,18 @@
               <div class="space-y-1 text-xs">
                 <div class="flex items-center justify-between p-2 bg-emerald-500/10 rounded border border-emerald-500/20">
                   <span class="text-emerald-300 flex items-center space-x-1">
-                    <span>🎯</span>
                     <span>Eigene Punkte treffen</span>
                   </span>
                   <span class="text-emerald-400 font-bold">+8</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-red-500/10 rounded border border-red-500/20">
                   <span class="text-red-300 flex items-center space-x-1">
-                    <span>💥</span>
                     <span>Andere Spieler treffen</span>
                   </span>
                   <span class="text-red-400 font-bold">-4</span>
                 </div>
                 <div class="flex items-center justify-between p-2 bg-party-purple/10 rounded border border-party-purple/25">
                   <span class="text-purple-300 flex items-center space-x-1">
-                    <span>🎲</span>
                     <span>Normale Würfe</span>
                   </span>
                   <span class="text-gray-400">0</span>
@@ -569,7 +577,7 @@
                 <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                 </svg>
-                <span>🎯 Würfe Historie</span>
+                <span>Würfe Historie</span>
               </h4>
               <div class="flex items-center space-x-2">
                 <div class="status-dot active"></div>
@@ -594,12 +602,13 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
           </svg>
-          <span>📱 Spielerzugang</span>
+          <span>Spielerzugang</span>
         </h4>
         
         <div class="mx-auto mb-4 p-4 bg-white rounded-lg inline-block shadow-lg">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ url('app_player_access', {olympixId: olympix.id})|url_encode }}" 
-               alt="QR Code" 
+          <img src="{{ path('app_qr_code', {olympixId: olympix.id}) }}"
+               alt="QR-Code Spielerzugang"
+               width="140" height="140"
                class="block mx-auto"
                style="width: 140px; height: 140px;">
         </div>
@@ -616,7 +625,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
             </svg>
-            <span>🎮 Spielhistorie</span>
+            <span>Spielhistorie</span>
           </h4>
         </div>
         
@@ -624,7 +633,7 @@
           {% for game in olympix.gamesByOrder %}
           <div class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border border-party-purple/15 hover:border-party-purple/40 {% if game.status == 'completed' %}bg-emerald-500/10 border-emerald-500/30{% elseif game.status == 'active' %}bg-party-purple/10 border-party-purple/40 pulse-glow{% else %}bg-night-800/40{% endif %}">
             <div class="flex-1 min-w-0">
-              <p class="font-medium truncate text-gray-100">{{ game.getGameTypeEmoji() }} {{ game.name }}</p>
+              <p class="font-medium truncate text-gray-100">{{ game.name }}</p>
               <p class="text-xs text-gray-400 uppercase tracking-wide">{{ game.gameType|replace({'_':' '}) }}</p>
             </div>
             <div class="text-lg ml-3">
@@ -662,17 +671,6 @@ let refreshInterval;
 let previousPlayersData = null; // Für Positionsänderungen
 let previousGamechangerData = null; // Speichert vorherige Gamechanger-Daten
 
-// Emojis pro Spieltyp (nur Anzeige)
-const GAME_TYPE_EMOJI = {
-  free_for_all: '⚔️',
-  tournament_team: '🏆',
-  tournament_single: '🏆',
-  quiz: '🧠',
-  split_or_steal: '🤝',
-  gamechanger: '🎯',
-  stopwatch: '⏱️'
-};
-
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Live Display initialized');
 
@@ -683,11 +681,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = '';
     players.forEach((player, index) => {
       const position = index + 1;
-      let bgClass = 'bg-night-600';
-      
-      if (position === 1) bgClass = 'bg-gradient-to-br from-amber-400 to-yellow-500';
-      else if (position === 2) bgClass = 'bg-gradient-to-br from-gray-300 to-gray-400';
-      else if (position === 3) bgClass = 'bg-gradient-to-br from-orange-400 to-amber-500';
+      let bgClass = 'bg-night-600/80 text-gray-400';
+
+      if (position === 1) bgClass = 'bg-[#d3a625] text-[#1c1917]';
+      else if (position === 2) bgClass = 'bg-[#9ca3af] text-[#1f2937]';
+      else if (position === 3) bgClass = 'bg-[#a16207] text-white';
       
       const playerName = player.name || 'Unbekannt';
       const totalPoints = player.total_points || 0;
@@ -700,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       html += `
         <div class="flex items-center p-4 bg-night-800/60 hover:bg-night-700/60 rounded-lg transition-all duration-200 border border-party-purple/15 hover:border-party-purple/40">
-          <div class="flex-none w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold text-white ${bgClass}">
+          <div class="flex-none w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${bgClass}">
             ${position}
           </div>
           <div class="flex-1 mx-4 min-w-0">
@@ -712,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="flex-none text-right">
             <div class="text-2xl font-extrabold text-amber-400">${totalPoints}</div>
-            <div class="text-xs text-gray-400">✨ Punkte</div>
+            <div class="text-xs text-gray-400">Punkte</div>
           </div>
         </div>
       `;
@@ -783,10 +781,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const playerId = player.id || player.name || 'Unknown';
       
       // Position Badge Styling
-      let positionBadgeClass = 'bg-night-600';
-      if (position === 1) positionBadgeClass = 'bg-gradient-to-br from-amber-400 to-yellow-500';
-      else if (position === 2) positionBadgeClass = 'bg-gradient-to-br from-gray-300 to-gray-400';
-      else if (position === 3) positionBadgeClass = 'bg-gradient-to-br from-orange-400 to-amber-500';
+      let positionBadgeClass = 'bg-night-600/80 text-gray-400';
+      if (position === 1) positionBadgeClass = 'bg-[#d3a625] text-[#1c1917]';
+      else if (position === 2) positionBadgeClass = 'bg-[#9ca3af] text-[#1f2937]';
+      else if (position === 3) positionBadgeClass = 'bg-[#a16207] text-white';
       
       // Positionsänderung nur anzeigen wenn es Änderungen gibt
       let positionChangeIndicator = '';
@@ -830,19 +828,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ranking-item ${animationClass} relative flex items-center p-2 bg-night-800/60 hover:bg-night-700/60 rounded-lg transition-all duration-200 border border-party-purple/15 hover:border-party-purple/40">
           
           <!-- Position Badge -->
-          <div class="flex-none w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white ${positionBadgeClass}">
+          <div class="flex-none w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${positionBadgeClass}">
             ${position}
           </div>
           
           <!-- Spieler Info -->
           <div class="flex-1 mx-2 min-w-0">
             <div class="font-medium truncate text-gray-100 text-sm">${playerName}</div>
-            <div class="text-xs font-bold text-amber-300">✨ ${totalPoints} Punkte</div>
+            <div class="text-xs font-bold text-amber-300">${totalPoints} Punkte</div>
             
             <!-- Joker Status (kompakt) -->
             <div class="flex space-x-1 mt-1">
               <span class="px-1 py-0.5 rounded text-xs font-medium ${doubleJokerClass}">2×</span>
-              <span class="px-1 py-0.5 rounded text-xs font-medium ${swapJokerClass}">⇄</span>
+              <span class="px-1 py-0.5 rounded text-xs font-medium ${swapJokerClass}">Tausch</span>
             </div>
           </div>
           
@@ -911,12 +909,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const gameName = game.name || 'Unbekanntes Spiel';
       const gameType = (game.type || 'Unbekannt').replace(/_/g, ' ');
-      const gameEmoji = GAME_TYPE_EMOJI[game.type] || '🎲';
 
       html += `
         <div class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border hover:border-party-purple/40 ${cardClass}">
           <div class="flex-1 min-w-0">
-            <p class="font-medium truncate text-gray-100">${gameEmoji} ${gameName}</p>
+            <p class="font-medium truncate text-gray-100">${gameName}</p>
             <p class="text-xs text-gray-400 uppercase tracking-wide">${gameType}</p>
           </div>
           <div class="text-lg ml-3">${iconHtml}</div>
@@ -1012,10 +1009,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const gameName = game.name || 'Unbekanntes Spiel';
       const gameType = (game.type || 'Unbekannt').replace(/_/g, ' ');
-      const gameEmoji = GAME_TYPE_EMOJI[game.type] || '🎲';
 
       container.innerHTML = `
-        <h3 class="text-xl font-semibold text-gray-100">${gameEmoji} ${gameName}</h3>
+        <h3 class="text-xl font-semibold text-gray-100">${gameName}</h3>
         <p class="text-sm text-gray-400 uppercase tracking-wide">${gameType} - ${statusText}</p>
       `;
       
@@ -1403,21 +1399,17 @@ document.addEventListener('DOMContentLoaded', () => {
       
       let bgClass = 'bg-night-800/60';
       let borderClass = 'border-party-purple/15';
-      let icon = '';
       let statusBadge = '';
-      
+
       if (isBonus) {
         bgClass = 'bg-emerald-500/10';
         borderClass = 'border-emerald-500/30';
-        icon = '🎯';
         statusBadge = '<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-500/30">BONUS +8</span>';
       } else if (isPenalty) {
         bgClass = 'bg-red-500/10';
         borderClass = 'border-red-500/30';
-        icon = '💥';
         statusBadge = '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">TREFFER -4</span>';
       } else {
-        icon = '🎲';
         statusBadge = '<span class="px-2 py-1 bg-night-700/60 text-gray-400 text-xs rounded-full border border-gray-600/40">NORMAL</span>';
       }
       
@@ -1431,10 +1423,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
         <div class="flex items-start space-x-2 p-2 ${bgClass} rounded-lg border ${borderClass} hover:bg-night-700/40 transition-all">
           <div class="flex-shrink-0 text-center">
-            <div class="w-8 h-8 rounded-full bg-night-700/60 flex items-center justify-center text-sm mb-1">
-              ${icon}
-            </div>
-            <div class="text-xs text-gray-500 font-mono">#${playerOrder}</div>
+            <div class="w-8 h-8 rounded-full bg-night-700/60 flex items-center justify-center text-xs text-gray-400 font-mono">#${playerOrder}</div>
           </div>
           
           <div class="flex-1 min-w-0">
@@ -1451,7 +1440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="text-xs text-gray-400 mb-1">${scoringReason}</div>
             
             <div class="text-xs text-gray-500">
-              ${thrownAt ? `⏰ ${thrownAt}` : ''}
+              ${thrownAt ? `${thrownAt}` : ''}
             </div>
           </div>
         </div>
@@ -1556,14 +1545,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     startGameHistoryAutoScroll();
   }, 500);
-  
-  refreshInterval = setInterval(refresh, 2000);
-});
 
-// Cleanup
-window.addEventListener('beforeunload', () => {
-  if (refreshInterval) clearInterval(refreshInterval);
-  stopGameHistoryAutoScroll();
+  refreshInterval = setInterval(refresh, 2000);
+
+  // Cleanup (innerhalb der Closure, damit stopGameHistoryAutoScroll erreichbar ist)
+  window.addEventListener('beforeunload', () => {
+    if (refreshInterval) clearInterval(refreshInterval);
+    stopGameHistoryAutoScroll();
+  });
 });
 </script>
 

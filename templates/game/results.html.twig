@@ -8,10 +8,10 @@
         <div class="card p-6">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-3xl font-bold text-gray-100">
-                    📊 Ergebnisse eingeben
+                    Ergebnisse eingeben
                 </h1>
                 <div class="text-sm text-gray-400">
-                    {{ game.getGameTypeEmoji() }} {{ game.name }} ({{ game.gameTypeLabel }})
+                    {{ game.name }} ({{ game.gameTypeLabel }})
                 </div>
             </div>
 
@@ -24,11 +24,11 @@
 
             {% if double_jokers is not empty or swap_joker %}
             <div class="mb-6 p-4 bg-party-purple/10 border border-party-purple/30 rounded-lg">
-                <h3 class="font-semibold text-purple-300 mb-3">🃏 Aktive Joker für dieses Spiel</h3>
+                <h3 class="font-semibold text-purple-300 mb-3">Aktive Joker für dieses Spiel</h3>
 
                 {% if double_jokers is not empty %}
                 <div class="mb-2">
-                    <h4 class="font-medium text-purple-300 mb-1">🔥 Doppelte Punkte Joker</h4>
+                    <h4 class="font-medium text-purple-300 mb-1">Doppelte Punkte Joker</h4>
                     <ul class="text-sm text-gray-300">
                         {% for joker in double_jokers %}
                         <li>• {{ joker.player.name }} bekommt doppelte Punkte</li>
@@ -51,11 +51,11 @@
             {% if game.isTournamentGame %}
                 {% if game.tournament and game.tournament.isCompleted %}
                     <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                        <h3 class="font-semibold text-emerald-300 mb-2">🏆 Turnier-Ergebnisse</h3>
+                        <h3 class="font-semibold text-emerald-300 mb-2">Turnier-Ergebnisse</h3>
                         <div class="mb-4">
                             <a href="{{ path('app_game_bracket', {id: game.id}) }}"
                                class="btn-secondary">
-                                🏆 Bracket anzeigen
+                                Bracket anzeigen
                             </a>
                         </div>
                         <div class="text-emerald-300 mb-4">
@@ -71,17 +71,17 @@
                             </button>
                             <button type="submit"
                                     class="btn-success">
-                                💾 Turnier-Ergebnisse speichern
+                                Turnier-Ergebnisse speichern
                             </button>
                         </form>
                     </div>
                 {% else %}
                     <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                        <h3 class="font-semibold text-amber-300 mb-2">⏳ Turnier läuft noch</h3>
+                        <h3 class="font-semibold text-amber-300 mb-2">Turnier läuft noch</h3>
                         <p class="text-amber-300 mb-4">Das Turnier ist noch nicht abgeschlossen. Beende alle Matches im Bracket.</p>
                         <a href="{{ path('app_game_bracket', {id: game.id}) }}"
                            class="btn-secondary">
-                            🏆 Bracket anzeigen
+                            Bracket anzeigen
                         </a>
                     </div>
                 {% endif %}
@@ -92,7 +92,7 @@
                         <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="text-lg font-semibold text-gray-100">{{ player.name }}</h3>
-                                <div class="text-sm text-gray-400">✨ {{ player.totalPoints }} Punkte gesamt</div>
+                                <div class="text-sm text-gray-400">{{ player.totalPoints }} Punkte gesamt</div>
                             </div>
 
                             {% set existingResult = null %}
@@ -127,7 +127,7 @@
                         </button>
                         <button type="submit"
                                 class="btn-primary">
-                            💾 Ergebnisse speichern
+                            Ergebnisse speichern
                         </button>
                     </div>
                 </form>
@@ -135,7 +135,7 @@
 
             {% if existing_results is not empty %}
             <div class="mt-8 p-4 bg-night-700/40 border border-gray-700/60 rounded-lg">
-                <h3 class="font-semibold text-gray-100 mb-4">📋 Aktuelle Ergebnisse</h3>
+                <h3 class="font-semibold text-gray-100 mb-4">Aktuelle Ergebnisse</h3>
                 <div class="space-y-2">
                     {% for result in existing_results %}
                     <div class="flex items-center justify-between py-2 px-3 bg-night-800/60 rounded-lg border border-gray-700/60">
@@ -146,13 +146,13 @@
                             <div>
                                 <div class="font-medium text-gray-100">{{ result.player.name }}</div>
                                 {% if result.jokerDoubleApplied %}
-                                    <div class="text-xs text-amber-300 font-medium">🔥 Doppelte Punkte aktiv</div>
+                                    <div class="text-xs text-amber-300 font-medium">Doppelte Punkte aktiv</div>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="text-right">
                             <div class="font-bold text-amber-300">
-                                ✨ {{ result.finalPoints }} Punkte
+                                {{ result.finalPoints }} Punkte
                             </div>
                             {% if result.jokerDoubleApplied %}
                                 <div class="text-xs text-amber-300">

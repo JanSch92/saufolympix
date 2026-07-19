@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}🤝 Split or Steal Ergebnisse - {{ game.name }}{% endblock %}
+{% block title %}Split or Steal Ergebnisse - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-6xl mx-auto">
@@ -8,7 +8,7 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-extrabold gradient-text">🏆 Split or Steal Ergebnisse</h1>
+                <h1 class="text-2xl font-extrabold gradient-text">Split or Steal Ergebnisse</h1>
                 <p class="text-gray-400 mt-1">{{ game.name }}</p>
                 <div class="mt-2 text-sm text-gray-500">
                     Status: <span class="font-semibold text-emerald-400">{{ game.statusLabel }}</span>
@@ -17,7 +17,7 @@
             <div class="flex space-x-4">
                 <a href="{{ path('app_split_or_steal_setup', {gameId: game.id}) }}"
                    class="btn-secondary">
-                    ⚙️ Setup
+                    Setup
                 </a>
                 <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-primary">
@@ -29,7 +29,7 @@
 
     <!-- Game Summary -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">📊 Zusammenfassung</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Zusammenfassung</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-party-purple/10 border border-party-purple/30 rounded-lg p-4">
@@ -64,7 +64,7 @@
 
         <!-- Strategy Analysis -->
         <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-100 mb-3">🧠 Strategie-Analyse</h3>
+            <h3 class="font-semibold text-gray-100 mb-3">Strategie-Analyse</h3>
 
             {% set splitCount = 0 %}
             {% set stealCount = 0 %}
@@ -90,7 +90,7 @@
                 <div class="bg-night-800/60 border border-gray-700/60 rounded p-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="font-medium text-emerald-400">🤝 Split-Entscheidungen</div>
+                            <div class="font-medium text-emerald-400">Split-Entscheidungen</div>
                             <div class="text-sm text-gray-400">Kooperative Spieler</div>
                         </div>
                         <div class="text-right">
@@ -109,7 +109,7 @@
                 <div class="bg-night-800/60 border border-gray-700/60 rounded p-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="font-medium text-pink-400">💰 Steal-Entscheidungen</div>
+                            <div class="font-medium text-pink-400">Steal-Entscheidungen</div>
                             <div class="text-sm text-gray-400">Kompetitive Spieler</div>
                         </div>
                         <div class="text-right">
@@ -130,7 +130,7 @@
 
     <!-- Match Results -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">🎯 Match-Ergebnisse</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Match-Ergebnisse</h2>
 
         <div class="space-y-4">
             {% for match in matches %}
@@ -167,9 +167,9 @@
                                             bg-red-500/20 text-pink-300
                                         {% endif %}">
                                         {% if match.player1Choice == 'split' %}
-                                            🤝 SPLIT
+                                            SPLIT
                                         {% else %}
-                                            💰 STEAL
+                                            STEAL
                                         {% endif %}
                                     </span>
                                 </div>
@@ -204,9 +204,9 @@
                                             bg-red-500/20 text-pink-300
                                         {% endif %}">
                                         {% if match.player2Choice == 'split' %}
-                                            🤝 SPLIT
+                                            SPLIT
                                         {% else %}
-                                            💰 STEAL
+                                            STEAL
                                         {% endif %}
                                     </span>
                                 </div>
@@ -238,7 +238,7 @@
 
     <!-- Player Performance -->
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">🎭 Spieler-Performance</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Spieler-Performance</h2>
 
         {% set playerStats = {} %}
         {% for match in matches %}
@@ -299,8 +299,8 @@
                         <th class="text-center py-2">Punkte</th>
                         <th class="text-center py-2">Matches</th>
                         <th class="text-center py-2">Siege</th>
-                        <th class="text-center py-2">🤝 Split</th>
-                        <th class="text-center py-2">💰 Steal</th>
+                        <th class="text-center py-2">Split</th>
+                        <th class="text-center py-2">Steal</th>
                         <th class="text-center py-2">Strategie</th>
                     </tr>
                 </thead>
@@ -341,7 +341,7 @@
     <!-- Game Results Integration -->
     {% if game_results %}
     <div class="card p-6">
-        <h2 class="text-lg font-bold text-gray-100 mb-4">📈 Auswirkung auf Gesamt-Ranking</h2>
+        <h2 class="text-lg font-bold text-gray-100 mb-4">Auswirkung auf Gesamt-Ranking</h2>
 
         <div class="space-y-2">
             {% for result in game_results %}

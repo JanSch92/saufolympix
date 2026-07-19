@@ -8,7 +8,7 @@
     <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-100">🎮 Neues Spiel erstellen</h1>
+                <h1 class="text-2xl font-bold text-gray-100">Neues Spiel erstellen</h1>
                 <p class="text-gray-400 mt-1">{{ olympix.name }}</p>
             </div>
             <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
@@ -48,13 +48,13 @@
                         onchange="updateGameTypeOptions()"
                         class="w-full">
                     <option value="">Bitte wählen</option>
-                    <option value="free_for_all">⚔️ Free For All</option>
-                    <option value="tournament_team">🏆 Turnier (Team)</option>
-                    <option value="tournament_single">🏆 Turnier (Einzel)</option>
-                    <option value="quiz">🧠 Quiz</option>
-                    <option value="split_or_steal">🤝 Split or Steal</option>
-                    <option value="gamechanger">🎯 Gamechanger</option> <!-- *** NEU HINZUGEFÜGT *** -->
-                    <option value="stopwatch">⏱️ Stoppuhr</option>
+                    <option value="free_for_all">Free For All</option>
+                    <option value="tournament_team">Turnier (Team)</option>
+                    <option value="tournament_single">Turnier (Einzel)</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="split_or_steal">Split or Steal</option>
+                    <option value="gamechanger">Gamechanger</option> <!-- *** NEU HINZUGEFÜGT *** -->
+                    <option value="stopwatch">Stoppuhr</option>
                 </select>
             </div>
             
@@ -93,7 +93,7 @@
                     
                     <!-- Free For All -->
                     <div id="help-free_for_all" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">⚔️ Free For All</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Free For All</h4>
                         <p class="text-gray-400 mb-2">
                             Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz).
                         </p>
@@ -107,7 +107,7 @@
                     
                     <!-- Tournament Team -->
                     <div id="help-tournament_team" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">🏆 Turnier (Team)</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Turnier (Team)</h4>
                         <p class="text-gray-400 mb-2">
                             Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. 
                             Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos.
@@ -122,7 +122,7 @@
                     
                     <!-- Tournament Single -->
                     <div id="help-tournament_single" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">🏆 Turnier (Einzel)</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Turnier (Einzel)</h4>
                         <p class="text-gray-400 mb-2">
                             Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. 
                             Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos.
@@ -137,7 +137,7 @@
                     
                     <!-- Quiz -->
                     <div id="help-quiz" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">🧠 Quiz</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Quiz</h4>
                         <p class="text-gray-400 mb-2">
                             Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobil ihre Antworten eingeben können.
                         </p>
@@ -151,7 +151,7 @@
                     
                     <!-- Split or Steal -->
                     <div id="help-split_or_steal" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">🤝 Split or Steal</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Split or Steal</h4>
                         <p class="text-gray-400 mb-2">
                             Zwei Spieler treten gegeneinander an. Jeder wählt heimlich Split oder Steal. 
                             Beide Split = Punkte geteilt, einer Split + einer Steal = Stealer bekommt alles, beide Steal = keiner bekommt Punkte.
@@ -166,7 +166,7 @@
 
                     <!-- *** NEU: GAMECHANGER HELP *** -->
                     <div id="help-gamechanger" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">🎯 Gamechanger</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Gamechanger</h4>
                         <p class="text-gray-400 mb-2">
                             Jeder Spieler wirft genau einmal in zufälliger Reihenfolge. Triffst du deine aktuellen Gesamtpunkte, bekommst du +8 Punkte. 
                             Triffst du die Punkte eines anderen Spielers, bekommt er -4 Punkte.
@@ -181,7 +181,7 @@
 
                     <!-- *** NEU: STOPPUHR HELP *** -->
                     <div id="help-stopwatch" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-100 mb-2">⏱️ Stoppuhr</h4>
+                        <h4 class="font-semibold text-gray-100 mb-2">Stoppuhr</h4>
                         <p class="text-gray-400 mb-2">
                             Beim Start wird eine zufällige Zielzeit zwischen 5 und 60 Sekunden gewählt (z.B. 20,86 s).
                             Jeder Spieler startet und stoppt blind eine Stoppuhr auf dem Handy und versucht,
@@ -205,7 +205,7 @@
             <!-- Submit Button -->
             <div class="flex justify-end">
                 <button type="submit" class="btn-primary">
-                    🎮 Spiel erstellen
+                    Spiel erstellen
                 </button>
             </div>
         </form>
@@ -213,14 +213,14 @@
 
     <!-- Player Info -->
     <div class="mt-8 bg-party-purple/10 border border-party-purple/30 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-purple-300 mb-3">👥 Aktuelle Spieler ({{ olympix.players|length }})</h3>
+        <h3 class="text-lg font-semibold text-purple-300 mb-3">Aktuelle Spieler ({{ olympix.players|length }})</h3>
         
         {% if olympix.players|length > 0 %}
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {% for player in olympix.players %}
                     <div class="bg-night-800/60 border border-party-purple/20 rounded-lg p-3 text-center">
                         <div class="font-medium text-gray-100">{{ player.name }}</div>
-                        <div class="text-sm text-amber-300">✨ {{ player.totalPoints }} Punkte</div>
+                        <div class="text-sm text-amber-300">{{ player.totalPoints }} Punkte</div>
                     </div>
                 {% endfor %}
             </div>
@@ -244,7 +244,7 @@
             <div class="mt-4">
                 <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
                    class="btn-primary">
-                    ➕ Spieler hinzufügen
+                    Spieler hinzufügen
                 </a>
             </div>
         {% endif %}
