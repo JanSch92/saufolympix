@@ -101,21 +101,71 @@ class QuizFlowTest extends FunctionalTestCase
         $this->assertTrue($game->isCompleted(), 'Quiz muss automatisch abgeschlossen werden, wenn alle geantwortet haben');
         $this->assertCount(3, $game->getGameResults());
 
-        // Ergebnis prüfen: Spieler 1 gewinnt (10 Fragen x 3 Punkte), Spieler 3 ist Letzter
+        // Ergebnis prüfen: Die Quiz-Punkte bestimmen nur die RANGLISTE des Spiels.
+        // In die Gesamtwertung fließen die Standard-Punkte wie bei jedem anderen
+        // Spiel (Default-Verteilung bei 3 Spielern: 3, 2, 1).
         $resultsByPosition = [];
         foreach ($game->getGameResults() as $result) {
             $resultsByPosition[$result->getPosition()] = $result;
         }
 
         $this->assertSame($players[0]->getId(), $resultsByPosition[1]->getPlayer()->getId());
-        $this->assertSame(30, $resultsByPosition[1]->getPoints());
+        $this->assertSame(3, $resultsByPosition[1]->getPoints());
+        $this->assertSame($players[1]->getId(), $resultsByPosition[2]->getPlayer()->getId());
+        $this->assertSame(2, $resultsByPosition[2]->getPoints());
         $this->assertSame($players[2]->getId(), $resultsByPosition[3]->getPlayer()->getId());
-        $this->assertSame(10, $resultsByPosition[3]->getPoints());
+        $this->assertSame(1, $resultsByPosition[3]->getPoints());
 
         // Gesamtpunkte der Spieler wurden aktualisiert
         foreach ($game->getOlympix()->getPlayers() as $player) {
             $this->assertGreaterThan(0, $player->getTotalPoints());
         }
+    }
+
+    public function testQuizEndScoringWithTiedPlayersSharesPositionAndPoints(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 3);
+        $game = $this->createGame($olympix, 'quiz', 'Wissensquiz');
+
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $questions = $game->getQuizQuestions();
+
+        // Spieler 1 und 2 geben ÜBERALL exakt dieselbe Antwort ab, Spieler 3 liegt weit daneben
+        $offsets = [5, 5, 1000];
+        foreach ($players as $index => $player) {
+            $formData = ['player_id' => (string) $player->getId()];
+            foreach ($questions as $question) {
+                $formData['answer_' . $question->getId()] =
+                    (string) (((float) $question->getCorrectAnswer()) + $offsets[$index]);
+            }
+
+            $this->client->request('POST', '/quiz/mobile/' . $game->getId(), $formData);
+            $this->assertResponseIsSuccessful();
+        }
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $this->assertTrue($game->isCompleted());
+
+        $resultsByPlayerId = [];
+        foreach ($game->getGameResults() as $result) {
+            $resultsByPlayerId[$result->getPlayer()->getId()] = $result;
+        }
+
+        // Beide punktgleichen Spieler teilen sich Platz 1 mit vollen Punkten,
+        // der Dritte ist Platz 3 (Platz 2 wird übersprungen, 1-1-3)
+        $this->assertSame(1, $resultsByPlayerId[$players[0]->getId()]->getPosition());
+        $this->assertSame(1, $resultsByPlayerId[$players[1]->getId()]->getPosition());
+        $this->assertSame(3, $resultsByPlayerId[$players[2]->getId()]->getPosition());
+
+        $this->assertSame(3, $resultsByPlayerId[$players[0]->getId()]->getPoints());
+        $this->assertSame(3, $resultsByPlayerId[$players[1]->getId()]->getPoints());
+        $this->assertSame(1, $resultsByPlayerId[$players[2]->getId()]->getPoints());
     }
 
     public function testQuizStatusApi(): void

@@ -69,6 +69,87 @@ class QuizQuestionTest extends TestCase
         $this->assertSame(1, $b->getPointsEarned());
     }
 
+    public function testCalculateScoresSameAnswerGetsSamePoints(): void
+    {
+        $question = new QuizQuestion();
+        $question->setQuestion('Wie viele Bundesstaaten haben die USA?');
+        $question->setCorrectAnswer('50');
+
+        $tieA = $this->createAnswer($question, '48', 'Jannik');  // Abweichung 2
+        $tieB = $this->createAnswer($question, '48', 'Hans');    // Abweichung 2 (gleiche Antwort!)
+        $far = $this->createAnswer($question, '30', 'Clara');    // Abweichung 20
+
+        $question->calculateScores();
+
+        $this->assertSame(3, $tieA->getPointsEarned(), 'Gleiche Antwort muss gleiche Punkte geben');
+        $this->assertSame(3, $tieB->getPointsEarned(), 'Gleiche Antwort muss gleiche Punkte geben');
+        $this->assertSame(1, $far->getPointsEarned(), 'Nach einem Gleichstand wird der Platz übersprungen (1-1-3)');
+    }
+
+    public function testCalculateScoresSameDistanceOverAndUnderGetsSamePoints(): void
+    {
+        $question = new QuizQuestion();
+        $question->setQuestion('Testfrage');
+        $question->setCorrectAnswer('100');
+
+        $over = $this->createAnswer($question, '105', 'Über');   // Abweichung 5
+        $under = $this->createAnswer($question, '95', 'Unter');  // Abweichung 5
+
+        $question->calculateScores();
+
+        $this->assertSame(2, $over->getPointsEarned());
+        $this->assertSame(2, $under->getPointsEarned());
+    }
+
+    public function testCalculateScoresAllTiedAllGetFullPoints(): void
+    {
+        $question = new QuizQuestion();
+        $question->setQuestion('Alle gleich');
+        $question->setCorrectAnswer('10');
+
+        $a = $this->createAnswer($question, '12', 'A');
+        $b = $this->createAnswer($question, '12', 'B');
+        $c = $this->createAnswer($question, '12', 'C');
+
+        $question->calculateScores();
+
+        $this->assertSame(3, $a->getPointsEarned());
+        $this->assertSame(3, $b->getPointsEarned());
+        $this->assertSame(3, $c->getPointsEarned());
+    }
+
+    public function testCalculateScoresTieGetsEqualPoints(): void
+    {
+        $question = new QuizQuestion();
+        $question->setQuestion('Gleichstand');
+        $question->setCorrectAnswer('12');
+
+        $tieA = $this->createAnswer($question, '12', 'Jannik');  // Abweichung 0
+        $tieB = $this->createAnswer($question, '12', 'Hans');    // Abweichung 0 -> gleiche Punkte!
+        $far = $this->createAnswer($question, '99', 'Clara');    // Abweichung 87
+
+        $question->calculateScores();
+
+        $this->assertSame(3, $tieA->getPointsEarned());
+        $this->assertSame(3, $tieB->getPointsEarned(), 'Gleiche Antwort muss gleiche Punkte geben');
+        $this->assertSame(1, $far->getPointsEarned(), 'Nach einem 2er-Gleichstand wird Platz 2 übersprungen');
+    }
+
+    public function testCalculateScoresTieOnSameDistanceDifferentSide(): void
+    {
+        $question = new QuizQuestion();
+        $question->setQuestion('Abstand gleich');
+        $question->setCorrectAnswer('100');
+
+        $under = $this->createAnswer($question, '90', 'Unter');  // Abweichung 10
+        $over = $this->createAnswer($question, '110', 'Über');   // Abweichung 10 -> gleich
+
+        $question->calculateScores();
+
+        $this->assertSame(2, $under->getPointsEarned());
+        $this->assertSame(2, $over->getPointsEarned(), 'Gleicher Abstand (drüber/drunter) muss gleiche Punkte geben');
+    }
+
     public function testCalculateScoresSinglePlayer(): void
     {
         $question = new QuizQuestion();

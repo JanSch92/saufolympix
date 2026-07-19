@@ -98,6 +98,34 @@ class QuizStepFlowTest extends FunctionalTestCase
         }
     }
 
+    public function testQuestionResultWithSameAnswerGivesSamePointsAndPosition(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $q1 = $data['question']['id'];
+
+        // Beide Spieler geben exakt dieselbe Antwort ab
+        $this->answer($game, $players[0]->getId(), $q1, '12');
+        $this->answer($game, $players[1]->getId(), $q1, '12');
+
+        $this->client->request('GET', '/api/quiz/question/' . $q1 . '/result');
+        $this->assertResponseIsSuccessful();
+        $resultData = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertCount(2, $resultData['entries']);
+        $this->assertSame(2, $resultData['entries'][0]['points'], 'Gleiche Antwort muss gleiche Punkte geben');
+        $this->assertSame(2, $resultData['entries'][1]['points'], 'Gleiche Antwort muss gleiche Punkte geben');
+        $this->assertSame(1, $resultData['entries'][0]['position']);
+        $this->assertSame(1, $resultData['entries'][1]['position']);
+    }
+
     public function testCurrentEndpointReturnsDashboardUrlWhenCompleted(): void
     {
         $olympix = $this->createOlympix();
@@ -120,6 +148,92 @@ class QuizStepFlowTest extends FunctionalTestCase
             '/player-dashboard/' . $olympix->getId() . '/' . $players[0]->getId(),
             $data['dashboard_url']
         );
+    }
+
+    public function testQuestionResultTieGetsEqualPoints(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 3);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $qid = $data['question']['id'];
+
+        // Zwei Spieler tippen identisch, einer weit daneben
+        $this->answer($game, $players[0]->getId(), $qid, '12');
+        $this->answer($game, $players[1]->getId(), $qid, '12');
+        $this->answer($game, $players[2]->getId(), $qid, '999999');
+
+        $this->client->request('GET', '/api/quiz/question/' . $qid . '/result');
+        $result = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame(3, $result['entries'][0]['points']);
+        $this->assertSame(3, $result['entries'][1]['points'], 'Gleiche Antworten müssen gleiche Punkte bekommen');
+        $this->assertSame(1, $result['entries'][2]['points']);
+    }
+
+    public function testFinalScoringUsesPointsDistributionLikeOtherGames(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 3);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        // Spieler 0 immer exakt richtig, Spieler 1 leicht daneben, Spieler 2 weit daneben
+        foreach ($game->getQuizQuestions() as $question) {
+            $correct = (float) $question->getCorrectAnswer();
+            $this->answer($game, $players[0]->getId(), $question->getId(), (string) $correct);
+            $this->answer($game, $players[1]->getId(), $question->getId(), (string) ($correct + 5));
+            $this->answer($game, $players[2]->getId(), $question->getId(), (string) ($correct + 100000));
+        }
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted());
+
+        $byPosition = [];
+        foreach ($game->getGameResults() as $result) {
+            $byPosition[$result->getPosition()] = $result;
+        }
+
+        // Endpunkte wie bei jedem anderen Spiel: Verteilung 3,2,1 — NICHT die Fragensummen (30/20/10)
+        $this->assertSame($players[0]->getId(), $byPosition[1]->getPlayer()->getId());
+        $this->assertSame(3, $byPosition[1]->getPoints(), 'Platz 1 bekommt Punkte aus der Verteilung, nicht die Fragensumme');
+        $this->assertSame(2, $byPosition[2]->getPoints());
+        $this->assertSame(1, $byPosition[3]->getPoints());
+    }
+
+    public function testFinalTieGetsSamePositionAndPoints(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        // Beide Spieler antworten auf ALLES identisch -> kompletter Gleichstand
+        foreach ($game->getQuizQuestions() as $question) {
+            $this->answer($game, $players[0]->getId(), $question->getId(), '7');
+            $this->answer($game, $players[1]->getId(), $question->getId(), '7');
+        }
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted());
+
+        foreach ($game->getGameResults() as $result) {
+            $this->assertSame(1, $result->getPosition(), 'Gleichstand: beide Platz 1');
+            $this->assertSame(2, $result->getPoints(), 'Gleichstand: beide bekommen die Platz-1-Punkte');
+        }
     }
 
     public function testAnswerZeroIsAcceptedInStepMode(): void

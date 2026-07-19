@@ -200,10 +200,11 @@
                 list.innerHTML = '';
                 data.entries.forEach((entry, i) => {
                     const mine = entry.player_id === playerId;
+                    const position = entry.position || (i + 1);
                     const row = document.createElement('div');
                     row.className = 'flex items-center justify-between px-3 py-2 rounded-lg ' +
                         (mine ? 'bg-party-purple/15 border border-party-purple/40' : 'bg-night-700/30');
-                    row.innerHTML = `<span class="text-gray-200">${i + 1}. ${entry.name}${mine ? ' (du)' : ''}` +
+                    row.innerHTML = `<span class="text-gray-200">${position}. ${entry.name}${mine ? ' (du)' : ''}` +
                         ` <span class="text-gray-500 text-sm">${entry.answer.toLocaleString('de-DE')}</span></span>` +
                         `<span class="font-bold text-amber-400">+${entry.points}</span>`;
                     list.appendChild(row);

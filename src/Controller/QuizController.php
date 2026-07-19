@@ -416,14 +416,27 @@ class QuizController extends AbstractController
             return abs((float) $a->getAnswer() - $correct) <=> abs((float) $b->getAnswer() - $correct);
         });
 
+        // Gleicher Abstand = gleicher Platz = gleiche Punkte (1-1-3),
+        // identisch zur Wertung in QuizQuestion::calculateScores()
         $total = count($answers);
         $entries = [];
+        $groupStartIndex = 0;
+        $previousDistance = null;
+
         foreach ($answers as $i => $answer) {
+            $distance = abs((float) $answer->getAnswer() - $correct);
+
+            if ($previousDistance === null || abs($distance - $previousDistance) > 0.000001) {
+                $groupStartIndex = $i;
+                $previousDistance = $distance;
+            }
+
             $entries[] = [
                 'name' => $answer->getPlayer()->getName(),
                 'player_id' => $answer->getPlayer()->getId(),
                 'answer' => (float) $answer->getAnswer(),
-                'points' => $total - $i,
+                'points' => $total - $groupStartIndex,
+                'position' => $groupStartIndex + 1,
             ];
         }
 
@@ -598,7 +611,7 @@ class QuizController extends AbstractController
         // Calculate scores for each question
         foreach ($questions as $question) {
             $question->calculateScores();
-            
+
             // Add points to player totals
             foreach ($question->getQuizAnswers() as $answer) {
                 $playerId = $answer->getPlayer()->getId();
@@ -617,20 +630,34 @@ class QuizController extends AbstractController
             $this->entityManager->remove($result);
         }
 
-        // Create new game results
-        $position = 1;
+        // WICHTIG: Die Quiz-Punkte bestimmen nur die RANGLISTE dieses Spiels.
+        // In die Gesamtwertung fließen die Punkte aus der Standard-Verteilung
+        // (getDefaultPointsDistribution), genau wie bei jedem anderen Spiel.
+        // Punktgleiche Spieler teilen sich den Platz und bekommen dieselben
+        // Punkte (Competition Ranking 1-1-3).
+        $pointsDistribution = $game->getDefaultPointsDistribution();
+
+        $index = 0;
+        $groupStartIndex = 0;
+        $previousTotal = null;
+
         foreach ($playerTotalPoints as $playerId => $totalPoints) {
             $player = $this->playerRepository->find($playerId);
-            
+
             if ($player) {
+                if ($previousTotal === null || $totalPoints !== $previousTotal) {
+                    $groupStartIndex = $index;
+                    $previousTotal = $totalPoints;
+                }
+
                 $result = new GameResult();
                 $result->setGame($game);
                 $result->setPlayer($player);
-                $result->setPosition($position);
-                $result->setPoints($totalPoints);
-                
+                $result->setPosition($groupStartIndex + 1);
+                $result->setPoints($pointsDistribution[$groupStartIndex] ?? 0);
+
                 $this->entityManager->persist($result);
-                $position++;
+                $index++;
             }
         }
 

@@ -124,24 +124,31 @@ class QuizQuestion
     public function calculateScores(): void
     {
         $answers = $this->quizAnswers->toArray();
-        
+
         // Sort answers by distance from correct answer
         usort($answers, function($a, $b) {
             $distanceA = abs(floatval($a->getAnswer()) - floatval($this->correctAnswer));
             $distanceB = abs(floatval($b->getAnswer()) - floatval($this->correctAnswer));
-            
-            if ($distanceA === $distanceB) {
-                return 0;
-            }
-            
-            return $distanceA < $distanceB ? -1 : 1;
+
+            return $distanceA <=> $distanceB;
         });
 
-        // Assign points based on ranking
+        // Assign points based on ranking. Gleicher Abstand = gleicher Platz =
+        // gleiche Punkte (Competition Ranking 1-1-3): Punktgleiche teilen sich
+        // die Punkte des besten Platzes ihrer Gruppe, danach wird übersprungen.
         $totalPlayers = count($answers);
-        for ($i = 0; $i < $totalPlayers; $i++) {
-            $points = $totalPlayers - $i;
-            $answers[$i]->setPointsEarned($points);
+        $groupStartIndex = 0;
+        $previousDistance = null;
+
+        foreach ($answers as $i => $answer) {
+            $distance = abs(floatval($answer->getAnswer()) - floatval($this->correctAnswer));
+
+            if ($previousDistance === null || abs($distance - $previousDistance) > 0.000001) {
+                $groupStartIndex = $i;
+                $previousDistance = $distance;
+            }
+
+            $answer->setPointsEarned($totalPlayers - $groupStartIndex);
         }
     }
 
