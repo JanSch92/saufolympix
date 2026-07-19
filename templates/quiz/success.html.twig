@@ -17,9 +17,20 @@
             </p>
         </div>
 
-        <div class="text-sm text-gray-400">
-            Du kannst diese Seite jetzt schließen oder zum nächsten Spiel wechseln.
+        <a href="{{ path('app_player_dashboard', {olympixId: game.olympix.id, playerId: player.id}) }}"
+           class="btn-primary w-full">
+            Zurück zu deinem Dashboard
+        </a>
+        <div class="text-sm text-gray-500 mt-3">
+            Du wirst gleich automatisch weitergeleitet …
         </div>
     </div>
 </div>
+
+<script>
+    // Automatisch zurück zum Dashboard — dort erscheint das nächste Spiel von selbst
+    setTimeout(() => {
+        window.location.href = '{{ path('app_player_dashboard', {olympixId: game.olympix.id, playerId: player.id}) }}';
+    }, 4000);
+</script>
 {% endblock %}

@@ -2,13 +2,18 @@
 
 namespace App\Controller;
 
+use App\Entity\Game;
 use App\Entity\Joker;
+use App\Entity\Player;
 use App\Repository\OlympixRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\GameRepository;
 use App\Repository\JokerRepository;
 use App\Repository\GameResultRepository;
+use App\Repository\QuizAnswerRepository;
+use App\Repository\QuizQuestionRepository;
 use App\Repository\SplitOrStealMatchRepository;
+use App\Repository\StopwatchAttemptRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,8 +30,44 @@ class PlayerInterfaceController extends AbstractController
         private GameRepository $gameRepository,
         private JokerRepository $jokerRepository,
         private GameResultRepository $gameResultRepository,
-        private SplitOrStealMatchRepository $splitOrStealMatchRepository
+        private SplitOrStealMatchRepository $splitOrStealMatchRepository,
+        private QuizQuestionRepository $quizQuestionRepository,
+        private QuizAnswerRepository $quizAnswerRepository,
+        private StopwatchAttemptRepository $stopwatchAttemptRepository
     ) {}
+
+    /**
+     * URL, auf die der Spieler automatisch geleitet wird, wenn ein Spiel
+     * seine Teilnahme braucht (Quiz/Stoppuhr aktiv und noch nicht abgegeben).
+     */
+    private function getJoinUrl(?Game $game, Player $player): ?string
+    {
+        if (!$game || !$game->isActive()) {
+            return null;
+        }
+
+        if ($game->isQuizGame()) {
+            $questions = $this->quizQuestionRepository->findByGameOrdered($game->getId());
+            if (count($questions) === 0) {
+                return null;
+            }
+            foreach ($questions as $question) {
+                if (!$this->quizAnswerRepository->findByPlayerAndQuestion($player->getId(), $question->getId())) {
+                    return $this->generateUrl('app_quiz_mobile', ['gameId' => $game->getId(), 'player' => $player->getId()]);
+                }
+            }
+            return null;
+        }
+
+        if ($game->isStopwatchGame()) {
+            if ($this->stopwatchAttemptRepository->findByPlayerAndGame($player->getId(), $game->getId())) {
+                return null;
+            }
+            return $this->generateUrl('app_stopwatch_mobile', ['gameId' => $game->getId(), 'player' => $player->getId()]);
+        }
+
+        return null;
+    }
 
     #[Route('/player-access/{olympixId}', name: 'app_player_access')]
     public function playerAccess(int $olympixId): Response
@@ -54,10 +95,17 @@ class PlayerInterfaceController extends AbstractController
 
         // Aktuelle Rangliste - sortiert nach Punkten
         $players = $this->playerRepository->findBy(['olympix' => $olympix], ['totalPoints' => 'DESC']);
-        
+
         // Aktuelles Spiel
         $currentGame = $this->gameRepository->findActiveGameForOlympix($olympixId);
-        
+
+        // Läuft gerade ein Spiel, bei dem dieser Spieler mitmachen muss?
+        // Dann direkt dorthin — Spieler sollen nichts neu scannen oder auswählen.
+        $joinUrl = $this->getJoinUrl($currentGame, $player);
+        if ($joinUrl) {
+            return $this->redirect($joinUrl);
+        }
+
         // Nächstes Spiel
         $nextGame = $this->gameRepository->findNextGameToPlay($olympixId);
 
@@ -332,6 +380,7 @@ class PlayerInterfaceController extends AbstractController
                 'status' => $currentGame->getStatus(),
                 'game_type' => $currentGame->getGameType(),
                 'type' => $currentGame->getGameType(),
+                'join_url' => $this->getJoinUrl($currentGame, $player),
             ] : null,
             'next_game' => $nextGame ? [
                 'id' => $nextGame->getId(),

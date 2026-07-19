@@ -195,19 +195,15 @@ class GameLifecycleTest extends FunctionalTestCase
         $this->assertResponseIsSuccessful();
     }
 
-    public function testPlayerDashboardShowsJoinLinkForActiveStopwatch(): void
+    public function testPlayerDashboardAutoJoinsActiveStopwatch(): void
     {
         $olympix = $this->createOlympix();
         $players = $this->createPlayers($olympix, 2);
         $game = $this->createGame($olympix, 'stopwatch');
         $this->client->request('GET', '/game/start/' . $game->getId());
 
+        // Dashboard leitet Spieler automatisch zum aktiven Spiel weiter (Auto-Join)
         $this->client->request('GET', '/player-dashboard/' . $olympix->getId() . '/' . $players[0]->getId());
-        $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString(
-            '/stopwatch/mobile/' . $game->getId(),
-            $this->client->getResponse()->getContent(),
-            'Dashboard muss den Mitspielen-Link für die aktive Stoppuhr zeigen'
-        );
+        $this->assertResponseRedirects('/stopwatch/mobile/' . $game->getId() . '?player=' . $players[0]->getId());
     }
 }

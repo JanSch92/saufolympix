@@ -204,8 +204,9 @@ class QuizController extends AbstractController
             $allAnswered = true;
             foreach ($questions as $question) {
                 $answerValue = $request->request->get('answer_' . $question->getId());
-                
-                if (empty($answerValue)) {
+
+                // WICHTIG: "0" ist eine gültige Antwort — nur null/leer zählt als fehlend (empty('0') wäre true!)
+                if ($answerValue === null || $answerValue === '' || !is_numeric($answerValue)) {
                     $allAnswered = false;
                     continue;
                 }
@@ -251,10 +252,24 @@ class QuizController extends AbstractController
             }
         }
 
+        // Vorausgewählter Spieler (kommt vom Dashboard-Auto-Join, ?player=ID):
+        // Name muss dann nicht mehr ausgewählt werden
+        $preselectedPlayer = null;
+        $preselectedId = $request->query->getInt('player');
+        if ($preselectedId > 0) {
+            foreach ($players as $p) {
+                if ($p->getId() === $preselectedId) {
+                    $preselectedPlayer = $p;
+                    break;
+                }
+            }
+        }
+
         return $this->render('quiz/mobile.html.twig', [
             'game' => $game,
             'players' => $players,
             'questions' => $questions,
+            'preselected_player' => $preselectedPlayer,
         ]);
     }
 

@@ -67,10 +67,24 @@ class StopwatchController extends AbstractController
             $attempts
         );
 
+        // Vorausgewählter Spieler (Dashboard-Auto-Join, ?player=ID):
+        // Namensauswahl wird übersprungen, sofern noch nicht abgegeben
+        $preselectedPlayer = null;
+        $preselectedId = $request->query->getInt('player');
+        if ($preselectedId > 0 && !in_array($preselectedId, $submittedPlayerIds, true)) {
+            foreach ($players as $p) {
+                if ($p->getId() === $preselectedId) {
+                    $preselectedPlayer = $p;
+                    break;
+                }
+            }
+        }
+
         return $this->render('stopwatch/mobile.html.twig', [
             'game' => $game,
             'players' => $players,
             'submitted_player_ids' => $submittedPlayerIds,
+            'preselected_player' => $preselectedPlayer,
         ]);
     }
 
