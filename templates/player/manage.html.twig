@@ -5,50 +5,50 @@
 {% block body %}
 <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Spieler verwalten</h1>
-                <p class="text-gray-600 mt-1">{{ olympix.name }}</p>
+                <h1 class="text-2xl font-bold gradient-text">👥 Spieler verwalten</h1>
+                <p class="text-gray-400 mt-1">🍻 {{ olympix.name }}</p>
             </div>
-            <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
+            <a href="{{ path('app_game_admin', {id: olympix.id}) }}"
                class="btn-secondary">
                 ← Zurück
             </a>
         </div>
     </div>
-    
+
     <!-- Add Player Form -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Neuen Spieler hinzufügen</h2>
-        
-        <form action="{{ path('app_player_create', {olympixId: olympix.id}) }}" 
-              method="POST" 
+    <div class="card p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">➕ Neuen Spieler hinzufügen</h2>
+
+        <form action="{{ path('app_player_create', {olympixId: olympix.id}) }}"
+              method="POST"
               class="flex items-end space-x-4">
             <div class="flex-1">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
                     Name
                 </label>
-                <input type="text" 
-                       id="name" 
-                       name="name" 
-                       required 
+                <input type="text"
+                       id="name"
+                       name="name"
+                       required
                        placeholder="Spielername eingeben"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full">
             </div>
             <button type="submit" class="btn-primary">
-                Hinzufügen
+                ➕ Hinzufügen
             </button>
         </form>
     </div>
-    
+
     <!-- Players List -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="card p-6">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800">Spieler ({{ players|length }})</h2>
+            <h2 class="text-xl font-bold text-gray-100">👥 Spieler ({{ players|length }})</h2>
             {% if players|length > 0 %}
-                <div class="text-sm text-gray-600">
-                    Sortiert nach Punkten
+                <div class="text-sm text-gray-400">
+                    ✨ Sortiert nach Punkten
                 </div>
             {% endif %}
         </div>
@@ -56,49 +56,49 @@
         {% if players|length > 0 %}
             <div class="space-y-4">
                 {% for player in players %}
-                    <div class="player-card bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                    <div class="player-card bg-night-700/40 border border-gray-700/60 rounded-lg p-4 flex items-center justify-between">
                         <div class="flex items-center space-x-4">
                             <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
                                 {{ loop.index }}
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ player.name }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-100">{% if loop.index == 1 %}👑 {% elseif loop.index == 2 %}🥈 {% elseif loop.index == 3 %}🥉 {% endif %}{{ player.name }}</h3>
                                 <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-sm text-gray-600">{{ player.totalPoints }} Punkte</span>
-                                    <span class="text-sm text-gray-400">•</span>
-                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
+                                    <span class="text-sm text-amber-300">✨ {{ player.totalPoints }} Punkte</span>
+                                    <span class="text-sm text-gray-500">•</span>
+                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerDoubleAvailable %}bg-emerald-500/10 text-emerald-300{% else %}bg-gray-700/50 text-gray-500{% endif %}">
+                                        🃏 2x {% if player.hasJokerDoubleAvailable %}✓{% else %}✗{% endif %}
                                     </span>
-                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-500{% endif %}">
-                                        ⇄ {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
+                                    <span class="text-xs px-2 py-1 rounded {% if player.hasJokerSwapAvailable %}bg-party-purple/10 text-purple-300{% else %}bg-gray-700/50 text-gray-500{% endif %}">
+                                        🔄 {% if player.hasJokerSwapAvailable %}✓{% else %}✗{% endif %}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center space-x-2">
                             <!-- Edit Button -->
-                            <button onclick="editPlayer({{ player.id }}, '{{ player.name }}')" 
-                                    class="text-blue-600 hover:text-blue-800 text-sm">
+                            <button onclick="editPlayer({{ player.id }}, '{{ player.name }}')"
+                                    class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-purple-300 hover:text-purple-200 hover:bg-party-purple/10 text-sm">
                                 ✏️ Bearbeiten
                             </button>
-                            
+
                             <!-- Reset Jokers -->
-                            <a href="{{ path('app_player_reset_jokers', {id: player.id}) }}" 
-                               class="text-orange-600 hover:text-orange-800 text-sm">
+                            <a href="{{ path('app_player_reset_jokers', {id: player.id}) }}"
+                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 text-sm">
                                 🔄 Joker zurücksetzen
                             </a>
-                            
+
                             <!-- Reset Points -->
-                            <a href="{{ path('app_player_reset_points', {id: player.id}) }}" 
-                               class="text-purple-600 hover:text-purple-800 text-sm"
+                            <a href="{{ path('app_player_reset_points', {id: player.id}) }}"
+                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-teal-300 hover:text-teal-200 hover:bg-teal-500/10 text-sm"
                                onclick="return confirm('Punkte wirklich zurücksetzen?')">
                                 🔢 Punkte zurücksetzen
                             </a>
-                            
+
                             <!-- Delete Button -->
-                            <a href="{{ path('app_player_delete', {id: player.id}) }}" 
-                               class="text-red-600 hover:text-red-800 text-sm"
+                            <a href="{{ path('app_player_delete', {id: player.id}) }}"
+                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 text-sm"
                                onclick="return confirmDelete('Spieler {{ player.name }} wirklich löschen?')">
                                 🗑️ Löschen
                             </a>
@@ -107,30 +107,30 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center text-gray-500 py-12">
+            <div class="text-center text-gray-400 py-12">
                 <div class="text-4xl mb-4">👥</div>
                 <p class="text-lg">Noch keine Spieler hinzugefügt</p>
-                <p class="text-sm mt-2">Füge oben deinen ersten Spieler hinzu</p>
+                <p class="text-sm mt-2 text-gray-500">Füge oben deinen ersten Spieler hinzu</p>
             </div>
         {% endif %}
     </div>
 </div>
 
 <!-- Edit Player Modal -->
-<div id="editPlayerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Spieler bearbeiten</h3>
-        
+<div id="editPlayerModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50">
+    <div class="card card-highlight p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-gray-100 mb-4">✏️ Spieler bearbeiten</h3>
+
         <form id="editPlayerForm" method="POST">
             <div class="mb-4">
-                <label for="editName" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="editName" class="block text-sm font-medium text-gray-300 mb-2">
                     Name
                 </label>
-                <input type="text" 
-                       id="editName" 
-                       name="name" 
-                       required 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text"
+                       id="editName"
+                       name="name"
+                       required
+                       class="w-full">
             </div>
             
             <div class="flex justify-end space-x-4">

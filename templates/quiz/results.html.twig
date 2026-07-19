@@ -1,79 +1,81 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Quiz-Ergebnisse - {{ game.name }}{% endblock %}
+{% block title %}🧠 Quiz-Ergebnisse - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-6xl mx-auto">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Quiz-Ergebnisse</h1>
-                <p class="text-gray-600 mt-1">{{ game.name }}</p>
+                <h1 class="text-2xl font-extrabold gradient-text">🏁 Quiz-Ergebnisse</h1>
+                <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
             <div class="flex space-x-4">
-                <a href="{{ path('app_quiz_calculate', {gameId: game.id}) }}" 
+                <a href="{{ path('app_quiz_calculate', {gameId: game.id}) }}"
                    class="btn-success">
                     🧮 Neu berechnen
                 </a>
-                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-primary">
                     ← Zurück
                 </a>
             </div>
         </div>
     </div>
-    
+
     <!-- Final Results -->
     {% if results %}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">🏆 Endwertung</h2>
-            
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-6">🏆 Endwertung</h2>
+
             <div class="space-y-3">
                 {% for result in results %}
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between p-4 rounded-xl {{ result.position == 1 ? 'bg-amber-500/10 border border-amber-500/40' : 'bg-night-700/40 border border-gray-700/60' }}">
                         <div class="flex items-center space-x-4">
                             <div class="ranking-badge {% if result.position == 1 %}ranking-1{% elseif result.position == 2 %}ranking-2{% elseif result.position == 3 %}ranking-3{% else %}ranking-default{% endif %}">
                                 {{ result.position }}
                             </div>
-                            <div class="font-medium text-gray-800">{{ result.player.name }}</div>
+                            <div class="font-medium text-gray-100">
+                                {% if result.position == 1 %}👑 {% elseif result.position == 2 %}🥈 {% elseif result.position == 3 %}🥉 {% endif %}{{ result.player.name }}
+                            </div>
                         </div>
-                        <div class="text-lg font-bold text-gray-800">{{ result.points }} Punkte</div>
+                        <div class="text-lg font-bold text-amber-400">{{ result.points }} Punkte</div>
                     </div>
                 {% endfor %}
             </div>
         </div>
     {% endif %}
-    
+
     <!-- Detailed Results per Question -->
     {% if questions %}
         <div class="space-y-8">
             {% for question in questions %}
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        Frage {{ loop.index }}: {{ question.question }}
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold text-gray-100 mb-4">
+                        🧠 Frage {{ loop.index }}: {{ question.question }}
                     </h3>
-                    
+
                     <div class="mb-4">
-                        <span class="text-sm font-medium text-green-600">
-                            Korrekte Antwort: {{ question.correctAnswer }}
+                        <span class="text-sm font-medium text-emerald-400">
+                            ✅ Korrekte Antwort: {{ question.correctAnswer }}
                         </span>
                     </div>
-                    
+
                     {% if question.quizAnswers|length > 0 %}
                         <div class="space-y-2">
                             {% for answer in question.quizAnswers %}
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between p-3 bg-night-700/40 border border-gray-700/60 rounded-lg">
                                     <div class="flex items-center space-x-3">
-                                        <div class="font-medium text-gray-800">{{ answer.player.name }}</div>
-                                        <div class="text-sm text-gray-600">
+                                        <div class="font-medium text-gray-100">{{ answer.player.name }}</div>
+                                        <div class="text-sm text-gray-400">
                                             Antwort: {{ answer.formattedAnswer }}
                                         </div>
                                         <div class="text-sm text-gray-500">
                                             (Abstand: {{ answer.distanceFromCorrectAnswer|number_format(2) }})
                                         </div>
                                     </div>
-                                    <div class="text-sm font-bold text-gray-800">
+                                    <div class="text-sm font-bold text-amber-400">
                                         {{ answer.pointsEarned }} Punkte
                                     </div>
                                 </div>

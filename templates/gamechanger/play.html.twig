@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gamechanger - {{ game.name }}{% endblock %}
+{% block title %}🎯 Gamechanger - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="container mx-auto px-4 py-8" id="gamechangerApp">
@@ -8,15 +8,15 @@
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">🎯 {{ game.name }}</h1>
-                <p class="text-lg text-gray-600 mt-2">{{ game.olympix.name }} - Gamechanger</p>
+                <h1 class="text-3xl font-extrabold gradient-text">🎯 {{ game.name }}</h1>
+                <p class="text-lg text-gray-400 mt-2">{{ game.olympix.name }} - Gamechanger</p>
             </div>
             <div class="flex gap-3">
-                <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}" 
+                <a href="{{ path('app_gamechanger_setup', {gameId: game.id}) }}"
                    class="btn-secondary text-sm">
                     ⚙️ Setup
                 </a>
-                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+                <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                    class="btn-secondary text-sm">
                     ← Zurück
                 </a>
@@ -27,48 +27,48 @@
     <!-- GEFIXT: Bessere Anzeige des Spielstatus -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Aktueller Status -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">📊 Spielstatus</h2>
+        <div class="card p-6">
+            <h2 class="text-lg font-bold text-gray-100 mb-4">📊 Spielstatus</h2>
             <div class="space-y-3">
                 {% set realThrows = throws|filter(t => t.thrownPoints > 0) %}
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Echte Würfe:</span>
-                    <span class="font-semibold">{{ realThrows|length }} / {{ players|length }}</span>
+                    <span class="text-gray-400">Echte Würfe:</span>
+                    <span class="font-semibold text-gray-100">{{ realThrows|length }} / {{ players|length }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Status:</span>
+                    <span class="text-gray-400">Status:</span>
                     {% if is_game_complete %}
-                        <span class="text-green-600 font-semibold">✅ Beendet</span>
+                        <span class="text-emerald-400 font-semibold">✅ Beendet</span>
                     {% else %}
-                        <span class="text-blue-600 font-semibold">🎯 Aktiv</span>
+                        <span class="text-purple-300 font-semibold">🎯 Aktiv</span>
                     {% endif %}
                 </div>
                 {% if next_player and not is_game_complete %}
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Nächster:</span>
-                    <span class="font-semibold text-blue-600">{{ next_player.name }}</span>
+                    <span class="text-gray-400">Nächster:</span>
+                    <span class="font-semibold text-purple-300">{{ next_player.name }}</span>
                 </div>
                 {% endif %}
-                
+
                 <!-- GEFIXT: Zeige Spielerreihenfolge an -->
                 {% if not is_game_complete %}
-                <div class="mt-4 pt-3 border-t">
-                    <div class="text-sm text-gray-600 mb-2">Spielerreihenfolge:</div>
+                <div class="mt-4 pt-3 border-t border-gray-700/60">
+                    <div class="text-sm text-gray-400 mb-2">Spielerreihenfolge:</div>
                     <div class="text-xs space-y-1">
                         {% for throw in throws|sort((a, b) => a.playerOrder <=> b.playerOrder) %}
                         <div class="flex items-center justify-between">
                             <span class="flex items-center">
                                 <span class="w-6">{{ throw.playerOrder }}.</span>
-                                <span class="{{ throw.thrownPoints > 0 ? 'line-through text-gray-400' : (next_player and throw.player.id == next_player.id ? 'font-bold text-blue-600' : '') }}">
+                                <span class="{{ throw.thrownPoints > 0 ? 'line-through text-gray-500' : (next_player and throw.player.id == next_player.id ? 'font-bold text-purple-300' : 'text-gray-300') }}">
                                     {{ throw.player.name }}
                                 </span>
                             </span>
                             {% if throw.thrownPoints > 0 %}
-                                <span class="text-green-600 text-xs">✅</span>
+                                <span class="text-emerald-400 text-xs">✅</span>
                             {% elseif next_player and throw.player.id == next_player.id %}
-                                <span class="text-blue-600 text-xs">👆</span>
+                                <span class="text-purple-300 text-xs">👆</span>
                             {% else %}
-                                <span class="text-gray-400 text-xs">⏳</span>
+                                <span class="text-gray-500 text-xs">⏳</span>
                             {% endif %}
                         </div>
                         {% endfor %}
@@ -79,30 +79,30 @@
         </div>
 
         <!-- Statistiken -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">📈 Statistiken</h2>
+        <div class="card p-6">
+            <h2 class="text-lg font-bold text-gray-100 mb-4">📈 Statistiken</h2>
             <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Bonus-Treffer:</span>
-                    <span class="text-green-600 font-semibold">{{ stats.bonusHits }}</span>
+                    <span class="text-gray-400">Bonus-Treffer:</span>
+                    <span class="text-emerald-400 font-semibold">{{ stats.bonusHits }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Strafen-Treffer:</span>
-                    <span class="text-red-600 font-semibold">{{ stats.penaltyHits }}</span>
+                    <span class="text-gray-400">Strafen-Treffer:</span>
+                    <span class="text-pink-400 font-semibold">{{ stats.penaltyHits }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Normale Würfe:</span>
-                    <span class="text-gray-600 font-semibold">{{ stats.normalThrows }}</span>
+                    <span class="text-gray-400">Normale Würfe:</span>
+                    <span class="text-gray-300 font-semibold">{{ stats.normalThrows }}</span>
                 </div>
                 {% if stats.totalBonusPoints > 0 or stats.totalPenaltyPoints > 0 %}
-                <div class="pt-2 border-t">
+                <div class="pt-2 border-t border-gray-700/60">
                     <div class="flex justify-between text-xs">
-                        <span class="text-green-600">Bonus-Punkte:</span>
-                        <span class="text-green-600">+{{ stats.totalBonusPoints }}</span>
+                        <span class="text-emerald-400">Bonus-Punkte:</span>
+                        <span class="text-emerald-400">+{{ stats.totalBonusPoints }}</span>
                     </div>
                     <div class="flex justify-between text-xs">
-                        <span class="text-red-600">Strafen-Punkte:</span>
-                        <span class="text-red-600">-{{ stats.totalPenaltyPoints }}</span>
+                        <span class="text-pink-400">Strafen-Punkte:</span>
+                        <span class="text-pink-400">-{{ stats.totalPenaltyPoints }}</span>
                     </div>
                 </div>
                 {% endif %}
@@ -110,26 +110,26 @@
         </div>
 
         <!-- Aktuelle Rangliste -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">🏆 Aktuelle Rangliste</h2>
+        <div class="card p-6">
+            <h2 class="text-lg font-bold text-gray-100 mb-4">🏆 Aktuelle Rangliste</h2>
             <div class="space-y-2">
                 {% set sortedPlayers = players|sort((a, b) => b.totalPoints <=> a.totalPoints) %}
                 {% for player in sortedPlayers|slice(0, 5) %}
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <span class="text-sm font-semibold w-6">{{ loop.index }}.</span>
-                        <span class="text-sm {{ next_player and player.id == next_player.id ? 'font-bold text-blue-600' : '' }}">
+                        <span class="text-sm {{ next_player and player.id == next_player.id ? 'font-bold text-purple-300' : 'text-gray-300' }}">
                             {{ player.name }}
                             {% if next_player and player.id == next_player.id %}
                                 <span class="text-xs">👆</span>
                             {% endif %}
                         </span>
                     </div>
-                    <span class="text-sm font-bold text-blue-600">{{ player.totalPoints }}</span>
+                    <span class="text-sm font-bold text-amber-400">{{ player.totalPoints }}</span>
                 </div>
                 {% endfor %}
                 {% if sortedPlayers|length > 5 %}
-                <div class="text-xs text-gray-400 text-center pt-2">
+                <div class="text-xs text-gray-500 text-center pt-2">
                     ... und {{ sortedPlayers|length - 5 }} weitere
                 </div>
                 {% endif %}
@@ -139,18 +139,18 @@
 
     {% if not is_game_complete %}
     <!-- Wurf eingeben -->
-    <div class="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">🎯 Wurf eingeben</h2>
-        
+    <div class="card card-highlight p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">🎯 Wurf eingeben</h2>
+
         {% if next_player %}
-        <div class="bg-white rounded-lg p-4 mb-6">
+        <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 mb-6">
             <div class="text-center">
-                <div class="text-lg text-gray-600">Aktueller Spieler:</div>
-                <div class="text-2xl font-bold text-blue-600 mt-2">{{ next_player.name }}</div>
+                <div class="text-lg text-gray-400">Aktueller Spieler:</div>
+                <div class="text-2xl font-bold text-purple-300 mt-2">{{ next_player.name }}</div>
                 <div class="text-lg text-gray-500 mt-1">
-                    Aktuelle Punkte: <span class="font-semibold">{{ current_player_points[next_player.id] }}</span>
+                    Aktuelle Punkte: <span class="font-semibold text-amber-400">{{ current_player_points[next_player.id] }}</span>
                 </div>
-                <div class="text-sm text-green-600 mt-1 font-semibold">
+                <div class="text-sm text-emerald-400 mt-1 font-semibold">
                     💡 Treffe {{ current_player_points[next_player.id] }} für +8 Punkte!
                 </div>
             </div>
@@ -160,27 +160,27 @@
             <div class="space-y-4">
                 <input type="hidden" name="player_id" value="{{ next_player.id }}">
                 <div>
-                    <label for="thrown_points" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="thrown_points" class="block text-sm font-medium text-gray-300 mb-2">
                         Geworfene Punkte:
                     </label>
-                    <input type="number" 
-                           name="thrown_points" 
+                    <input type="number"
+                           name="thrown_points"
                            id="thrown_points"
-                           min="0" 
-                           max="180" 
+                           min="0"
+                           max="180"
                            required
-                           class="w-full px-4 py-3 text-lg text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           class="w-full text-lg text-center"
                            placeholder="0-180"
                            autofocus>
                 </div>
-                <button type="submit" 
+                <button type="submit"
                         class="w-full btn-primary text-lg py-3">
                     🎯 Wurf bestätigen
                 </button>
             </div>
         </form>
         {% else %}
-        <div class="text-center text-gray-600">
+        <div class="text-center text-gray-400">
             <p class="text-lg">Alle Spieler haben bereits geworfen!</p>
             <p class="text-sm mt-2">Das Spiel wird automatisch abgeschlossen...</p>
         </div>
@@ -189,12 +189,12 @@
     {% endif %}
 
     <!-- Wurf-Historie -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-800">📋 Wurf-Historie</h2>
+            <h2 class="text-xl font-bold text-gray-100">📋 Wurf-Historie</h2>
             {% set realThrows = throws|filter(t => t.thrownPoints > 0) %}
             {% if realThrows|length > 0 and not is_game_complete %}
-            <button onclick="undoLastThrow()" 
+            <button onclick="undoLastThrow()"
                     class="btn-secondary text-sm"
                     id="undoButton">
                 ↶ Letzten Wurf rückgängig
@@ -207,7 +207,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b">
+                    <tr class="border-b border-gray-700/60 text-gray-300">
                         <th class="text-left py-2">#</th>
                         <th class="text-left py-2">Spieler</th>
                         <th class="text-center py-2">Geworfene Punkte</th>
@@ -218,15 +218,15 @@
                 </thead>
                 <tbody id="throwsTableBody">
                     {% for throw in realThrows %}
-                    <tr class="border-b hover:bg-gray-50">
+                    <tr class="border-b border-gray-700/60 hover:bg-night-700/60">
                         <td class="py-2 font-semibold">{{ throw.playerOrder }}.</td>
-                        <td class="py-2">{{ throw.player.name }}</td>
-                        <td class="py-2 text-center font-mono text-lg">{{ throw.thrownPoints }}</td>
+                        <td class="py-2 text-gray-100">{{ throw.player.name }}</td>
+                        <td class="py-2 text-center font-mono text-lg text-gray-100">{{ throw.thrownPoints }}</td>
                         <td class="py-2 text-center">
                             {% if throw.pointsScored > 0 %}
-                                <span class="text-green-600 font-semibold">+{{ throw.pointsScored }}</span>
+                                <span class="text-emerald-400 font-semibold">+{{ throw.pointsScored }}</span>
                             {% elseif throw.pointsScored < 0 %}
-                                <span class="text-red-600 font-semibold">{{ throw.pointsScored }}</span>
+                                <span class="text-pink-400 font-semibold">{{ throw.pointsScored }}</span>
                             {% else %}
                                 <span class="text-gray-500">-</span>
                             {% endif %}
@@ -235,9 +235,9 @@
                             {% if throw.scoringReason == 'Keine besonderen Treffer' %}
                                 <span class="text-gray-500">{{ throw.scoringReason }}</span>
                             {% elseif throw.pointsScored > 0 %}
-                                <span class="text-green-600">{{ throw.scoringReason }}</span>
+                                <span class="text-emerald-400">{{ throw.scoringReason }}</span>
                             {% else %}
-                                <span class="text-red-600">{{ throw.scoringReason }}</span>
+                                <span class="text-pink-400">{{ throw.scoringReason }}</span>
                             {% endif %}
                         </td>
                         <td class="py-2 text-center text-xs text-gray-500">
@@ -250,12 +250,12 @@
         </div>
         {% else %}
         <div class="text-center text-gray-500 py-8">
-            <p class="text-lg">Noch keine Würfe vorhanden.</p>
+            <p class="text-lg text-gray-300">Noch keine Würfe vorhanden.</p>
             <p class="text-sm mt-2">Das Spiel startet, sobald der erste Spieler wirft.</p>
             {% if throws|length > 0 %}
             <div class="mt-4 text-xs">
                 <p>Spielerreihenfolge wurde bereits festgelegt:</p>
-                <div class="mt-2 text-gray-600">
+                <div class="mt-2 text-gray-400">
                     {% for throw in throws|sort((a, b) => a.playerOrder <=> b.playerOrder) %}
                         {{ loop.index }}. {{ throw.player.name }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
@@ -268,20 +268,20 @@
 
     {% if is_game_complete %}
     <!-- Spiel beendet -->
-    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-        <h2 class="text-xl font-bold text-green-800 mb-4">🎉 Spiel beendet!</h2>
-        <p class="text-green-700 mb-4">Alle Spieler haben geworfen. Die Punkte sind in die Gesamtwertung eingeflossen.</p>
-        
+    <div class="bg-emerald-500/10 border border-emerald-500/40 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-emerald-300 mb-4">🎉 Spiel beendet!</h2>
+        <p class="text-emerald-400 mb-4">Alle Spieler haben geworfen. Die Punkte sind in die Gesamtwertung eingeflossen.</p>
+
         <!-- Finale Rangliste -->
-        <div class="bg-white rounded-lg p-4 mb-4">
-            <h3 class="font-bold text-gray-800 mb-3">🏆 Finale Rangliste:</h3>
+        <div class="bg-night-800/60 border border-gray-700/60 rounded-lg p-4 mb-4">
+            <h3 class="font-bold text-gray-100 mb-3">🏆 Finale Rangliste:</h3>
             <div class="space-y-2">
                 {% set finalPlayers = players|sort((a, b) => b.totalPoints <=> a.totalPoints) %}
                 {% for player in finalPlayers %}
-                <div class="flex items-center justify-between {{ loop.index <= 3 ? 'font-bold' : '' }}">
+                <div class="flex items-center justify-between {{ loop.index <= 3 ? 'font-bold text-gray-100' : 'text-gray-300' }}">
                     <div class="flex items-center">
                         <span class="w-8">
-                            {% if loop.index == 1 %}🥇
+                            {% if loop.index == 1 %}👑
                             {% elseif loop.index == 2 %}🥈
                             {% elseif loop.index == 3 %}🥉
                             {% else %}{{ loop.index }}.
@@ -289,16 +289,16 @@
                         </span>
                         <span>{{ player.name }}</span>
                     </div>
-                    <span class="text-blue-600">{{ player.totalPoints }} Punkte</span>
+                    <span class="text-amber-400">{{ player.totalPoints }} Punkte</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
-        
+
         <div class="text-center">
-            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                class="btn-primary">
-                Zurück zur Übersicht
+                ← Zurück zur Übersicht
             </a>
         </div>
     </div>
@@ -306,7 +306,7 @@
 </div>
 
 <!-- Toast Notifications -->
-<div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+<div id="toast" class="fixed top-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
     <span id="toastMessage"></span>
 </div>
 
@@ -318,41 +318,41 @@ let refreshInterval;
 // Form Submit Handler
 document.getElementById('throwForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(this);
     const playerId = formData.get('player_id');
     const thrownPoints = parseInt(formData.get('thrown_points'));
-    
+
     if (thrownPoints < 0 || thrownPoints > 180) {
         showToast('Punkte müssen zwischen 0 und 180 liegen!', 'error');
         return;
     }
-    
+
     // Disable submit button to prevent double-submission
     const submitButton = this.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
     submitButton.disabled = true;
     submitButton.textContent = '⏳ Verarbeite...';
-    
+
     try {
         const response = await fetch(`/gamechanger/throw/${gameId}`, {
             method: 'POST',
             body: formData
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showToast(`Wurf von ${data.throw.player_name}: ${data.throw.thrown_points} Punkte - ${data.throw.scoring_reason}`, 'success');
-            
+
             // Reset form
             document.getElementById('thrown_points').value = '';
-            
+
             // Reload page after short delay
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
-            
+
         } else {
             showToast(data.message, 'error');
             submitButton.disabled = false;
@@ -371,14 +371,14 @@ async function undoLastThrow() {
     if (!confirm('Letzten Wurf wirklich rückgängig machen?')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`/gamechanger/undo-last/${gameId}`, {
             method: 'POST'
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showToast(data.message, 'success');
             setTimeout(() => {
@@ -397,18 +397,18 @@ async function undoLastThrow() {
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
-    
+
     toastMessage.textContent = message;
-    
+
     // Set color based on type
     if (type === 'error') {
-        toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        toast.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
     } else {
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        toast.className = 'fixed top-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
     }
-    
+
     toast.classList.remove('hidden');
-    
+
     setTimeout(() => {
         toast.classList.add('hidden');
     }, 4000);
@@ -420,7 +420,7 @@ refreshInterval = setInterval(async () => {
     try {
         const response = await fetch(`/gamechanger/status/${gameId}`);
         const data = await response.json();
-        
+
         if (data.success && data.is_game_complete) {
             clearInterval(refreshInterval);
             showToast('Spiel beendet! Seite wird neu geladen...', 'success');

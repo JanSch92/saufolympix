@@ -5,11 +5,11 @@
 {% block body %}
 <div class="max-w-2xl mx-auto">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Neues Spiel erstellen</h1>
-                <p class="text-gray-600 mt-1">{{ olympix.name }}</p>
+                <h1 class="text-2xl font-bold text-gray-100">🎮 Neues Spiel erstellen</h1>
+                <p class="text-gray-400 mt-1">{{ olympix.name }}</p>
             </div>
             <a href="{{ path('app_game_admin', {id: olympix.id}) }}" 
                class="btn-secondary">
@@ -19,14 +19,14 @@
     </div>
     
     <!-- Form -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="card p-6">
         <form action="{{ path('app_game_create', {olympixId: olympix.id}) }}" 
               method="POST" 
               id="gameForm">
             
             <!-- Game Name -->
             <div class="mb-6">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
                     Spielname *
                 </label>
                 <input type="text" 
@@ -34,19 +34,19 @@
                        name="name" 
                        required 
                        placeholder="z.B. Flunky Ball"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full">
             </div>
             
             <!-- Game Type -->
             <div class="mb-6">
-                <label for="game_type" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="game_type" class="block text-sm font-medium text-gray-300 mb-2">
                     Spieltyp *
                 </label>
                 <select id="game_type" 
                         name="game_type" 
                         required 
                         onchange="updateGameTypeOptions()"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full">
                     <option value="">Bitte wählen</option>
                     <option value="free_for_all">⚔️ Free For All</option>
                     <option value="tournament_team">🏆 Turnier (Team)</option>
@@ -60,12 +60,12 @@
             
             <!-- Team Size (for team tournaments) -->
             <div id="teamSizeContainer" class="mb-6 hidden">
-                <label for="team_size" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="team_size" class="block text-sm font-medium text-gray-300 mb-2">
                     Team-Größe
                 </label>
                 <select id="team_size" 
                         name="team_size"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full">
                     <option value="2">2 Spieler pro Team</option>
                     <option value="3">3 Spieler pro Team</option>
                     <option value="4">4 Spieler pro Team</option>
@@ -74,123 +74,123 @@
             
             <!-- Points Distribution -->
             <div class="mb-6">
-                <label for="points_distribution" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="points_distribution" class="block text-sm font-medium text-gray-300 mb-2">
                     Punkteverteilung (optional)
                 </label>
                 <input type="text" 
                        id="points_distribution" 
                        name="points_distribution" 
                        placeholder="z.B. 8,6,4,2 (von 1. bis letzter Platz)"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <div class="text-sm text-gray-600 mt-1">
+                       class="w-full">
+                <div class="text-sm text-gray-400 mt-1">
                     Komma-getrennte Werte. Leer lassen für Standard-Verteilung.
                 </div>
             </div>
             
             <!-- Game Type Help -->
             <div class="mb-6">
-                <div class="bg-gray-50 rounded-lg p-4 text-sm">
+                <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 text-sm">
                     
                     <!-- Free For All -->
                     <div id="help-free_for_all" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Free For All</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">⚔️ Free For All</h4>
+                        <p class="text-gray-400 mb-2">
                             Alle Spieler nehmen gleichzeitig teil. Am Ende wird die Platzierung festgelegt (1. bis letzter Platz).
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> Bier Pong Turnier, alle spielen gleichzeitig an verschiedenen Tischen
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> 8,7,6,5,4,3,2,1 (bei 8 Spielern)
                         </p>
                     </div>
                     
                     <!-- Tournament Team -->
                     <div id="help-tournament_team" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Turnier (Team)</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">🏆 Turnier (Team)</h4>
+                        <p class="text-gray-400 mb-2">
                             Spieler werden in Teams aufgeteilt. Zufällige Auslosung mit Bracket-System. 
                             Bei ungerader Anzahl bekommt das Team mit den wenigsten Punkten ein Freilos.
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> Flunky Ball Teams, KO-System
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> 8,6,4,2 (1.-4. Platz)
                         </p>
                     </div>
                     
                     <!-- Tournament Single -->
                     <div id="help-tournament_single" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Turnier (Einzel)</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">🏆 Turnier (Einzel)</h4>
+                        <p class="text-gray-400 mb-2">
                             Jeder Spieler tritt einzeln an. Zufällige Auslosung mit Bracket-System. 
                             Bei ungerader Anzahl bekommt der Spieler mit den wenigsten Punkten ein Freilos.
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> 1vs1 Dart Turnier, KO-System
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> 8,6,4,2 (1.-4. Platz)
                         </p>
                     </div>
                     
                     <!-- Quiz -->
                     <div id="help-quiz" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Quiz</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">🧠 Quiz</h4>
+                        <p class="text-gray-400 mb-2">
                             Schätzfragen werden gestellt. QR-Code wird angezeigt, über den Spieler mobil ihre Antworten eingeben können.
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> "Wie viele Gummibärchen sind im Glas?"
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> Nach Platzierung der Schätzungen
                         </p>
                     </div>
                     
                     <!-- Split or Steal -->
                     <div id="help-split_or_steal" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Split or Steal</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">🤝 Split or Steal</h4>
+                        <p class="text-gray-400 mb-2">
                             Zwei Spieler treten gegeneinander an. Jeder wählt heimlich Split oder Steal. 
                             Beide Split = Punkte geteilt, einer Split + einer Steal = Stealer bekommt alles, beide Steal = keiner bekommt Punkte.
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> Psychologisches Spiel um 50 Punkte
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> 50 Punkte pro Match
                         </p>
                     </div>
 
                     <!-- *** NEU: GAMECHANGER HELP *** -->
                     <div id="help-gamechanger" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">Gamechanger</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">🎯 Gamechanger</h4>
+                        <p class="text-gray-400 mb-2">
                             Jeder Spieler wirft genau einmal in zufälliger Reihenfolge. Triffst du deine aktuellen Gesamtpunkte, bekommst du +8 Punkte. 
                             Triffst du die Punkte eines anderen Spielers, bekommt er -4 Punkte.
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> Du hast 45 Punkte und wirfst 45 → +8 Punkte für dich. Wirfst du 30 und ein anderer hat 30 → -4 Punkte für ihn.
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Besonderheit:</strong> Schnelles Spiel (10-20 Min), jeder wirft nur einmal, strategisches Element durch aktuelle Punktestände.
                         </p>
                     </div>
 
                     <!-- *** NEU: STOPPUHR HELP *** -->
                     <div id="help-stopwatch" class="game-type-help hidden">
-                        <h4 class="font-semibold text-gray-800 mb-2">⏱️ Stoppuhr</h4>
-                        <p class="text-gray-600 mb-2">
+                        <h4 class="font-semibold text-gray-100 mb-2">⏱️ Stoppuhr</h4>
+                        <p class="text-gray-400 mb-2">
                             Beim Start wird eine zufällige Zielzeit zwischen 5 und 60 Sekunden gewählt (z.B. 20,86 s).
                             Jeder Spieler startet und stoppt blind eine Stoppuhr auf dem Handy und versucht,
                             möglichst nah an die Zielzeit zu kommen. Die laufende Zeit ist dabei unsichtbar!
                         </p>
-                        <p class="text-blue-600 text-xs">
+                        <p class="text-purple-300 text-xs">
                             <strong>Beispiel:</strong> Zielzeit 20,86 s – wer am nächsten dran stoppt, gewinnt
                         </p>
-                        <p class="text-green-600 text-xs mt-1">
+                        <p class="text-emerald-400 text-xs mt-1">
                             <strong>Standardpunkte:</strong> Nach Platzierung der Abweichungen (wie beim Quiz)
                         </p>
                     </div>
@@ -205,30 +205,30 @@
             <!-- Submit Button -->
             <div class="flex justify-end">
                 <button type="submit" class="btn-primary">
-                    Spiel erstellen
+                    🎮 Spiel erstellen
                 </button>
             </div>
         </form>
     </div>
 
     <!-- Player Info -->
-    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-blue-800 mb-3">📊 Aktuelle Spieler ({{ olympix.players|length }})</h3>
+    <div class="mt-8 bg-party-purple/10 border border-party-purple/30 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-purple-300 mb-3">👥 Aktuelle Spieler ({{ olympix.players|length }})</h3>
         
         {% if olympix.players|length > 0 %}
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {% for player in olympix.players %}
-                    <div class="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div class="font-medium text-gray-800">{{ player.name }}</div>
-                        <div class="text-sm text-blue-600">{{ player.totalPoints }} Punkte</div>
+                    <div class="bg-night-800/60 border border-party-purple/20 rounded-lg p-3 text-center">
+                        <div class="font-medium text-gray-100">{{ player.name }}</div>
+                        <div class="text-sm text-amber-300">✨ {{ player.totalPoints }} Punkte</div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-blue-600 mb-4">Noch keine Spieler hinzugefügt.</p>
+            <p class="text-purple-300 mb-4">Noch keine Spieler hinzugefügt.</p>
         {% endif %}
         
-        <div class="text-sm text-blue-600">
+        <div class="text-sm text-purple-300">
             <p><strong>Mindestanforderungen:</strong></p>
             <ul class="list-disc list-inside mt-2 space-y-1">
                 <li>Free For All: mind. 2 Spieler</li>

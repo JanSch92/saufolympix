@@ -6,30 +6,31 @@
     {{ parent() }}
     <style>
         .player-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(31, 24, 54, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
+            min-height: 44px;
         }
-        
+
         .player-card:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+            border-color: rgba(139, 92, 246, 0.45);
+            box-shadow: 0 8px 25px -5px rgba(139, 92, 246, 0.25);
             transform: translateY(-2px);
         }
-        
+
         .player-card.selected {
             border-color: rgba(16, 185, 129, 0.5);
             background: rgba(16, 185, 129, 0.1);
         }
-        
+
         .loading-spinner {
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(59, 130, 246, 0.2);
-            border-top: 2px solid #3b82f6;
+            border: 2px solid rgba(139, 92, 246, 0.25);
+            border-top: 2px solid #a78bfa;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -57,35 +58,35 @@
         }
         
         .player-scroll::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.3);
+            background: rgba(31, 24, 54, 0.3);
         }
-        
+
         .player-scroll::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.6);
+            background: rgba(139, 92, 246, 0.4);
             border-radius: 3px;
         }
-        
+
         .player-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(71, 85, 105, 0.8);
+            background: rgba(139, 92, 246, 0.6);
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="w-screen h-screen flex flex-col bg-slate-900 text-slate-100">
+<div class="w-screen h-screen flex flex-col bg-night-950 text-gray-100">
     <div class="flex-1 flex items-center justify-center p-2">
         <div class="w-full max-w-md">
-            
+
             <!-- Header -->
             <div class="professional-card p-3 mb-3">
                 <div class="text-center">
-                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-party-purple to-party-pink rounded-xl flex items-center justify-center mx-auto mb-2">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                         </svg>
                     </div>
-                    <h1 class="text-base font-bold gradient-text mb-1">{{ olympix.name }}</h1>
-                    <p class="text-xs text-slate-400">Spieler auswählen</p>
+                    <h1 class="text-base font-bold gradient-text mb-1">🍻 {{ olympix.name }}</h1>
+                    <p class="text-xs text-gray-400">👥 Spieler auswählen</p>
                 </div>
             </div>
             
@@ -97,12 +98,12 @@
                                 class="player-card w-full p-2.5 text-left">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
-                                    <div class="w-7 h-7 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center text-white font-bold text-xs">
+                                    <div class="w-7 h-7 bg-gradient-to-br from-party-purple to-party-pink rounded-lg flex items-center justify-center text-white font-bold text-xs">
                                         {{ player.name|first|upper }}
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-slate-100 text-sm">{{ player.name }}</div>
-                                        <div class="text-xs text-slate-400">{{ player.totalPoints }} Punkte</div>
+                                        <div class="font-semibold text-gray-100 text-sm">{{ player.name }}</div>
+                                        <div class="text-xs text-amber-300">✨ {{ player.totalPoints }} Punkte</div>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -112,8 +113,8 @@
                                             {% set position = position + 1 %}
                                         {% endif %}
                                     {% endfor %}
-                                    <div class="text-base font-bold text-slate-200">#{{ position }}</div>
-                                    <div class="text-xs text-slate-500">Platz</div>
+                                    <div class="text-base font-bold text-gray-200">#{{ position }}</div>
+                                    <div class="text-xs text-gray-500">Platz</div>
                                 </div>
                             </div>
                         </button>
@@ -133,10 +134,10 @@
                             </div>
                             <div>
                                 <div class="font-semibold text-emerald-400 text-sm">Ausgewählt</div>
-                                <div id="selected-name" class="text-slate-200 text-xs"></div>
+                                <div id="selected-name" class="text-gray-200 text-xs"></div>
                             </div>
                         </div>
-                        <button onclick="resetSelection()" class="text-slate-400 hover:text-slate-200 transition-colors">
+                        <button onclick="resetSelection()" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -148,7 +149,7 @@
             <!-- Loading -->
             <div id="loading" class="hidden professional-card p-3 text-center">
                 <div class="loading-spinner mx-auto mb-2"></div>
-                <div class="text-slate-200 font-medium text-sm">Dashboard wird geladen...</div>
+                <div class="text-gray-200 font-medium text-sm">📱 Dashboard wird geladen...</div>
             </div>
             
         </div>

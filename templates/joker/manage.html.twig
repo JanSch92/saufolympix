@@ -1,42 +1,42 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Joker verwalten - {{ game.name }}{% endblock %}
+{% block title %}🃏 Joker verwalten - {{ game.name }}{% endblock %}
 
 {% block body %}
 <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Joker verwalten</h1>
-                <p class="text-gray-600 mt-1">{{ game.name }}</p>
+                <h1 class="text-2xl font-extrabold gradient-text">🃏 Joker verwalten</h1>
+                <p class="text-gray-400 mt-1">{{ game.name }}</p>
             </div>
-            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}" 
+            <a href="{{ path('app_game_admin', {id: game.olympix.id}) }}"
                class="btn-primary">
                 ← Zurück
             </a>
         </div>
     </div>
-    
+
     <!-- Joker Activation for Active Game -->
     {% if game.status == 'active' %}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">🃏 Joker aktivieren</h2>
-            
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-6">🃏 Joker aktivieren</h2>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {% for player in game.olympix.players %}
-                    <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="bg-night-700/40 border border-gray-700/60 rounded-xl p-4">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-800">{{ player.name }}</h3>
-                            <div class="text-sm text-gray-600">{{ player.totalPoints }} Punkte</div>
+                            <h3 class="text-lg font-semibold text-gray-100">{{ player.name }}</h3>
+                            <div class="text-sm text-amber-400 font-semibold">{{ player.totalPoints }} Punkte</div>
                         </div>
-                        
+
                         <div class="space-y-2">
                             <!-- Double Joker -->
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Doppelte Punkte</span>
+                                <span class="text-sm text-gray-300">🃏 Doppelte Punkte</span>
                                 {% if player.hasJokerDoubleAvailable %}
-                                    <a href="{{ path('app_joker_double', {playerId: player.id, gameId: game.id}) }}" 
+                                    <a href="{{ path('app_joker_double', {playerId: player.id, gameId: game.id}) }}"
                                        class="btn-success text-sm">
                                         ✓ Aktivieren
                                     </a>
@@ -44,12 +44,12 @@
                                     <span class="text-sm text-gray-500">✗ Verwendet</span>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Swap Joker -->
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Punkte tauschen</span>
+                                <span class="text-sm text-gray-300">🔄 Punkte tauschen</span>
                                 {% if player.hasJokerSwapAvailable %}
-                                    <a href="{{ path('app_joker_swap', {playerId: player.id, gameId: game.id}) }}" 
+                                    <a href="{{ path('app_joker_swap', {playerId: player.id, gameId: game.id}) }}"
                                        class="btn-success text-sm">
                                         ⇄ Aktivieren
                                     </a>
@@ -63,23 +63,23 @@
             </div>
         </div>
     {% endif %}
-    
+
     <!-- Active Double Jokers -->
     {% if double_jokers|length > 0 %}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">🔥 Aktive Doppelte Punkte</h2>
-            
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-6">🔥 Aktive Doppelte Punkte</h2>
+
             <div class="space-y-3">
                 {% for joker in double_jokers %}
-                    <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/40 rounded-lg">
                         <div>
-                            <div class="font-medium text-green-800">{{ joker.player.name }}</div>
-                            <div class="text-sm text-green-600">Erhält doppelte Punkte für dieses Spiel</div>
+                            <div class="font-medium text-emerald-300">{{ joker.player.name }}</div>
+                            <div class="text-sm text-emerald-400">Erhält doppelte Punkte für dieses Spiel</div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="text-sm text-green-600">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
-                            <a href="{{ path('app_joker_cancel', {id: joker.id}) }}" 
-                               class="text-red-600 hover:text-red-800 text-sm"
+                            <span class="text-sm text-emerald-400">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
+                            <a href="{{ path('app_joker_cancel', {id: joker.id}) }}"
+                               class="text-pink-400 hover:text-pink-300 text-sm"
                                onclick="return confirm('Joker wirklich stornieren?')">
                                 ✗ Stornieren
                             </a>
@@ -89,27 +89,27 @@
             </div>
         </div>
     {% endif %}
-    
+
     <!-- Active Swap Jokers -->
     {% if swap_jokers|length > 0 %}
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">🔄 Aktive Punkte-Tausch</h2>
-            
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-6">🔄 Aktive Punkte-Tausch</h2>
+
             <div class="space-y-3">
                 {% for joker in swap_jokers %}
-                    <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between p-4 bg-party-purple/10 border border-party-purple/30 rounded-lg">
                         <div>
-                            <div class="font-medium text-blue-800">
+                            <div class="font-medium text-purple-300">
                                 {{ joker.player.name }} ⇄ {{ joker.targetPlayer.name }}
                             </div>
-                            <div class="text-sm text-blue-600">
+                            <div class="text-sm text-purple-300/80">
                                 Punkte werden nach dem Spiel getauscht
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="text-sm text-blue-600">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
-                            <a href="{{ path('app_joker_cancel', {id: joker.id}) }}" 
-                               class="text-red-600 hover:text-red-800 text-sm"
+                            <span class="text-sm text-purple-300/80">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
+                            <a href="{{ path('app_joker_cancel', {id: joker.id}) }}"
+                               class="text-pink-400 hover:text-pink-300 text-sm"
                                onclick="return confirm('Joker wirklich stornieren?')">
                                 ✗ Stornieren
                             </a>
@@ -119,13 +119,13 @@
             </div>
         </div>
     {% endif %}
-    
+
     <!-- No Active Jokers -->
     {% if double_jokers|length == 0 and swap_jokers|length == 0 %}
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-6">
             <div class="text-center text-gray-500 py-12">
                 <div class="text-4xl mb-4">🃏</div>
-                <p class="text-lg">Keine aktiven Joker für dieses Spiel</p>
+                <p class="text-lg text-gray-300">Keine aktiven Joker für dieses Spiel</p>
                 {% if game.status == 'active' %}
                     <p class="text-sm mt-2">Aktiviere oben Joker für die Spieler</p>
                 {% endif %}

@@ -6,18 +6,19 @@
     {{ parent() }}
     <style>
         .game-option, .player-option {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(31, 24, 54, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
             cursor: pointer;
+            min-height: 44px;
         }
-        
+
         .game-option:hover, .player-option:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+            border-color: rgba(139, 92, 246, 0.45);
+            box-shadow: 0 8px 25px -5px rgba(139, 92, 246, 0.25);
             transform: translateY(-2px);
         }
         
@@ -36,20 +37,20 @@
         
         .game-option.disabled:hover {
             transform: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
-        
+
         .player-option.disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .player-option.disabled:hover {
             transform: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border-color: rgba(71, 85, 105, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            border-color: rgba(139, 92, 246, 0.18);
         }
-        
+
         .game-type-icon {
             width: 3rem;
             height: 3rem;
@@ -58,7 +59,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         }
         
         .player-avatar {
@@ -85,16 +86,16 @@
             width: 0.75rem;
             height: 0.75rem;
             border-radius: 50%;
-            background: rgba(71, 85, 105, 0.3);
+            background: rgba(58, 47, 92, 0.6);
             transition: all 0.3s ease;
         }
-        
+
         .step-dot.active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
         }
-        
+
         .step-dot.completed {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
         }
         
         .step-content {
@@ -143,59 +144,61 @@
         }
         
         .scrollable-content::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.3);
+            background: rgba(31, 24, 54, 0.3);
         }
-        
+
         .scrollable-content::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.6);
+            background: rgba(139, 92, 246, 0.4);
             border-radius: 3px;
         }
-        
+
         .scrollable-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(71, 85, 105, 0.8);
+            background: rgba(139, 92, 246, 0.6);
         }
-        
+
         .mobile-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             height: 4rem;
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(23, 17, 41, 0.95);
             backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            border-top: 1px solid rgba(139, 92, 246, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 50;
             gap: 1rem;
         }
-        
+
         .mobile-nav a {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: #9ca3af;
             text-decoration: none;
             transition: all 0.3s ease;
             padding: 0.5rem;
             border-radius: 0.5rem;
             min-width: 60px;
+            min-height: 44px;
         }
-        
+
         .mobile-nav a.active {
-            color: #10b981;
+            color: #a78bfa;
         }
-        
+
         .mobile-nav a:hover {
-            background: rgba(71, 85, 105, 0.2);
+            background: rgba(139, 92, 246, 0.1);
         }
-        
+
         .mobile-nav .nav-apply {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
             color: white !important;
             padding: 0.75rem 1rem;
+            min-height: 44px;
             border-radius: 0.75rem;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -203,25 +206,25 @@
             border: none;
             min-width: auto;
         }
-        
+
         .mobile-nav .nav-apply:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
         }
-        
+
         .mobile-nav .nav-apply:disabled {
-            background: rgba(71, 85, 105, 0.6);
-            color: #94a3b8;
+            background: rgba(58, 47, 92, 0.6);
+            color: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-        
+
         .mobile-nav .nav-apply:disabled:hover {
             transform: none;
             box-shadow: none;
-            background: rgba(71, 85, 105, 0.6);
+            background: rgba(58, 47, 92, 0.6);
         }
         
         /* Responsive Anpassungen */
@@ -286,25 +289,25 @@
 {% endblock %}
 
 {% block body %}
-<div class="main-container bg-slate-900 text-slate-100">
+<div class="main-container bg-night-950 text-gray-100">
 
     <!-- Header -->
-    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
+    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-night-900/80 backdrop-blur-xl border-b border-party-purple/20">
         <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-party-teal rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                 </svg>
             </div>
             <div>
-                <h1 class="text-lg font-bold gradient-text">⇄ Punktetausch Joker</h1>
-                <p class="text-xs text-slate-400">{{ player.name }}</p>
+                <h1 class="text-lg font-bold gradient-text">🔄 Punktetausch Joker</h1>
+                <p class="text-xs text-gray-400">{{ player.name }}</p>
             </div>
         </div>
-        
+
         <div class="flex items-center space-x-2">
-            <span class="text-sm font-medium text-slate-300">{{ player.totalPoints }}</span>
-            <span class="text-xs text-slate-500">Punkte</span>
+            <span class="text-sm font-medium text-amber-300">✨ {{ player.totalPoints }}</span>
+            <span class="text-xs text-gray-500">Punkte</span>
         </div>
     </header>
 
@@ -317,8 +320,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"></path>
                     </svg>
                 </div>
-                <h2 class="text-xl font-bold text-slate-200 mb-2">Keine Spiele verfügbar</h2>
-                <p class="text-slate-400 text-sm mb-6">Alle Spiele bereits verwendet oder keine zukünftigen Spiele</p>
+                <h2 class="text-xl font-bold text-gray-200 mb-2">Keine Spiele verfügbar</h2>
+                <p class="text-gray-400 text-sm mb-6">Alle Spiele bereits verwendet oder keine zukünftigen Spiele</p>
             </div>
         </div>
     {% else %}
@@ -338,8 +341,8 @@
             <!-- Step 1: Game Selection -->
             <div class="step-content active" id="step1">
                 <div class="step-header">
-                    <h2 class="text-lg font-semibold text-slate-200 mb-1">Spiel auswählen</h2>
-                    <p class="text-sm text-slate-400">Wähle ein zukünftiges Spiel für den Punktetausch</p>
+                    <h2 class="text-lg font-semibold text-gray-200 mb-1">🔄 Spiel auswählen</h2>
+                    <p class="text-sm text-gray-400">Wähle ein zukünftiges Spiel für den Punktetausch</p>
                 </div>
                 
                 <div class="scrollable-content">
@@ -368,12 +371,12 @@
                                         </div>
                                         
                                         <div class="flex-1 min-w-0">
-                                            <div class="font-semibold text-slate-100 text-lg truncate">{{ gameData.game.name }}</div>
-                                            <div class="text-sm text-slate-400 mt-1">{{ gameData.game.gameTypeLabel }}</div>
+                                            <div class="font-semibold text-gray-100 text-lg truncate">{{ gameData.game.name }}</div>
+                                            <div class="text-sm text-gray-400 mt-1">{{ gameData.game.gameTypeLabel }}</div>
                                             {% if gameData.has_swap %}
-                                                <div class="text-sm text-red-400 font-medium mt-1">⇄ Joker bereits verwendet</div>
+                                                <div class="text-sm text-pink-300 font-medium mt-1">🔄 Joker bereits verwendet</div>
                                             {% else %}
-                                                <div class="text-sm text-emerald-400 font-medium mt-1">⇄ Joker verfügbar</div>
+                                                <div class="text-sm text-emerald-300 font-medium mt-1">🔄 Joker verfügbar</div>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -387,8 +390,8 @@
             <!-- Step 2: Player Selection -->
             <div class="step-content" id="step2">
                 <div class="step-header">
-                    <h2 class="text-lg font-semibold text-slate-200 mb-1">Spieler auswählen</h2>
-                    <p class="text-sm text-slate-400" id="selectedGameInfo">Tausch-Partner auswählen</p>
+                    <h2 class="text-lg font-semibold text-gray-200 mb-1">👥 Spieler auswählen</h2>
+                    <p class="text-sm text-gray-400" id="selectedGameInfo">Tausch-Partner auswählen</p>
                 </div>
                 
                 <div class="scrollable-content">
@@ -411,12 +414,12 @@
                                     </div>
                                     
                                     <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-100 text-lg truncate">{{ availablePlayer.name }}</div>
-                                        <div class="text-sm text-slate-400 mt-1">{{ availablePlayer.totalPoints }} Punkte</div>
+                                        <div class="font-semibold text-gray-100 text-lg truncate">{{ availablePlayer.name }}</div>
+                                        <div class="text-sm text-amber-300 mt-1">✨ {{ availablePlayer.totalPoints }} Punkte</div>
                                     </div>
-                                    
+
                                     <div class="text-right">
-                                        <div class="text-2xl">⇄</div>
+                                        <div class="text-2xl">🔄</div>
                                     </div>
                                 </div>
                             </label>
@@ -441,7 +444,7 @@
                 id="navApplyBtn"
                 disabled
                 onclick="submitForm()">
-            <span class="text-xs">⇄ Anwenden</span>
+            <span class="text-xs">🔄 Anwenden</span>
         </button>
     </div>
 </div>

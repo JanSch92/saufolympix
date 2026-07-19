@@ -5,11 +5,11 @@
 {% block body %}
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Turnier-Bracket</h1>
-                <p class="text-gray-600 mt-1">{{ game.name }}</p>
+                <h1 class="text-2xl font-bold text-gray-100">🏆 Turnier-Bracket</h1>
+                <p class="text-gray-400 mt-1">{{ game.getGameTypeEmoji() }} {{ game.name }}</p>
             </div>
             <div class="flex space-x-4">
                 <a href="{{ path('app_game_results', {id: game.id}) }}" 
@@ -25,11 +25,11 @@
     </div>
     
     <!-- Tournament Stats -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="card p-6 mb-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="text-center">
-                <div class="text-2xl font-bold text-gray-800">{{ tournament.bracketData.participants|length }}</div>
-                <div class="text-sm text-gray-600">
+                <div class="text-2xl font-bold text-gray-100">{{ tournament.bracketData.participants|length }}</div>
+                <div class="text-sm text-gray-400">
                     {% if game.gameType == 'tournament_team' %}
                         Teams
                     {% else %}
@@ -38,11 +38,11 @@
                 </div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold text-gray-800">{{ tournament.currentRound }}</div>
-                <div class="text-sm text-gray-600">Aktuelle Runde</div>
+                <div class="text-2xl font-bold text-gray-100">{{ tournament.currentRound }}</div>
+                <div class="text-sm text-gray-400">Aktuelle Runde</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold text-gray-800">
+                <div class="text-2xl font-bold text-gray-100">
                     {% set completedMatches = 0 %}
                     {% set totalMatches = 0 %}
                     {% for round in tournament.bracketData.rounds %}
@@ -61,28 +61,28 @@
                     {% endif %}
                     {{ completedMatches }}/{{ totalMatches }}
                 </div>
-                <div class="text-sm text-gray-600">Matches gespielt</div>
+                <div class="text-sm text-gray-400">Matches gespielt</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold {% if tournament.isCompleted %}text-green-600{% else %}text-orange-600{% endif %}">
+                <div class="text-2xl font-bold {% if tournament.isCompleted %}text-emerald-400{% else %}text-amber-400{% endif %}">
                     {% if tournament.isCompleted %}
                         ✅ Abgeschlossen
                     {% else %}
                         ⏳ Läuft
                     {% endif %}
                 </div>
-                <div class="text-sm text-gray-600">Status</div>
+                <div class="text-sm text-gray-400">Status</div>
             </div>
         </div>
     </div>
     
     <!-- Bracket Display -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="card p-6">
         <div class="tournament-bracket">
             <div class="bracket-rounds grid gap-8" style="grid-template-columns: repeat({{ tournament.bracketData.rounds|length }}, 1fr);">
                 {% for round in tournament.bracketData.rounds %}
                     <div class="round">
-                        <h3 class="text-lg font-bold mb-4 text-center">
+                        <h3 class="text-lg font-bold mb-4 text-center text-gray-100">
                             {% if loop.index == tournament.bracketData.rounds|length %}
                                 🏆 Finale
                             {% elseif loop.index == tournament.bracketData.rounds|length - 1 %}
@@ -93,12 +93,12 @@
                         </h3>
                         
                         {% for match in round %}
-                            <div class="match border-2 border-gray-300 rounded-lg p-4 mb-4 bg-white">
+                            <div class="match border-2 border-party-purple/25 rounded-lg p-4 mb-4 bg-night-800/60">
                                 <!-- Participant 1 -->
-                                <div class="participant mb-2 p-2 rounded {% if match.winner and match.winner.id == match.participant1.id %}bg-green-100 border-green-500{% else %}bg-gray-50{% endif %}">
+                                <div class="participant mb-2 p-2 rounded {% if match.winner and match.winner.id == match.participant1.id %}bg-emerald-500/15 border-emerald-500{% else %}bg-night-700/40{% endif %}">
                                     <span class="font-medium">{{ match.participant1.name ?? 'TBD' }}</span>
                                     {% if match.participant1 and match.participant1.total_points is defined %}
-                                        <span class="text-sm text-gray-600 ml-2">({{ match.participant1.total_points }} Punkte)</span>
+                                        <span class="text-sm text-gray-400 ml-2">({{ match.participant1.total_points }} Punkte)</span>
                                     {% endif %}
                                     {% if match.participant1 and match.participant1.type == 'team' %}
                                         <div class="text-xs text-gray-500 mt-1">
@@ -112,10 +112,10 @@
                                 <div class="text-center text-gray-400 text-sm">vs</div>
                                 
                                 <!-- Participant 2 -->
-                                <div class="participant mt-2 p-2 rounded {% if match.winner and match.winner.id == match.participant2.id %}bg-green-100 border-green-500{% else %}bg-gray-50{% endif %}">
+                                <div class="participant mt-2 p-2 rounded {% if match.winner and match.winner.id == match.participant2.id %}bg-emerald-500/15 border-emerald-500{% else %}bg-night-700/40{% endif %}">
                                     <span class="font-medium">{{ match.participant2.name ?? 'TBD' }}</span>
                                     {% if match.participant2 and match.participant2.total_points is defined %}
-                                        <span class="text-sm text-gray-600 ml-2">({{ match.participant2.total_points }} Punkte)</span>
+                                        <span class="text-sm text-gray-400 ml-2">({{ match.participant2.total_points }} Punkte)</span>
                                     {% endif %}
                                     {% if match.participant2 and match.participant2.type == 'team' %}
                                         <div class="text-xs text-gray-500 mt-1">
@@ -129,7 +129,7 @@
                                 <!-- Match Status -->
                                 {% if match.completed %}
                                     <div class="mt-3 text-center">
-                                        <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                        <span class="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 rounded-full text-sm font-medium">
                                             🏆 Gewinner: {{ match.winner.name }}
                                         </span>
                                     </div>
@@ -139,7 +139,7 @@
                                               method="POST" 
                                               class="space-y-2">
                                             <select name="winner_id" 
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                                                    class="w-full text-sm"
                                                     onchange="updateWinnerType(this)">
                                                 <option value="">Gewinner wählen</option>
                                                 <option value="{{ match.participant1.id }}" data-type="{{ match.participant1.type }}">
@@ -151,7 +151,7 @@
                                             </select>
                                             <input type="hidden" name="winner_type" value="player">
                                             <button type="submit" 
-                                                    class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                                    class="btn-primary w-full text-sm">
                                                 ✅ Ergebnis speichern
                                             </button>
                                         </form>
@@ -170,15 +170,15 @@
             <!-- Third Place Match -->
             {% if tournament.bracketData.thirdPlaceMatch is defined %}
                 <div class="third-place-match mt-8">
-                    <h3 class="text-lg font-bold mb-4 text-center">🥉 Spiel um Platz 3</h3>
+                    <h3 class="text-lg font-bold mb-4 text-center text-gray-100">🥉 Spiel um Platz 3</h3>
                     
                     {% set match = tournament.bracketData.thirdPlaceMatch %}
-                    <div class="match border-2 border-gray-300 rounded-lg p-4 bg-white max-w-md mx-auto">
+                    <div class="match border-2 border-party-purple/25 rounded-lg p-4 bg-night-800/60 max-w-md mx-auto">
                         <!-- Participant 1 -->
-                        <div class="participant mb-2 p-2 rounded {% if match.winner and match.winner.id == match.participant1.id %}bg-green-100 border-green-500{% else %}bg-gray-50{% endif %}">
+                        <div class="participant mb-2 p-2 rounded {% if match.winner and match.winner.id == match.participant1.id %}bg-emerald-500/15 border-emerald-500{% else %}bg-night-700/40{% endif %}">
                             <span class="font-medium">{{ match.participant1.name ?? 'TBD' }}</span>
                             {% if match.participant1 and match.participant1.total_points is defined %}
-                                <span class="text-sm text-gray-600 ml-2">({{ match.participant1.total_points }} Punkte)</span>
+                                <span class="text-sm text-gray-400 ml-2">({{ match.participant1.total_points }} Punkte)</span>
                             {% endif %}
                             {% if match.participant1 and match.participant1.type == 'team' %}
                                 <div class="text-xs text-gray-500 mt-1">
@@ -192,10 +192,10 @@
                         <div class="text-center text-gray-400 text-sm">vs</div>
                         
                         <!-- Participant 2 -->
-                        <div class="participant mt-2 p-2 rounded {% if match.winner and match.winner.id == match.participant2.id %}bg-green-100 border-green-500{% else %}bg-gray-50{% endif %}">
+                        <div class="participant mt-2 p-2 rounded {% if match.winner and match.winner.id == match.participant2.id %}bg-emerald-500/15 border-emerald-500{% else %}bg-night-700/40{% endif %}">
                             <span class="font-medium">{{ match.participant2.name ?? 'TBD' }}</span>
                             {% if match.participant2 and match.participant2.total_points is defined %}
-                                <span class="text-sm text-gray-600 ml-2">({{ match.participant2.total_points }} Punkte)</span>
+                                <span class="text-sm text-gray-400 ml-2">({{ match.participant2.total_points }} Punkte)</span>
                             {% endif %}
                             {% if match.participant2 and match.participant2.type == 'team' %}
                                 <div class="text-xs text-gray-500 mt-1">
@@ -209,7 +209,7 @@
                         <!-- Match Status -->
                         {% if match.completed %}
                             <div class="mt-3 text-center">
-                                <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                <span class="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 rounded-full text-sm font-medium">
                                     🥉 Gewinner: {{ match.winner.name }}
                                 </span>
                             </div>
@@ -219,7 +219,7 @@
                                       method="POST" 
                                       class="space-y-2">
                                     <select name="winner_id" 
-                                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                                            class="w-full text-sm"
                                             onchange="updateWinnerType(this)">
                                         <option value="">Gewinner wählen</option>
                                         <option value="{{ match.participant1.id }}" data-type="{{ match.participant1.type }}">
@@ -231,7 +231,7 @@
                                     </select>
                                     <input type="hidden" name="winner_type" value="player">
                                     <button type="submit" 
-                                            class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                            class="btn-primary w-full text-sm">
                                         ✅ Ergebnis speichern
                                     </button>
                                 </form>
@@ -249,13 +249,13 @@
     
     <!-- Tournament Results Preview -->
     {% if tournament.isCompleted %}
-        <div class="bg-white rounded-lg shadow-md p-6 mt-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">🏆 Turnier-Ergebnisse</h2>
+        <div class="card p-6 mt-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-6">🏆 Turnier-Ergebnisse</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {% set results = tournament.tournamentResults %}
                 {% for position, participant in results %}
-                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <div class="text-center p-4 bg-night-700/40 border border-gray-700/60 rounded-lg">
                         <div class="text-3xl mb-2">
                             {% if position == 1 %}🥇
                             {% elseif position == 2 %}🥈
@@ -263,8 +263,8 @@
                             {% else %}4️⃣
                             {% endif %}
                         </div>
-                        <div class="font-bold text-lg">{{ participant.name }}</div>
-                        <div class="text-sm text-gray-600">
+                        <div class="font-bold text-lg text-gray-100">{{ participant.name }}</div>
+                        <div class="text-sm text-gray-400">
                             {% if position == 1 %}1. Platz (8 Punkte)
                             {% elseif position == 2 %}2. Platz (6 Punkte)
                             {% elseif position == 3 %}3. Platz (4 Punkte)

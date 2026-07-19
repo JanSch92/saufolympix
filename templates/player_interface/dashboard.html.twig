@@ -34,16 +34,16 @@
         }
         
         .scrollable-content::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.3);
+            background: rgba(31, 24, 54, 0.3);
         }
-        
+
         .scrollable-content::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.6);
+            background: rgba(139, 92, 246, 0.4);
             border-radius: 3px;
         }
-        
+
         .scrollable-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(71, 85, 105, 0.8);
+            background: rgba(139, 92, 246, 0.6);
         }
         
         .mobile-nav {
@@ -52,29 +52,31 @@
             left: 0;
             right: 0;
             height: 4rem;
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(23, 17, 41, 0.95);
             backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(71, 85, 105, 0.3);
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3); /* Besserer Schatten */
+            border-top: 1px solid rgba(139, 92, 246, 0.25);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4); /* Besserer Schatten */
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 100; /* Höherer Z-Index */
         }
-        
+
         .mobile-nav a {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: #9ca3af;
             text-decoration: none;
             transition: color 0.3s ease;
             padding: 0.5rem;
+            min-height: 44px;
+            min-width: 44px;
         }
-        
+
         .mobile-nav a.active {
-            color: #10b981;
+            color: #a78bfa;
         }
         
         .status-dot {
@@ -91,8 +93,8 @@
         }
         
         .score-card {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            background: linear-gradient(135deg, #1f1836 0%, #2a2145 100%);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 2rem;
             padding: 2rem;
             text-align: center;
@@ -100,7 +102,7 @@
             overflow: hidden;
             margin-bottom: 1.5rem;
         }
-        
+
         .score-card::before {
             content: '';
             position: absolute;
@@ -108,26 +110,26 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #10b981, #06b6d4, #3b82f6, #8b5cf6);
+            background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b, #fbbf24);
             border-radius: 2rem 2rem 0 0;
         }
-        
+
         .score-number {
             font-size: 4rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             line-height: 1;
             margin-bottom: 0.5rem;
         }
-        
+
         .position-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 9999px;
@@ -144,9 +146,9 @@
         }
         
         .joker-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(31, 24, 54, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 1.5rem;
             padding: 1.5rem;
             text-align: center;
@@ -155,21 +157,21 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .joker-card.available {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
-            border-color: rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%);
+            border-color: rgba(139, 92, 246, 0.35);
         }
-        
+
         .joker-card.available:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.25);
+            border-color: rgba(139, 92, 246, 0.6);
         }
-        
+
         .joker-card.used {
-            background: rgba(71, 85, 105, 0.2);
-            border-color: rgba(71, 85, 105, 0.3);
+            background: rgba(58, 47, 92, 0.2);
+            border-color: rgba(139, 92, 246, 0.12);
             cursor: not-allowed;
             opacity: 0.7;
         }
@@ -187,16 +189,16 @@
         }
         
         .joker-card.available .joker-title {
-            color: #10b981;
+            color: #a78bfa;
         }
-        
+
         .joker-card.used .joker-title {
-            color: #94a3b8;
+            color: #9ca3af;
         }
-        
+
         .joker-subtitle {
             font-size: 0.75rem;
-            color: #64748b;
+            color: #9ca3af;
             margin-bottom: 0.5rem;
         }
         
@@ -212,76 +214,76 @@
         }
         
         .joker-card.available .joker-status {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
         }
-        
+
         .joker-card.used .joker-status {
-            background: rgba(71, 85, 105, 0.3);
-            color: #94a3b8;
+            background: rgba(58, 47, 92, 0.4);
+            color: #9ca3af;
         }
-        
+
         .game-status-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(31, 24, 54, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 1.5rem;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .game-status-header {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1rem;
-            color: #94a3b8;
+            color: #9ca3af;
             font-size: 0.875rem;
             font-weight: 600;
         }
-        
+
         .game-active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
             color: white;
             padding: 1rem;
             border-radius: 1rem;
             text-align: center;
         }
-        
+
         .game-next {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
             color: white;
             padding: 1rem;
             border-radius: 1rem;
             text-align: center;
         }
-        
+
         .game-finished {
-            background: rgba(71, 85, 105, 0.3);
-            color: #94a3b8;
+            background: rgba(58, 47, 92, 0.35);
+            color: #9ca3af;
             padding: 1rem;
             border-radius: 1rem;
             text-align: center;
         }
-        
+
         .ranking-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(31, 24, 54, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.18);
             border-radius: 1.5rem;
             padding: 1.5rem;
         }
-        
+
         .ranking-header {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1rem;
-            color: #94a3b8;
+            color: #9ca3af;
             font-size: 0.875rem;
             font-weight: 600;
         }
-        
+
         .ranking-item {
             display: flex;
             align-items: center;
@@ -289,20 +291,20 @@
             padding: 0.75rem;
             border-radius: 0.75rem;
             margin-bottom: 0.5rem;
-            background: rgba(51, 65, 85, 0.3);
-            border: 1px solid rgba(71, 85, 105, 0.2);
+            background: rgba(42, 33, 69, 0.4);
+            border: 1px solid rgba(139, 92, 246, 0.12);
         }
-        
+
         .ranking-item.you {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
-            border-color: rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%);
+            border-color: rgba(139, 92, 246, 0.45);
         }
-        
+
         .ranking-position {
             width: 2rem;
             height: 2rem;
             border-radius: 0.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
             color: white;
             display: flex;
             align-items: center;
@@ -311,21 +313,21 @@
             font-weight: 700;
             margin-right: 0.75rem;
         }
-        
+
         .ranking-name {
             flex: 1;
             font-weight: 600;
-            color: #e2e8f0;
+            color: #e5e7eb;
         }
-        
+
         .ranking-points {
             font-weight: 700;
-            color: #e2e8f0;
+            color: #fbbf24;
         }
-        
+
         .split-steal-container {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            background: linear-gradient(135deg, #1f1836 0%, #2a2145 100%);
+            border: 1px solid rgba(245, 158, 11, 0.35);
             border-radius: 1.5rem;
             padding: 2rem;
             text-align: center;
@@ -354,15 +356,16 @@
         
         .split-btn, .steal-btn {
             padding: 1rem;
+            min-height: 44px;
             border-radius: 0.75rem;
             font-weight: 700;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
         }
-        
+
         .split-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
             color: white;
         }
         
@@ -392,17 +395,17 @@
         
         .loading-indicator {
             text-align: center;
-            color: #64748b;
+            color: #9ca3af;
             padding: 1rem;
         }
-        
+
         .error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: 0.75rem;
             padding: 1rem;
             margin-bottom: 1rem;
-            color: #ef4444;
+            color: #fca5a5;
             font-size: 0.875rem;
         }
         
@@ -470,12 +473,12 @@
 <!-- Flash-Messages aus Session entfernen -->
 {% set _ = app.session.flashbag.clear() %}
 
-<div class="main-container bg-slate-900 text-slate-100">
+<div class="main-container bg-night-950 text-gray-100">
 
     <!-- Header -->
-    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50">
+    <header class="flex-shrink-0 h-16 flex items-center justify-between px-4 bg-night-900/80 backdrop-blur-xl border-b border-party-purple/20">
         <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-gradient-to-br from-party-purple to-party-pink rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
@@ -484,10 +487,10 @@
                 <h1 id="player-name" class="text-lg font-bold gradient-text">
                     {% if player is defined %}{{ player.name }}{% else %}Lade...{% endif %}
                 </h1>
-                <p class="text-xs text-slate-400">{{ olympix.name }}</p>
+                <p class="text-xs text-gray-400">🍻 {{ olympix.name }}</p>
             </div>
         </div>
-        
+
         <div class="flex items-center space-x-2">
             <div class="status-dot"></div>
             <span class="text-xs text-emerald-400 font-medium">Live</span>
@@ -502,14 +505,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold gradient-text mb-2">Split or Steal</h2>
-            <div class="text-sm text-slate-400 mb-4">
-                <span id="points-at-stake">0</span> Punkte im Spiel
+            <h2 class="text-xl font-bold gradient-text mb-2">🤝 Split or Steal</h2>
+            <div class="text-sm text-gray-400 mb-4">
+                ✨ <span id="points-at-stake">0</span> Punkte im Spiel
             </div>
-            
-            <div class="bg-slate-800/40 rounded-lg p-4 mb-6">
-                <div class="text-sm text-slate-400 mb-2">Dein Gegner</div>
-                <div id="opponent-name" class="text-lg font-bold text-slate-100">Lade...</div>
+
+            <div class="bg-night-700/40 rounded-lg p-4 mb-6">
+                <div class="text-sm text-gray-400 mb-2">Dein Gegner</div>
+                <div id="opponent-name" class="text-lg font-bold text-gray-100">Lade...</div>
             </div>
             
             <div id="choice-buttons" class="split-steal-buttons">
@@ -530,10 +533,10 @@
             </div>
             
             <div id="match-result" class="hidden">
-                <div class="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mt-4">
-                    <div class="font-semibold text-blue-400 mb-2">Ergebnis</div>
-                    <div id="result-description" class="text-blue-300 text-sm mb-2"></div>
-                    <div id="points-earned" class="text-lg font-bold text-blue-100"></div>
+                <div class="bg-party-purple/20 border border-party-purple/30 rounded-lg p-4 mt-4">
+                    <div class="font-semibold text-purple-300 mb-2">🏁 Ergebnis</div>
+                    <div id="result-description" class="text-purple-200 text-sm mb-2"></div>
+                    <div id="points-earned" class="text-lg font-bold text-amber-300"></div>
                 </div>
             </div>
         </div>
@@ -544,7 +547,7 @@
         
         <!-- Score Card -->
         <div class="score-card">
-            <div class="text-sm text-slate-400 mb-2">Deine Punkte</div>
+            <div class="text-sm text-gray-400 mb-2">✨ Deine Punkte</div>
             <div id="player-points" class="score-number">
                 {% if player is defined %}{{ player.totalPoints }}{% else %}0{% endif %}
             </div>
@@ -570,17 +573,17 @@
         
         <!-- Joker Cards -->
         <div class="joker-grid">
-            <div id="double-joker-card" onclick="navigateToDoubleJoker()" 
+            <div id="double-joker-card" onclick="navigateToDoubleJoker()"
                  class="joker-card available">
-                <div class="joker-icon">🔥</div>
-                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-icon">🃏</div>
+                <div class="joker-title">✖️2 Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Verfügbar</div>
             </div>
-            
-            <div id="swap-joker-card" onclick="navigateToSwapJoker()" 
+
+            <div id="swap-joker-card" onclick="navigateToSwapJoker()"
                  class="joker-card available">
-                <div class="joker-icon">⇄</div>
+                <div class="joker-icon">🔄</div>
                 <div class="joker-title">Punktetausch</div>
                 <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
                 <div class="joker-status">Verfügbar</div>
@@ -595,7 +598,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
-                <span>Aktuelles Spiel</span>
+                <span>▶️ Aktuelles Spiel</span>
             </div>
             
             <div id="game-status">
@@ -638,7 +641,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                 </svg>
-                <span>Live-Rangliste</span>
+                <span>👑 Live-Rangliste</span>
             </div>
             
             <div id="ranking-list">
@@ -1042,8 +1045,8 @@
             doubleCard.className = 'joker-card available';
             doubleCard.onclick = () => navigateToDoubleJoker();
             doubleCard.innerHTML = `
-                <div class="joker-icon">🔥</div>
-                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-icon">🃏</div>
+                <div class="joker-title">✖️2 Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Verfügbar</div>
             `;
@@ -1052,8 +1055,8 @@
             doubleCard.onclick = null;
             const usedFor = jokerData.doubleUsedFor ? `für ${jokerData.doubleUsedFor}` : '';
             doubleCard.innerHTML = `
-                <div class="joker-icon">🔥</div>
-                <div class="joker-title">Doppelte Punkte</div>
+                <div class="joker-icon">🃏</div>
+                <div class="joker-title">✖️2 Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Genutzt ${usedFor}</div>
             `;
@@ -1064,7 +1067,7 @@
             swapCard.className = 'joker-card available';
             swapCard.onclick = () => navigateToSwapJoker();
             swapCard.innerHTML = `
-                <div class="joker-icon">⇄</div>
+                <div class="joker-icon">🔄</div>
                 <div class="joker-title">Punktetausch</div>
                 <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
                 <div class="joker-status">Verfügbar</div>
@@ -1074,7 +1077,7 @@
             swapCard.onclick = null;
             const usedFor = jokerData.swapUsedFor ? `für ${jokerData.swapUsedFor}` : '';
             swapCard.innerHTML = `
-                <div class="joker-icon">⇄</div>
+                <div class="joker-icon">🔄</div>
                 <div class="joker-title">Punktetausch</div>
                 <div class="joker-subtitle">Tausche Punkte mit einem Spieler</div>
                 <div class="joker-status">Genutzt ${usedFor}</div>
