@@ -1,87 +1,30 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Saufolympix – Die Trinkspiel-Olympiade{% endblock %}
+{% block title %}Saufolympix{% endblock %}
 
 {% block body %}
-<div class="min-h-screen">
-    <!-- Hero Section -->
-    <div class="relative overflow-hidden">
-        <div class="max-w-7xl mx-auto">
-            <div class="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                    <div class="sm:text-center lg:text-left">
-                        <h1 class="text-4xl tracking-tight font-extrabold text-gray-100 sm:text-5xl md:text-6xl">
-                            <span class="block xl:inline">Willkommen bei der</span>
-                            <span class="block gradient-text xl:inline">Saufolympix</span>
-                        </h1>
-                        <p class="mt-3 text-base text-gray-400 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            Die Trinkspiel-Olympiade für euren Abend: Quiz, Stoppuhr, Turniere, Split or Steal und mehr.
-                            Mit Live-Rangliste, Joker-System und Teilnahme direkt am Handy — einmal scannen, mitspielen, gewinnen.
-                        </p>
-                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                            <div>
-                                <a href="#create-olympix"
-                                   class="btn-primary w-full md:py-4 md:text-lg md:px-10">
-                                    Saufolympix starten
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        </div>
-        <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-            <div class="h-56 w-full bg-gradient-to-r from-party-purple via-party-pink to-party-amber sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
-                <div class="text-center text-white">
-                    <h2 class="text-2xl font-bold">Saufolympix</h2>
-                    <p class="text-lg">Ein Abend. Viele Spiele. Ein Sieger.</p>
-                </div>
-            </div>
-        </div>
+<div class="max-w-3xl mx-auto py-8">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-100">Saufolympix</h1>
     </div>
 
-    <!-- Recent Olympix -->
+    <!-- Laufende Saufolympix -->
     {% if recent_olympix|length > 0 %}
-    <div class="max-w-7xl mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-100">Laufende Saufolympix</h2>
-            <p class="text-lg text-gray-400 mt-2">Springe direkt zu deiner Runde</p>
-        </div>
+    <div class="mb-10">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Laufende Saufolympix</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="space-y-3">
             {% for olympix in recent_olympix %}
-                <div class="card player-card p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-gray-100">{{ olympix.name }}</h3>
-                        <span class="px-3 py-1 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 rounded-full text-sm font-medium">
-                            Aktiv
-                        </span>
-                    </div>
-
-                    <div class="space-y-2 mb-6 text-sm text-gray-400">
-                        <div class="flex justify-between">
-                            <span>Spieler:</span>
-                            <span class="font-semibold">{{ olympix.players|length }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Spiele:</span>
-                            <span class="font-semibold">{{ olympix.games|length }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Erstellt:</span>
-                            <span class="font-semibold">{{ olympix.createdAt|date('d.m.Y') }}</span>
+                <div class="card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <div class="text-lg font-semibold text-gray-100">{{ olympix.name }}</div>
+                        <div class="text-sm text-gray-400">
+                            {{ olympix.players|length }} Spieler · {{ olympix.games|length }} Spiele · {{ olympix.createdAt|date('d.m.Y') }}
                         </div>
                     </div>
-
-                    <div class="flex space-x-2">
-                        <a href="{{ path('app_show_olympix', {id: olympix.id}) }}"
-                           class="btn-secondary flex-1 text-center">
-                            Anzeigen
-                        </a>
-                        <a href="{{ path('app_game_admin', {id: olympix.id}) }}"
-                           class="btn-primary flex-1 text-center">
-                            Verwalten
-                        </a>
+                    <div class="flex gap-2 shrink-0">
+                        <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" class="btn-secondary">Live-Anzeige</a>
+                        <a href="{{ path('app_game_admin', {id: olympix.id}) }}" class="btn-primary">Verwalten</a>
                     </div>
                 </div>
             {% endfor %}
@@ -89,148 +32,21 @@
     </div>
     {% endif %}
 
-    <!-- Features -->
-    <div class="max-w-7xl mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-100">Spielmodi</h2>
-            <p class="text-lg text-gray-400 mt-2">Sieben Modi für einen langen Abend</p>
-        </div>
+    <!-- Neue Saufolympix erstellen -->
+    <div id="create-olympix" class="card p-6">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Neue Saufolympix erstellen</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Free For All</h3>
-                <p class="text-sm text-gray-400">Alle Spieler gleichzeitig, Platzierung bestimmt Punkte</p>
+        <form action="{{ path('app_create_olympix') }}" method="POST">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text"
+                       id="name"
+                       name="name"
+                       required
+                       placeholder="Name, z.B. Sauf-WM 2026"
+                       class="w-full text-lg">
+                <button type="submit" class="btn-primary shrink-0">Erstellen</button>
             </div>
-
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Turniere</h3>
-                <p class="text-sm text-gray-400">Einzel oder Team-Turniere mit Bracket-System</p>
-            </div>
-
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Quiz</h3>
-                <p class="text-sm text-gray-400">10 automatisch generierte Schätzfragen, Frage für Frage am Handy</p>
-            </div>
-
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Stoppuhr</h3>
-                <p class="text-sm text-gray-400">Blind stoppen: Wer der geheimen Zielzeit am nächsten kommt, gewinnt</p>
-            </div>
-
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Split or Steal</h3>
-                <p class="text-sm text-gray-400">Psychologisches Spiel: Kooperation oder Verrat?</p>
-            </div>
-
-            <!-- *** NEU: GAMECHANGER FEATURE CARD *** -->
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Gamechanger</h3>
-                <p class="text-sm text-gray-400">Schnelles Spiel: Jeder wirft einmal, treffe deine Punkte für Bonus!</p>
-            </div>
-
-            <div class="card player-card p-6 text-center">
-                <h3 class="text-lg font-semibold text-gray-100 mb-2">Joker</h3>
-                <p class="text-sm text-gray-400">Doppelte Punkte oder Punkte tauschen</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- How it works -->
-    <div class="max-w-7xl mx-auto px-4 py-16">
-        <div class="card p-8">
-            <h2 class="text-2xl font-bold text-gray-100 mb-6 text-center">So funktioniert's</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-party-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-xl font-bold text-purple-300">1</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Olympix erstellen</h3>
-                    <p class="text-gray-400">Gib deinem Olympix einen Namen und füge Spieler hinzu</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-xl font-bold text-emerald-300">2</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Spiele konfigurieren</h3>
-                    <p class="text-gray-400">Erstelle verschiedene Spiele und lege die Punkteverteilung fest</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-party-pink/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-xl font-bold text-pink-300">3</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-100 mb-2">Spielen & Gewinnen</h3>
-                    <p class="text-gray-400">Führe die Spiele durch und verfolge die Ergebnisse live</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Olympix Section -->
-    <div id="create-olympix" class="max-w-7xl mx-auto px-4 py-16">
-        <div class="card card-highlight p-8">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-100">Neue Saufolympix erstellen</h2>
-                <p class="text-lg text-gray-400 mt-2">Starte jetzt euren Spieleabend</p>
-            </div>
-
-            <form action="{{ path('app_create_olympix') }}" method="POST" class="max-w-md mx-auto">
-                <div class="mb-6">
-                    <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
-                        Name eurer Saufolympix *
-                    </label>
-                    <input type="text"
-                           id="name"
-                           name="name"
-                           required
-                           placeholder="z.B. Sauf-WM 2026, WG-Olympiade, JGA Malle"
-                           class="w-full text-lg">
-                </div>
-
-                <button type="submit"
-                        class="btn-primary w-full text-lg">
-                    Saufolympix erstellen
-                </button>
-            </form>
-
-            <div class="mt-8 text-center text-sm text-gray-500">
-                <p>Kostenlos • Keine Registrierung erforderlich • Sofort loslegen</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Features Overview -->
-    <div class="max-w-7xl mx-auto px-4 py-16">
-        <div class="bg-gradient-to-r from-party-purple to-party-pink rounded-2xl shadow-lg p-8 text-white">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold mb-4">Warum Saufolympix?</h2>
-                <p class="text-lg opacity-90">Alles für einen legendären Spieleabend</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="text-center">
-                    <h4 class="font-semibold mb-2">Mobile-First</h4>
-                    <p class="text-sm opacity-80">Optimiert für Smartphones und Tablets</p>
-                </div>
-
-                <div class="text-center">
-                    <h4 class="font-semibold mb-2">Live-Updates</h4>
-                    <p class="text-sm opacity-80">Echtzeit-Ranglisten und Ergebnisse</p>
-                </div>
-
-                <div class="text-center">
-                    <h4 class="font-semibold mb-2">Vielfältig</h4>
-                    <p class="text-sm opacity-80">Sieben Spielmodi von Quiz bis Stoppuhr</p>
-                </div>
-
-                <div class="text-center">
-                    <h4 class="font-semibold mb-2">Flexibel</h4>
-                    <p class="text-sm opacity-80">Anpassbare Punkteverteilung und Regeln</p>
-                </div>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 {% endblock %}
