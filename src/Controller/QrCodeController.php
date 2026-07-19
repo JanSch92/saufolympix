@@ -11,6 +11,7 @@ use App\Repository\GameRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class QrCodeController extends AbstractController
 {
@@ -28,11 +29,11 @@ class QrCodeController extends AbstractController
         }
 
         if ($game->isQuizGame()) {
-            $url = $this->generateUrl('app_quiz_mobile', ['gameId' => $gameId], true);
+            $url = $this->generateUrl('app_quiz_mobile', ['gameId' => $gameId], UrlGeneratorInterface::ABSOLUTE_URL);
         } elseif ($game->isStopwatchGame()) {
-            $url = $this->generateUrl('app_stopwatch_mobile', ['gameId' => $gameId], true);
+            $url = $this->generateUrl('app_stopwatch_mobile', ['gameId' => $gameId], UrlGeneratorInterface::ABSOLUTE_URL);
         } else {
-            $url = $this->generateUrl('app_player_access', ['olympixId' => $game->getOlympix()->getId()], true);
+            $url = $this->generateUrl('app_player_access', ['olympixId' => $game->getOlympix()->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         }
 
         return $this->renderQrPng($url);
@@ -42,8 +43,8 @@ class QrCodeController extends AbstractController
     public function generateQrCode(string $olympixId): Response
     {
         try {
-            // URL generieren, die im QR Code enthalten sein soll
-            $url = $this->generateUrl('app_player_access', ['olympixId' => $olympixId], true);
+            // URL generieren, die im QR Code enthalten sein soll (absolute URL inkl. Domain!)
+            $url = $this->generateUrl('app_player_access', ['olympixId' => $olympixId], UrlGeneratorInterface::ABSOLUTE_URL);
 
             return $this->renderQrPng($url);
         } catch (\Exception $e) {
