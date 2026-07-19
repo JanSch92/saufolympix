@@ -55,7 +55,7 @@ class GamechangerThrowRepository extends ServiceEntityRepository
     }
 
     /**
-     * GEFIXT: Prüft ob Spieler tatsächlich geworfen hat (thrownPoints > 0)
+     * Prüft ob Spieler tatsächlich geworfen hat (isProcessed) — 0-Punkte-Fehlwürfe zählen
      */
     public function hasPlayerThrown(int $gameId, int $playerId): bool
     {
@@ -63,7 +63,7 @@ class GamechangerThrowRepository extends ServiceEntityRepository
             ->select('COUNT(gt.id)')
             ->andWhere('gt.game = :gameId')
             ->andWhere('gt.player = :playerId')
-            ->andWhere('gt.thrownPoints > 0') // NUR echte Würfe!
+            ->andWhere('gt.isProcessed = true') // Nur echte Würfe (auch 0-Punkte-Fehlwürfe zählen)
             ->setParameter('gameId', $gameId)
             ->setParameter('playerId', $playerId)
             ->getQuery()
@@ -73,14 +73,14 @@ class GamechangerThrowRepository extends ServiceEntityRepository
     }
 
     /**
-     * GEFIXT: Zählt nur echte Würfe (thrownPoints > 0)
+     * Zählt nur echte Würfe (isProcessed) — 0-Punkte-Fehlwürfe zählen
      */
     public function getThrowsCount(int $gameId): int
     {
         return $this->createQueryBuilder('gt')
             ->select('COUNT(gt.id)')
             ->andWhere('gt.game = :gameId')
-            ->andWhere('gt.thrownPoints > 0') // NUR echte Würfe!
+            ->andWhere('gt.isProcessed = true') // Nur echte Würfe (auch 0-Punkte-Fehlwürfe zählen)
             ->setParameter('gameId', $gameId)
             ->getQuery()
             ->getSingleScalarResult();
@@ -113,7 +113,7 @@ class GamechangerThrowRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('gt')
             ->andWhere('gt.game = :gameId')
             ->andWhere('gt.player = :playerId')
-            ->andWhere('gt.thrownPoints = 0') // Platzhalter haben 0 Punkte
+            ->andWhere('gt.isProcessed = false') // Platzhalter sind noch nicht verarbeitet
             ->setParameter('gameId', $gameId)
             ->setParameter('playerId', $playerId)
             ->getQuery()
@@ -124,7 +124,7 @@ class GamechangerThrowRepository extends ServiceEntityRepository
     {
         $throws = $this->createQueryBuilder('gt')
             ->andWhere('gt.game = :gameId')
-            ->andWhere('gt.thrownPoints > 0') // NUR echte Würfe!
+            ->andWhere('gt.isProcessed = true') // Nur echte Würfe (auch 0-Punkte-Fehlwürfe zählen)
             ->setParameter('gameId', $gameId)
             ->getQuery()
             ->getResult();
@@ -157,7 +157,7 @@ class GamechangerThrowRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('gt')
             ->andWhere('gt.game = :gameId')
-            ->andWhere('gt.thrownPoints > 0') // NUR echte Würfe!
+            ->andWhere('gt.isProcessed = true') // Nur echte Würfe (auch 0-Punkte-Fehlwürfe zählen)
             ->setParameter('gameId', $gameId)
             ->orderBy('gt.thrownAt', 'DESC')
             ->setMaxResults(1)

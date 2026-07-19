@@ -125,6 +125,47 @@ class GameTypesFlowTest extends FunctionalTestCase
         $this->assertSame(26, $totals[$players[2]->getId()], '30 - 4 (getroffen worden)');
     }
 
+    public function testGamechangerZeroThrowCountsAsMiss(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $players[0]->setTotalPoints(10);
+        $players[1]->setTotalPoints(20);
+        $this->entityManager->flush();
+
+        $game = $this->createGame($olympix, 'gamechanger');
+        $this->client->request('POST', '/gamechanger/setup/' . $game->getId());
+
+        // Spieler 1 verfehlt alles: 0 Punkte geworfen — muss trotzdem als Wurf zählen
+        $this->client->request('POST', '/gamechanger/throw/' . $game->getId(), [
+            'player_id' => $players[0]->getId(),
+            'thrown_points' => 0,
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertTrue($data['success']);
+
+        // Derselbe Spieler darf NICHT nochmal werfen
+        $this->client->request('POST', '/gamechanger/throw/' . $game->getId(), [
+            'player_id' => $players[0]->getId(),
+            'thrown_points' => 5,
+        ]);
+        $again = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertFalse($again['success'], 'Ein 0-Punkte-Wurf zählt als Wurf — kein zweiter Versuch');
+
+        // Spieler 2 wirft -> Spiel muss abgeschlossen sein
+        $this->client->request('POST', '/gamechanger/throw/' . $game->getId(), [
+            'player_id' => $players[1]->getId(),
+            'thrown_points' => 3,
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertTrue($data['success']);
+        $this->assertTrue($data['is_game_complete'], 'Spiel muss auch mit einem 0-Punkte-Wurf abgeschlossen werden');
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted());
+    }
+
     public function testTournamentSingleFullFlow(): void
     {
         $olympix = $this->createOlympix();

@@ -669,10 +669,10 @@ class Game
                 $totalPlayers = $this->olympix->getPlayers()->count();
                 if ($totalPlayers === 0) return 0;
 
-                // GEFIXT: Zähle nur echte Würfe (thrownPoints > 0)
+                // Zähle nur echte Würfe (isProcessed) — auch 0-Punkte-Fehlwürfe zählen
                 $realThrows = 0;
                 foreach ($this->gamechangerThrows as $throw) {
-                    if ($throw->getThrownPoints() > 0) {
+                    if ($throw->isProcessed()) {
                         $realThrows++;
                     }
                 }
