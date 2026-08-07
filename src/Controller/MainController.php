@@ -26,10 +26,21 @@ class MainController extends AbstractController
     #[Route('/', name: 'app_index')]
     public function index(): Response
     {
-        $recentOlympix = $this->olympixRepository->findActiveOlympix();
+        $allOlympix = $this->olympixRepository->findBy([], ['createdAt' => 'DESC']);
+
+        $running = [];
+        $finished = [];
+        foreach ($allOlympix as $olympix) {
+            if ($olympix->isCompleted()) {
+                $finished[] = $olympix;
+            } else {
+                $running[] = $olympix;
+            }
+        }
 
         return $this->render('main/index.html.twig', [
-            'recent_olympix' => $recentOlympix,
+            'recent_olympix' => $running,
+            'finished_olympix' => $finished,
         ]);
     }
 
@@ -125,6 +136,8 @@ class MainController extends AbstractController
             'players' => $players,
             'current_game' => $currentGame,
             'next_game' => $nextGame,
+            'is_completed' => $olympix->isCompleted(),
+            'leading_player' => $olympix->getLeadingPlayer(),
         ]);
     }
 
@@ -354,6 +367,8 @@ class MainController extends AbstractController
             'olympix' => [
                 'id' => $olympix->getId(),
                 'name' => $olympix->getName(),
+                'is_completed' => $olympix->isCompleted(),
+                'leading_player' => $olympix->getLeadingPlayer()?->getName(),
             ],
             'players' => $players,
             'current_game' => $gameData,

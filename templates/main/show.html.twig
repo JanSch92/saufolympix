@@ -396,17 +396,25 @@
               {% if current_game %}
               <h3 class="text-xl font-semibold text-gray-100">{{ current_game.name }}</h3>
               <p class="text-sm text-gray-400 uppercase tracking-wide">{{ current_game.gameType|replace({'_':' '}) }}</p>
+              {% elseif is_completed %}
+              <h3 class="text-xl font-semibold text-amber-400">🏆 Olympix beendet!</h3>
+              <p class="text-sm text-gray-400">{{ leading_player ? 'Sieger: ' ~ leading_player.name ~ ' (' ~ leading_player.totalPoints ~ ' Punkte)' : 'Endstand siehe Rangliste' }}</p>
               {% else %}
               <h3 class="text-xl font-semibold text-gray-400">Kein aktives Spiel</h3>
               <p class="text-sm text-gray-500">Warten auf nächsten Wettkampf</p>
               {% endif %}
             </div>
           </div>
-          
+
           {% if current_game %}
           <div class="status-indicator">
             <div class="status-dot active"></div>
             <span class="text-sm font-medium text-emerald-400 uppercase tracking-wide">Live</span>
+          </div>
+          {% elseif is_completed %}
+          <div class="status-indicator">
+            <div class="status-dot" style="background-color:#fbbf24"></div>
+            <span class="text-sm font-medium text-amber-400 uppercase tracking-wide">Beendet</span>
           </div>
           {% endif %}
         </div>
@@ -1525,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // Update current game
-      updateCurrentGame(data.current_game);
+      updateCurrentGame(data.current_game, data.olympix);
       
       // Update game results
       updateGameResults(data.game_results);

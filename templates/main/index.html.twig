@@ -36,6 +36,37 @@
     </div>
     {% endif %}
 
+    <!-- Abgeschlossene Saufolympix -->
+    {% if finished_olympix is defined and finished_olympix|length > 0 %}
+    <div class="mb-10">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Abgeschlossene Saufolympix</h2>
+
+        <div class="space-y-3">
+            {% for olympix in finished_olympix %}
+                <div class="card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 opacity-90">
+                    <div>
+                        <div class="text-lg font-semibold text-gray-100">{{ olympix.name }}</div>
+                        <div class="text-sm text-gray-400">
+                            {% set leader = olympix.leadingPlayer %}
+                            {% if leader %}
+                                Sieger: <span class="text-amber-400 font-semibold">{{ leader.name }} ({{ leader.totalPoints }} P)</span> ·
+                            {% endif %}
+                            {{ olympix.players|length }} Spieler · {{ olympix.games|length }} Spiele · {{ olympix.createdAt|date('d.m.Y') }}
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" class="btn-secondary">Endstand</a>
+                        <form action="{{ path('app_copy_olympix', {id: olympix.id}) }}" method="POST"
+                              onsubmit="return confirm('Olympix mit allen Spielern und Spielen kopieren?')">
+                            <button type="submit" class="btn-primary">Kopieren</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Neue Saufolympix erstellen -->
     <div id="create-olympix" class="card p-6">
         <h2 class="text-xl font-bold text-gray-100 mb-4">Neue Saufolympix erstellen</h2>
