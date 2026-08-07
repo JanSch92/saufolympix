@@ -55,14 +55,21 @@
         
         {% if players|length > 0 %}
             <div class="space-y-4">
+                {% set sharedPosition = 0 %}
+                {% set lastPoints = null %}
                 {% for player in players %}
+                    {# Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4) #}
+                    {% if lastPoints is null or player.totalPoints != lastPoints %}
+                        {% set sharedPosition = loop.index %}
+                        {% set lastPoints = player.totalPoints %}
+                    {% endif %}
                     <div class="player-card bg-night-700/40 border border-gray-700/60 rounded-lg p-4 flex items-center justify-between">
                         <div class="flex items-center space-x-4">
-                            <div class="ranking-badge {% if loop.index == 1 %}ranking-1{% elseif loop.index == 2 %}ranking-2{% elseif loop.index == 3 %}ranking-3{% else %}ranking-default{% endif %}">
-                                {{ loop.index }}
+                            <div class="ranking-badge {% if sharedPosition == 1 %}ranking-1{% elseif sharedPosition == 2 %}ranking-2{% elseif sharedPosition == 3 %}ranking-3{% else %}ranking-default{% endif %}">
+                                {{ sharedPosition }}
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-100">{% if loop.index == 1 %}{% elseif loop.index == 2 %}{% elseif loop.index == 3 %}{% endif %}{{ player.name }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-100">{{ player.name }}</h3>
                                 <div class="flex items-center space-x-2 mt-1">
                                     <span class="text-sm text-amber-300">{{ player.totalPoints }} Punkte</span>
                                     <span class="text-sm text-gray-500">•</span>

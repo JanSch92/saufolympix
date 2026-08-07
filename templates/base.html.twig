@@ -552,14 +552,20 @@
             function updatePlayersRanking(players) {
                 const container = document.getElementById('players-ranking');
                 let html = '';
+                let lastPoints = null;
+                let lastPosition = 0;
 
                 players.forEach((player, index) => {
-                    const rankingClass = index === 0 ? 'ranking-1' : index === 1 ? 'ranking-2' : index === 2 ? 'ranking-3' : 'ranking-default';
+                    // Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4)
+                    const position = (lastPoints !== null && player.total_points === lastPoints) ? lastPosition : index + 1;
+                    lastPoints = player.total_points;
+                    lastPosition = position;
+                    const rankingClass = position === 1 ? 'ranking-1' : position === 2 ? 'ranking-2' : position === 3 ? 'ranking-3' : 'ranking-default';
 
                     html += `
                         <div class="player-card card p-6 flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <div class="ranking-badge ${rankingClass}">${index + 1}</div>
+                                <div class="ranking-badge ${rankingClass}">${position}</div>
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-100">${player.name}</h3>
                                     <div class="flex items-center space-x-2 mt-1">

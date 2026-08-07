@@ -348,14 +348,21 @@
         </div>
         
         <div class="overflow-y-auto custom-scrollbar p-4 space-y-3" id="players-ranking">
+          {% set sharedPosition = 0 %}
+          {% set lastPoints = null %}
           {% for player in players %}
+          {# Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4) #}
+          {% if lastPoints is null or player.totalPoints != lastPoints %}
+            {% set sharedPosition = loop.index %}
+            {% set lastPoints = player.totalPoints %}
+          {% endif %}
           <div class="flex items-center p-4 bg-night-800/60 hover:bg-night-700/60 rounded-lg transition-all duration-200 border border-party-purple/15 hover:border-party-purple/40">
             <div class="flex-none w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold
-              {% if loop.index == 1 %}bg-[#d3a625] text-[#1c1917]
-              {% elseif loop.index == 2 %}bg-[#9ca3af] text-[#1f2937]
-              {% elseif loop.index == 3 %}bg-[#a16207] text-white
+              {% if sharedPosition == 1 %}bg-[#d3a625] text-[#1c1917]
+              {% elseif sharedPosition == 2 %}bg-[#9ca3af] text-[#1f2937]
+              {% elseif sharedPosition == 3 %}bg-[#a16207] text-white
               {% else %}bg-night-600/80 text-gray-400{% endif %}">
-              {{ loop.index }}
+              {{ sharedPosition }}
             </div>
             
             <div class="flex-1 mx-4 min-w-0">
@@ -687,8 +694,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!container || !Array.isArray(players)) return;
     
     let html = '';
+    let lastPoints = null;
+    let lastPosition = 0;
     players.forEach((player, index) => {
-      const position = index + 1;
+      // Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4)
+      const points = player.total_points || 0;
+      const position = (lastPoints !== null && points === lastPoints) ? lastPosition : index + 1;
+      lastPoints = points;
+      lastPosition = position;
       let bgClass = 'bg-night-600/80 text-gray-400';
 
       if (position === 1) bgClass = 'bg-[#d3a625] text-[#1c1917]';
@@ -782,10 +795,15 @@ document.addEventListener('DOMContentLoaded', () => {
     previousGamechangerData = JSON.parse(JSON.stringify(players));
     
     let html = '';
+    let lastPointsGc = null;
+    let lastPositionGc = 0;
     players.forEach((player, index) => {
-      const position = index + 1;
       const playerName = player.name || 'Unbekannt';
       const totalPoints = player.total_points || 0;
+      // Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4)
+      const position = (lastPointsGc !== null && totalPoints === lastPointsGc) ? lastPositionGc : index + 1;
+      lastPointsGc = totalPoints;
+      lastPositionGc = position;
       const playerId = player.id || player.name || 'Unknown';
       
       // Position Badge Styling

@@ -542,10 +542,11 @@
                 </svg>
                 <span id="player-position">
                     {% if player is defined and players is defined %}
-                        {% set position = 0 %}
+                        {# Geteilte Plätze: Platz = 1 + Anzahl Spieler mit MEHR Punkten #}
+                        {% set position = 1 %}
                         {% for p in players %}
-                            {% if p.id == player.id %}
-                                {% set position = loop.index %}
+                            {% if p.totalPoints > player.totalPoints %}
+                                {% set position = position + 1 %}
                             {% endif %}
                         {% endfor %}
                         Platz {{ position }}
@@ -560,7 +561,7 @@
         <div class="joker-grid">
             <div id="double-joker-card" onclick="navigateToDoubleJoker()"
                  class="joker-card available">
-                <div class="joker-title">2 Doppelte Punkte</div>
+                <div class="joker-title">Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Verfügbar</div>
             </div>
@@ -628,9 +629,16 @@
             
             <div id="ranking-list">
                 {% if players is defined %}
+                    {% set sharedPosition = 0 %}
+                    {% set lastPoints = null %}
                     {% for p in players %}
+                        {# Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4) #}
+                        {% if lastPoints is null or p.totalPoints != lastPoints %}
+                            {% set sharedPosition = loop.index %}
+                            {% set lastPoints = p.totalPoints %}
+                        {% endif %}
                         <div class="ranking-item {% if player is defined and p.id == player.id %}you{% endif %}">
-                            <div class="ranking-position">{{ loop.index }}</div>
+                            <div class="ranking-position">{{ sharedPosition }}</div>
                             <div class="ranking-name">
                                 {{ p.name }}
                                 {% if player is defined and p.id == player.id %} (Du){% endif %}
@@ -943,9 +951,14 @@
     function updateRanking(ranking) {
         const container = document.getElementById('ranking-list');
         let html = '';
-        
+        let lastPoints = null;
+        let lastPosition = 0;
+
         ranking.forEach((player, index) => {
-            const position = index + 1;
+            // Geteilte Plätze: gleiche Punkte = gleicher Platz (1-2-2-4)
+            const position = (lastPoints !== null && player.total_points === lastPoints) ? lastPosition : index + 1;
+            lastPoints = player.total_points;
+            lastPosition = position;
             const isCurrentPlayer = player.id === parseInt(currentPlayer.id);
             
             html += `
@@ -1032,7 +1045,7 @@
             doubleCard.className = 'joker-card available';
             doubleCard.onclick = () => navigateToDoubleJoker();
             doubleCard.innerHTML = `
-                <div class="joker-title">2 Doppelte Punkte</div>
+                <div class="joker-title">Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Verfügbar</div>
             `;
@@ -1041,7 +1054,7 @@
             doubleCard.onclick = null;
             const usedFor = jokerData.doubleUsedFor ? `für ${jokerData.doubleUsedFor}` : '';
             doubleCard.innerHTML = `
-                <div class="joker-title">2 Doppelte Punkte</div>
+                <div class="joker-title">Doppelte Punkte</div>
                 <div class="joker-subtitle">Verdopple deine Punkte in einem Spiel</div>
                 <div class="joker-status">Genutzt ${usedFor}</div>
             `;
