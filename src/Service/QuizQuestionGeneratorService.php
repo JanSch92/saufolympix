@@ -84,19 +84,25 @@ class QuizQuestionGeneratorService
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'Du bist ein Quizmaster für ein Partyspiel mit Erwachsenen (25+). '
-                            . 'Erstelle Allgemeinwissen-Schätzfragen auf Deutsch, die mit einer ganzen Zahl beantwortet werden. '
-                            . 'Kein Spezialwissen, nicht trivial — Beispiele: "Wie viele Bundesstaaten haben die USA?", '
-                            . '"In welchem Jahr fiel die Berliner Mauer?", "Wie viele Knochen hat ein erwachsener Mensch?". '
+                        'content' => 'Du bist Quizmaster für ein Party-Schätzquiz mit Erwachsenen (25+). '
+                            . 'Erstelle deutsche SCHÄTZFRAGEN mit ganzzahliger Antwort, deren exakten Wert '
+                            . 'praktisch NIEMAND auswendig weiß — die Spieler müssen wirklich schätzen. '
+                            . 'Gewertet wird, wer am nächsten dran ist. '
+                            . 'VERBOTEN ist simples Schulwissen mit bekannter Antwort (z.B. "Wie viele Bundesländer hat Deutschland?", '
+                            . '"Wie viele Planeten hat das Sonnensystem?", "In welchem Jahr fiel die Mauer?"). '
+                            . 'GUT sind Fragen wie: "Wie viele McDonald\'s-Filialen gibt es in Deutschland?", '
+                            . '"Wie oft blinzelt ein Mensch pro Tag?", "Wie viele Tennisbälle verbraucht Wimbledon pro Turnier?", '
+                            . '"Wie viel wiegt die Zunge eines Blauwals in Tonnen?", "Wie lang ist die Donau in Kilometern?". '
                             . 'Antworte NUR mit einem JSON-Objekt der Form '
-                            . '{"questions": [{"question": "...", "answer": 50}, ...]}. '
-                            . 'Das Feld "answer" muss immer eine ganze Zahl sein.',
+                            . '{"questions": [{"question": "...", "answer": 1400}, ...]}. '
+                            . 'Das Feld "answer" muss immer eine ganze Zahl (dein bester Näherungswert) sein.',
                     ],
                     [
                         'role' => 'user',
                         'content' => sprintf(
-                            'Erstelle %d abwechslungsreiche Allgemeinwissen-Fragen mit ganzzahligen Antworten. '
-                            . 'Mische Kategorien (Geographie, Geschichte, Natur, Sport, Kultur, Alltag).',
+                            'Erstelle %d abwechslungsreiche Schätzfragen mit ganzzahligen Antworten, '
+                            . 'deren exakte Werte man nicht auswendig wissen kann. '
+                            . 'Mische Kategorien (Geographie, Rekorde, Körper, Tiere, Essen, Technik, Sport, Alltag).',
                             $count
                         ),
                     ],

@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Game;
 use App\Entity\Olympix;
+use App\Entity\Player;
 use App\Entity\GameResult;
 use App\Entity\Joker;
 use App\Repository\OlympixRepository;
@@ -54,6 +56,50 @@ class MainController extends AbstractController
         }
 
         return $this->redirectToRoute('app_index');
+    }
+
+    /**
+     * Kopiert ein Olympix: gleiche Spieler (Punkte/Joker frisch) und gleiche
+     * Spiele (alle wieder auf "wartend", ohne Ergebnisse/Fragen/Versuche).
+     */
+    #[Route('/olympix/copy/{id}', name: 'app_copy_olympix', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function copyOlympix(int $id): Response
+    {
+        $source = $this->olympixRepository->find($id);
+
+        if (!$source) {
+            throw $this->createNotFoundException('Olympix nicht gefunden');
+        }
+
+        $copy = new Olympix();
+        $copy->setName($source->getName() . ' (Kopie)');
+        $this->entityManager->persist($copy);
+
+        foreach ($source->getPlayers() as $sourcePlayer) {
+            $player = new Player();
+            $player->setName($sourcePlayer->getName());
+            $player->setOlympix($copy);
+            $copy->addPlayer($player);
+            $this->entityManager->persist($player);
+        }
+
+        foreach ($source->getGames() as $sourceGame) {
+            $game = new Game();
+            $game->setName($sourceGame->getName());
+            $game->setGameType($sourceGame->getGameType());
+            $game->setTeamSize($sourceGame->getTeamSize());
+            $game->setPointsDistribution($sourceGame->getPointsDistribution());
+            $game->setOrderPosition($sourceGame->getOrderPosition());
+            $game->setOlympix($copy);
+            $copy->addGame($game);
+            $this->entityManager->persist($game);
+        }
+
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Olympix wurde kopiert: "' . $copy->getName() . '"');
+
+        return $this->redirectToRoute('app_game_admin', ['id' => $copy->getId()]);
     }
 
     #[Route('/olympix/{id}', name: 'app_show_olympix')]
