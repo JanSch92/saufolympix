@@ -69,6 +69,30 @@ class MainController extends AbstractController
         return $this->redirectToRoute('app_index');
     }
 
+    #[Route('/olympix/rename/{id}', name: 'app_rename_olympix', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function renameOlympix(int $id, Request $request): Response
+    {
+        $olympix = $this->olympixRepository->find($id);
+
+        if (!$olympix) {
+            throw $this->createNotFoundException('Olympix nicht gefunden');
+        }
+
+        $name = trim((string) $request->request->get('name'));
+
+        if ($name === '') {
+            $this->addFlash('error', 'Name darf nicht leer sein');
+            return $this->redirectToRoute('app_game_admin', ['id' => $id]);
+        }
+
+        $olympix->setName($name);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Olympix wurde umbenannt in "' . $name . '"');
+
+        return $this->redirectToRoute('app_game_admin', ['id' => $id]);
+    }
+
     /**
      * Kopiert ein Olympix: gleiche Spieler (Punkte/Joker frisch) und gleiche
      * Spiele (alle wieder auf "wartend", ohne Ergebnisse/Fragen/Versuche).
