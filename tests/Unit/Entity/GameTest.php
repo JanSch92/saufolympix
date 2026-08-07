@@ -121,11 +121,12 @@ class GameTest extends TestCase
         $this->assertSame([5, 4, 3, 2, 1], $game->getDefaultPointsDistribution());
     }
 
-    public function testDefaultPointsDistributionTournament(): void
+    public function testDefaultPointsDistributionTournamentUsesUnifiedScheme(): void
     {
+        // EINHEITSSCHEMA: auch Turniere vergeben n..1 (keine 8/6/4/2-Sonderregel mehr)
         $game = $this->createGameWithPlayers('tournament_single', 6);
 
-        $this->assertSame([8, 6, 4, 2, 0, 0], $game->getDefaultPointsDistribution());
+        $this->assertSame([6, 5, 4, 3, 2, 1], $game->getDefaultPointsDistribution());
     }
 
     public function testCustomPointsDistributionWins(): void

@@ -252,6 +252,61 @@ class QuizStepFlowTest extends FunctionalTestCase
         $this->assertTrue($result['success'], 'Antwort "0" muss im Frage-für-Frage-Modus gültig sein');
     }
 
+    public function testOnlyWholeNumbersAreAcceptedAsAnswers(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $qid = $data['question']['id'];
+
+        // Dezimalzahlen, Kommazahlen und Text werden IMMER abgelehnt
+        foreach (['3.5', '3,5', '1e3', 'abc', '7.0', ' '] as $invalid) {
+            $result = $this->answer($game, $players[0]->getId(), $qid, $invalid);
+            $this->assertFalse($result['success'], "Antwort '$invalid' muss abgelehnt werden — nur ganze Zahlen");
+            $this->assertResponseStatusCodeSame(400);
+        }
+
+        // Ganze Zahlen (auch negativ) sind gültig
+        $result = $this->answer($game, $players[0]->getId(), $qid, '-40');
+        $this->assertTrue($result['success'], 'Negative ganze Zahlen (z.B. Temperaturen) müssen gültig sein');
+
+        $result = $this->answer($game, $players[1]->getId(), $qid, '1250');
+        $this->assertTrue($result['success']);
+    }
+
+    public function testManualQuestionRequiresIntegerCorrectAnswer(): void
+    {
+        $olympix = $this->createOlympix();
+        $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+
+        // Dezimale korrekte Antwort wird abgelehnt
+        $this->client->request('POST', '/quiz/questions/' . $game->getId(), [
+            'question' => 'Wie viel wiegt ein Blauwal in Tonnen?',
+            'correct_answer' => '140.5',
+        ]);
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertCount(0, $game->getQuizQuestions(), 'Dezimale korrekte Antwort darf keine Frage anlegen');
+
+        // Ganzzahlige korrekte Antwort funktioniert
+        $this->client->request('POST', '/quiz/questions/' . $game->getId(), [
+            'question' => 'Wie viel wiegt ein Blauwal in Tonnen?',
+            'correct_answer' => '140',
+        ]);
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertCount(1, $game->getQuizQuestions());
+    }
+
     public function testAnswerRejectedWhenQuizNotActive(): void
     {
         $olympix = $this->createOlympix();

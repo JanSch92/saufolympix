@@ -10,6 +10,7 @@ use App\Repository\GameRepository;
 use App\Repository\SplitOrStealMatchRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\GameResultRepository;
+use App\Service\StandardScoringService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,7 +25,8 @@ class SplitOrStealController extends AbstractController
         private GameRepository $gameRepository,
         private SplitOrStealMatchRepository $splitOrStealMatchRepository,
         private PlayerRepository $playerRepository,
-        private GameResultRepository $gameResultRepository
+        private GameResultRepository $gameResultRepository,
+        private StandardScoringService $standardScoringService
     ) {}
 
     #[Route('/split-or-steal/setup/{gameId}', name: 'app_split_or_steal_setup')]
@@ -150,39 +152,29 @@ class SplitOrStealController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Berechne Ergebnisse und erstelle GameResults
+        // EINHEITSSCHEMA: Die erspielte Beute (50/25/0) bestimmt nur die
+        // RANGFOLGE — Punkte für die Gesamtwertung kommen aus der
+        // Standard-Verteilung (n..1), Gleichstand teilt den Platz.
+        $playersById = [];
+        $metric = [];
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $playersById[$player->getId()] = $player;
+            $metric[$player->getId()] = 0; // Spieler ohne Match gehen mit 0 Beute ins Ranking
+        }
+
         foreach ($matches as $match) {
-            // Berechne Punkte basierend auf Entscheidungen
             $match->calculatePoints();
             $this->entityManager->persist($match);
 
-            // Erstelle GameResult für Player 1
-            $gameResult1 = new GameResult();
-            $gameResult1->setGame($game);
-            $gameResult1->setPlayer($match->getPlayer1());
-            $gameResult1->setPoints($match->getPlayer1Points());
-            $gameResult1->setPosition($match->getPlayer1Points() > 0 ? 1 : 2);
-            $this->entityManager->persist($gameResult1);
-
-            // Erstelle GameResult für Player 2
-            $gameResult2 = new GameResult();
-            $gameResult2->setGame($game);
-            $gameResult2->setPlayer($match->getPlayer2());
-            $gameResult2->setPoints($match->getPlayer2Points());
-            $gameResult2->setPosition($match->getPlayer2Points() > 0 ? 1 : 2);
-            $this->entityManager->persist($gameResult2);
-
-            // Aktualisiere Spieler-Punkte
-            $match->getPlayer1()->setTotalPoints($match->getPlayer1()->getTotalPoints() + $match->getPlayer1Points());
-            $match->getPlayer2()->setTotalPoints($match->getPlayer2()->getTotalPoints() + $match->getPlayer2Points());
-            $this->entityManager->persist($match->getPlayer1());
-            $this->entityManager->persist($match->getPlayer2());
+            $metric[$match->getPlayer1()->getId()] = $match->getPlayer1Points();
+            $metric[$match->getPlayer2()->getId()] = $match->getPlayer2Points();
         }
-
-        // Spiel als abgeschlossen markieren
-        $game->setStatus('completed');
-        $this->entityManager->persist($game);
         $this->entityManager->flush();
+
+        $messages = $this->standardScoringService->completeGameByMetric($game, $metric, $playersById);
+        foreach ($messages as $message) {
+            $this->addFlash($message['type'], $message['message']);
+        }
 
         $this->addFlash('success', 'Split or Steal wurde ausgewertet! Alle Ergebnisse sind nun im Live-Ranking sichtbar.');
         return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);

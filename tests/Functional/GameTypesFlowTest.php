@@ -56,12 +56,14 @@ class GameTypesFlowTest extends FunctionalTestCase
             $pointsByPlayer[$result->getPlayer()->getId()] = $result->getFinalPoints();
         }
 
+        // EINHEITSSCHEMA: Beute (50/25/25/0) bestimmt nur die Rangfolge,
+        // Punkte kommen aus der Verteilung 4..1 mit geteilten Plätzen
         $m1 = $matchList[0];
         $m2 = $matchList[1];
-        $this->assertSame(25, $pointsByPlayer[$m1->getPlayer1()->getId()], 'Split/Split: je die Hälfte');
-        $this->assertSame(25, $pointsByPlayer[$m1->getPlayer2()->getId()]);
-        $this->assertSame(50, $pointsByPlayer[$m2->getPlayer1()->getId()], 'Steal gegen Split: Stealer bekommt alles');
-        $this->assertSame(0, $pointsByPlayer[$m2->getPlayer2()->getId()]);
+        $this->assertSame(4, $pointsByPlayer[$m2->getPlayer1()->getId()], 'Stealer (50 Beute) = Platz 1 = 4 Punkte');
+        $this->assertSame(3, $pointsByPlayer[$m1->getPlayer1()->getId()], 'Splitter (25 Beute) teilen sich Platz 2 = je 3 Punkte');
+        $this->assertSame(3, $pointsByPlayer[$m1->getPlayer2()->getId()]);
+        $this->assertSame(1, $pointsByPlayer[$m2->getPlayer2()->getId()], 'Bestohlener (0 Beute) = Platz 4 = 1 Punkt');
     }
 
     public function testGamechangerFullFlow(): void
@@ -69,11 +71,20 @@ class GameTypesFlowTest extends FunctionalTestCase
         $olympix = $this->createOlympix();
         $players = $this->createPlayers($olympix, 3);
 
-        // Ausgangspunkte setzen, damit die Treffer-Regeln deterministisch sind
-        $players[0]->setTotalPoints(10);
-        $players[1]->setTotalPoints(20);
-        $players[2]->setTotalPoints(30);
-        $this->entityManager->flush();
+        // Ausgangspunkte über ein ECHTES Spiel (FFA): 3 / 2 / 1
+        $ffa = $this->createGame($olympix, 'free_for_all', 'Basis');
+        $this->client->request('GET', '/game/start/' . $ffa->getId());
+        $this->client->request('POST', '/game/results/' . $ffa->getId(), [
+            'positions' => [
+                $players[0]->getId() => 1,
+                $players[1]->getId() => 2,
+                $players[2]->getId() => 3,
+            ],
+        ]);
+
+        // Nach Client-Requests ist der EntityManager resettet — Olympix neu laden
+        $this->entityManager->clear();
+        $olympix = $this->entityManager->getRepository(\App\Entity\Olympix::class)->find($olympix->getId());
 
         $game = $this->createGame($olympix, 'gamechanger');
 
@@ -84,19 +95,19 @@ class GameTypesFlowTest extends FunctionalTestCase
         $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
         $this->assertSame('active', $game->getStatus());
 
-        // Spieler 1 trifft die EIGENEN Punkte (10) -> +8 => 18
+        // Spieler 1 trifft die EIGENEN Punkte (3) -> Wertung +8
         $this->client->request('POST', '/gamechanger/throw/' . $game->getId(), [
             'player_id' => $players[0]->getId(),
-            'thrown_points' => 10,
+            'thrown_points' => 3,
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($data['success']);
         $this->assertSame(8, $data['throw']['points_scored']);
 
-        // Spieler 2 trifft Spieler 3 (30) -> Spieler 3 bekommt -4 => 26
+        // Spieler 2 trifft Spieler 3 (1 Punkt) -> Wertung -4 für Spieler 3
         $this->client->request('POST', '/gamechanger/throw/' . $game->getId(), [
             'player_id' => $players[1]->getId(),
-            'thrown_points' => 30,
+            'thrown_points' => 1,
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($data['success']);
@@ -116,13 +127,24 @@ class GameTypesFlowTest extends FunctionalTestCase
         $this->assertTrue($game->isCompleted());
         $this->assertCount(3, $game->getGameResults());
 
+        // EINHEITSSCHEMA: Wertung (+8 / 0 / -4) bestimmt nur die Rangfolge,
+        // Punkte kommen aus der Verteilung 3..1
         $totals = [];
         foreach ($game->getOlympix()->getPlayers() as $player) {
             $totals[$player->getId()] = $player->getTotalPoints();
         }
-        $this->assertSame(18, $totals[$players[0]->getId()], '10 + 8 (eigene Punkte getroffen)');
-        $this->assertSame(20, $totals[$players[1]->getId()]);
-        $this->assertSame(26, $totals[$players[2]->getId()], '30 - 4 (getroffen worden)');
+        $this->assertSame(6, $totals[$players[0]->getId()], '3 (FFA) + 3 (Wertung +8 = Platz 1)');
+        $this->assertSame(4, $totals[$players[1]->getId()], '2 (FFA) + 2 (Wertung 0 = Platz 2)');
+        $this->assertSame(2, $totals[$players[2]->getId()], '1 (FFA) + 1 (Wertung -4 = Platz 3)');
+
+        // Invariante: Gesamtpunkte == Summe der Spielergebnisse
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $sum = 0;
+            foreach ($player->getGameResults() as $result) {
+                $sum += $result->getFinalPoints();
+            }
+            $this->assertSame($sum, $player->getTotalPoints(), 'Invariante: Gesamt == Summe der Ergebnisse');
+        }
     }
 
     public function testGamechangerZeroThrowCountsAsMiss(): void
@@ -214,13 +236,143 @@ class GameTypesFlowTest extends FunctionalTestCase
         $this->assertTrue($game->isCompleted(), 'Turnier muss nach dem Finale abgeschlossen sein');
         $this->assertGreaterThanOrEqual(2, $game->getGameResults()->count());
 
-        // Punkte kommen aus der Turnier-Verteilung (8, 6, 4, 2)
+        // EINHEITSSCHEMA: auch Turnier vergibt n..1 (bei 4 Spielern: 4, 3, 2, 1)
         $pointsByPosition = [];
         foreach ($game->getGameResults() as $result) {
             $pointsByPosition[$result->getPosition()] = $result->getPoints();
         }
-        $this->assertSame(8, $pointsByPosition[1], 'Turniersieger bekommt 8 Punkte');
-        $this->assertSame(6, $pointsByPosition[2]);
+        $this->assertSame(4, $pointsByPosition[1], 'Turniersieger bekommt 4 Punkte (bei 4 Spielern)');
+        $this->assertSame(3, $pointsByPosition[2]);
+    }
+
+    public function testTournamentWith8PlayersHasSharedPlace5(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 8);
+        $game = $this->createGame($olympix, 'tournament_single');
+
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        // Bracket komplett durchspielen: immer der Spieler mit der kleineren ID gewinnt
+        // (8 Spieler: 4 Viertelfinals, 2 Halbfinals, Spiel um Platz 3, Finale)
+        for ($i = 0; $i < 12; $i++) {
+            $this->entityManager->clear();
+            $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+            if ($game->isCompleted()) {
+                break;
+            }
+
+            $match = $this->findOpenMatch($game->getTournament()->getBracketData());
+            $this->assertNotNull($match, 'Es muss ein offenes Match geben, solange das Turnier läuft');
+
+            $winner = $match['participant1']['id'] < $match['participant2']['id']
+                ? $match['participant1']
+                : $match['participant2'];
+
+            $this->client->request('POST', '/game/bracket/' . $game->getId() . '/update-match', [
+                'match_id' => $match['id'],
+                'winner_id' => $winner['id'],
+                'winner_type' => 'player',
+            ]);
+        }
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted(), 'Turnier mit 8 Spielern muss abgeschlossen sein');
+        $this->assertCount(8, $game->getGameResults(), 'Jeder der 8 Spieler braucht ein Ergebnis');
+
+        $positions = [];
+        $pointsByPosition = [];
+        foreach ($game->getGameResults() as $result) {
+            $positions[] = $result->getPosition();
+            $pointsByPosition[$result->getPosition()] = $result->getPoints();
+        }
+        sort($positions);
+
+        // Plätze 1-4 werden ausgespielt, die 4 Viertelfinal-Verlierer teilen sich Platz 5
+        $this->assertSame([1, 2, 3, 4, 5, 5, 5, 5], $positions, 'Viertelfinal-Verlierer teilen sich Platz 5');
+
+        // EINHEITSSCHEMA bei 8 Spielern: 8, 7, 6, 5 und 4 für den geteilten Platz 5
+        $this->assertSame(8, $pointsByPosition[1]);
+        $this->assertSame(7, $pointsByPosition[2]);
+        $this->assertSame(6, $pointsByPosition[3]);
+        $this->assertSame(5, $pointsByPosition[4]);
+        $this->assertSame(4, $pointsByPosition[5], 'Geteilter Platz 5 = 4 Punkte für jeden Viertelfinal-Verlierer');
+
+        // Spieler mit der kleinsten ID hat alles gewonnen -> Platz 1
+        foreach ($game->getGameResults() as $result) {
+            if ($result->getPlayer()->getId() === $players[0]->getId()) {
+                $this->assertSame(1, $result->getPosition());
+            }
+        }
+
+        // Invariante: Gesamtpunkte == Summe der Spielergebnisse
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $sum = 0;
+            foreach ($player->getGameResults() as $result) {
+                $sum += $result->getFinalPoints();
+            }
+            $this->assertSame($sum, $player->getTotalPoints());
+        }
+    }
+
+    public function testTournamentTeamFullFlowWith8Players(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 8);
+        $game = $this->createGame($olympix, 'tournament_team');
+        $game->setTeamSize(2);
+        $this->entityManager->flush();
+
+        // Start bildet zufällige 2er-Teams (4 Teams) und das Bracket
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        // Bracket durchspielen: 2 Halbfinals, Spiel um Platz 3, Finale
+        for ($i = 0; $i < 8; $i++) {
+            $this->entityManager->clear();
+            $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+            if ($game->isCompleted()) {
+                break;
+            }
+
+            $match = $this->findOpenMatch($game->getTournament()->getBracketData());
+            $this->assertNotNull($match, 'Es muss ein offenes Match geben, solange das Turnier läuft');
+
+            $this->client->request('POST', '/game/bracket/' . $game->getId() . '/update-match', [
+                'match_id' => $match['id'],
+                'winner_id' => $match['participant1']['id'],
+                'winner_type' => 'team',
+            ]);
+        }
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted(), 'Team-Turnier muss nach dem Finale abgeschlossen sein');
+        $this->assertCount(8, $game->getGameResults(), 'Jeder Spieler braucht ein Ergebnis (Teams teilen die Platzierung)');
+
+        // EINHEITSSCHEMA für Teams: Team-Platz -> Punkte der Verteilung für JEDES Mitglied
+        // 4 Teams: Platz 1 = 8/8, Platz 2 = 7/7, Platz 3 = 6/6, Platz 4 = 5/5
+        $positions = [];
+        $points = [];
+        foreach ($game->getGameResults() as $result) {
+            $positions[] = $result->getPosition();
+            $points[] = $result->getPoints();
+        }
+        sort($positions);
+        sort($points);
+        $this->assertSame([1, 1, 2, 2, 3, 3, 4, 4], $positions, 'Beide Teammitglieder teilen sich die Team-Platzierung');
+        $this->assertSame([5, 5, 6, 6, 7, 7, 8, 8], $points, 'Teampunkte folgen der Verteilung 8..1 nach Team-Platz');
+
+        // Invariante: Gesamtpunkte == Summe der Spielergebnisse
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $sum = 0;
+            foreach ($player->getGameResults() as $result) {
+                $sum += $result->getFinalPoints();
+            }
+            $this->assertSame($sum, $player->getTotalPoints());
+        }
     }
 
     private function findOpenMatch(array $bracket): ?array

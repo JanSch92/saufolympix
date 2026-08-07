@@ -97,8 +97,13 @@ class QuizController extends AbstractController
             $question = $request->request->get('question');
             $correctAnswer = $request->request->get('correct_answer');
 
-            if (empty($question) || empty($correctAnswer)) {
+            if (empty($question) || $correctAnswer === null || $correctAnswer === '') {
                 $this->addFlash('error', 'Frage und korrekte Antwort sind erforderlich');
+                return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
+            }
+
+            if (!$this->isWholeNumber($correctAnswer)) {
+                $this->addFlash('error', 'Die korrekte Antwort muss eine ganze Zahl sein (keine Dezimalzahlen)');
                 return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
             }
 
@@ -206,7 +211,8 @@ class QuizController extends AbstractController
                 $answerValue = $request->request->get('answer_' . $question->getId());
 
                 // WICHTIG: "0" ist eine gültige Antwort — nur null/leer zählt als fehlend (empty('0') wäre true!)
-                if ($answerValue === null || $answerValue === '' || !is_numeric($answerValue)) {
+                // Und: NUR ganze Zahlen sind erlaubt — niemals Dezimalzahlen.
+                if ($answerValue === null || !$this->isWholeNumber($answerValue)) {
                     $allAnswered = false;
                     continue;
                 }
@@ -468,8 +474,12 @@ class QuizController extends AbstractController
         $questionId = $data['question_id'] ?? null;
         $answerValue = $data['answer'] ?? null;
 
-        if (!$playerId || !$questionId || $answerValue === null || $answerValue === '' || !is_numeric($answerValue)) {
+        if (!$playerId || !$questionId || $answerValue === null || $answerValue === '') {
             return $this->json(['success' => false, 'error' => 'Ungültige Daten'], 400);
+        }
+
+        if (!$this->isWholeNumber($answerValue)) {
+            return $this->json(['success' => false, 'error' => 'Nur ganze Zahlen sind erlaubt'], 400);
         }
 
         $player = $this->playerRepository->find($playerId);
@@ -712,5 +722,14 @@ class QuizController extends AbstractController
             'progress_percentage' => $totalAnswersNeeded > 0 ? round(($currentAnswers / $totalAnswersNeeded) * 100, 2) : 0,
             'is_complete' => $currentAnswers >= $totalAnswersNeeded,
         ];
+    }
+
+    /**
+     * Quiz-Antworten sind IMMER ganze Zahlen — "0" und negative Werte sind
+     * gültig, Dezimal-/Kommazahlen und Text werden überall abgelehnt.
+     */
+    private function isWholeNumber(mixed $value): bool
+    {
+        return preg_match('/^-?\d+$/', trim((string) $value)) === 1;
     }
 }

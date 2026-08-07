@@ -40,7 +40,7 @@
             <div class="bg-night-700/40 border border-gray-700/60 rounded-xl p-4 mb-4">
                 <div class="text-lg font-semibold text-gray-100" id="q-text"></div>
             </div>
-            <input type="number" id="q-answer" step="0.01" placeholder="Deine Schätzung" class="w-full text-lg mb-4">
+            <input type="number" id="q-answer" step="1" inputmode="numeric" pattern="-?[0-9]*" placeholder="Deine Schätzung (ganze Zahl)" class="w-full text-lg mb-4">
             <button type="button" id="q-submit" class="btn-primary w-full text-lg">Antwort abschicken</button>
             <div id="q-error" class="hidden flash-message flash-error mt-4"></div>
         </div>
@@ -238,6 +238,7 @@
     document.getElementById('q-submit').addEventListener('click', () => {
         const value = document.getElementById('q-answer').value;
         if (value === '' || value === null) { appAlert('Bitte gib deine Schätzung ein!'); return; }
+        if (!/^-?\d+$/.test(value.trim())) { appAlert('Nur ganze Zahlen erlaubt — keine Kommazahlen!'); return; }
         document.getElementById('q-submit').disabled = true;
 
         fetch(`/quiz/answer/${gameId}`, {

@@ -32,12 +32,12 @@
                 </ul>
             </div>
             <div>
-                <h3 class="font-semibold text-purple-300 mb-2">Scoring-Regeln:</h3>
+                <h3 class="font-semibold text-purple-300 mb-2">Wertungs-Regeln:</h3>
                 <ul class="space-y-1 text-purple-200">
-                    <li>• <strong>Eigene Punkte treffen:</strong> +8 Punkte für dich</li>
-                    <li>• <strong>Andere Spieler treffen:</strong> -4 Punkte für sie</li>
-                    <li>• <strong>Sonst:</strong> Keine Punkte (weder plus noch minus)</li>
-                    <li>• <strong>Punkte können nicht unter 0 fallen</strong></li>
+                    <li>• <strong>Eigene Punkte treffen:</strong> +8 Wertung für dich</li>
+                    <li>• <strong>Andere Spieler treffen:</strong> -4 Wertung für sie</li>
+                    <li>• <strong>Sonst:</strong> Keine Wertung (weder plus noch minus)</li>
+                    <li>• <strong>Am Ende:</strong> Die Wertung bestimmt die Platzierung — Punkte gibt es wie in jedem Spiel nach Platz (bei 8 Spielern 8..1)</li>
                 </ul>
             </div>
         </div>
@@ -51,7 +51,7 @@
             <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4 text-center">
                 <div class="text-lg font-semibold text-gray-100">{{ player.name }}</div>
                 <div class="text-2xl font-bold text-amber-400 mt-2">{{ player.totalPoints }} Punkte</div>
-                <div class="text-sm text-emerald-400 mt-1 font-semibold">Ziel für +8 Punkte</div>
+                <div class="text-sm text-emerald-400 mt-1 font-semibold">Ziel für +8 Wertung</div>
             </div>
             {% endfor %}
         </div>

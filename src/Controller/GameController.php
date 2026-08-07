@@ -800,6 +800,11 @@ class GameController extends AbstractController
         $gameResults = [];
 
         foreach ($results as $position => $participantData) {
+            // Plätze 1-4 werden im Bracket ausgespielt; alle früher
+            // Ausgeschiedenen teilen sich Platz 5 (geteilte Punkte)
+            $effectivePosition = $position <= 4 ? $position : 5;
+            $points = $pointsDistribution[$effectivePosition - 1] ?? 0;
+
             if ($participantData['type'] === 'team') {
                 // Handle team results - distribute points to all team members
                 foreach ($participantData['players'] as $playerData) {
@@ -808,10 +813,7 @@ class GameController extends AbstractController
                         $result = new GameResult();
                         $result->setGame($game);
                         $result->setPlayer($player);
-                        $result->setPosition($position);
-                        
-                        // CHANGED: Use dynamic points distribution
-                        $points = $pointsDistribution[$position - 1] ?? 0;
+                        $result->setPosition($effectivePosition);
                         $result->setPoints($points);
 
                         $gameResults[$player->getId()] = $result;
@@ -825,10 +827,7 @@ class GameController extends AbstractController
                     $result = new GameResult();
                     $result->setGame($game);
                     $result->setPlayer($player);
-                    $result->setPosition($position);
-                    
-                    // CHANGED: Use dynamic points distribution
-                    $points = $pointsDistribution[$position - 1] ?? 0;
+                    $result->setPosition($effectivePosition);
                     $result->setPoints($points);
 
                     $gameResults[$player->getId()] = $result;

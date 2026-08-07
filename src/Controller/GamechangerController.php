@@ -9,6 +9,7 @@ use App\Repository\GamechangerThrowRepository;
 use App\Repository\PlayerRepository;
 use App\Repository\GameResultRepository;
 use App\Repository\JokerRepository;
+use App\Service\StandardScoringService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,7 +25,8 @@ class GamechangerController extends AbstractController
         private GamechangerThrowRepository $gamechangerThrowRepository,
         private PlayerRepository $playerRepository,
         private GameResultRepository $gameResultRepository,
-        private JokerRepository $jokerRepository
+        private JokerRepository $jokerRepository,
+        private StandardScoringService $standardScoringService
     ) {}
 
     #[Route('/gamechanger/setup/{gameId}', name: 'app_gamechanger_setup')]
@@ -156,16 +158,17 @@ class GamechangerController extends AbstractController
 
         $this->entityManager->persist($throw);
 
+        // Wurf erst speichern — die Auswertung liest die Würfe aus der Datenbank
+        $this->entityManager->flush();
+
         // Prüfe ob Spiel nach diesem Wurf komplett ist
         $playerCount = $game->getOlympix()->getPlayers()->count();
-        $realThrowsAfterThis = $this->gamechangerThrowRepository->getThrowsCount($gameId) + 1;
+        $realThrowsAfterThis = $this->gamechangerThrowRepository->getThrowsCount($gameId);
 
         if ($realThrowsAfterThis >= $playerCount) {
-            // Spiel beenden und finale Ergebnisse erstellen
+            // Spiel beenden: Einheitsschema-Auswertung inkl. Joker
             $this->completeGame($game);
         }
-
-        $this->entityManager->flush();
 
         return new JsonResponse([
             'success' => true,
@@ -189,31 +192,27 @@ class GamechangerController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Spiel nicht gefunden']);
         }
 
+        // Abgeschlossene Spiele haben bereits gewertet (inkl. Joker) —
+        // dafür gibt es den kompletten Spiel-Reset im Admin
+        if ($game->getStatus() === 'completed') {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Spiel ist bereits abgeschlossen und gewertet — nutze im Admin "Zurücksetzen", um es neu zu spielen',
+            ]);
+        }
+
         $lastThrow = $this->gamechangerThrowRepository->getLastThrow($gameId);
         if (!$lastThrow) {
             return new JsonResponse(['success' => false, 'message' => 'Kein Wurf zum Rückgängigmachen gefunden']);
         }
 
-        // Rückgängigmachen der Punkteänderungen
-        $this->undoScoringChanges($lastThrow);
-
-        // GEFIXT: Setze den Wurf zurück auf Platzhalter-Status statt ihn zu löschen
+        // Wurf zurück auf Platzhalter — die Wertung verändert keine
+        // Gesamtpunkte mehr, es gibt also nichts zurückzurechnen
         $lastThrow->setThrownPoints(0);
         $lastThrow->setPointsScored(0);
         $lastThrow->setScoringReason('Reihenfolge festgelegt');
         $lastThrow->setIsProcessed(false);
         $this->entityManager->persist($lastThrow);
-
-        // Wenn das Spiel completed war, setze es zurück auf active
-        if ($game->getStatus() === 'completed') {
-            $game->setStatus('active');
-            
-            // Lösche finale GameResults
-            $gameResults = $this->gameResultRepository->findBy(['game' => $game]);
-            foreach ($gameResults as $result) {
-                $this->entityManager->remove($result);
-            }
-        }
 
         $this->entityManager->flush();
 
@@ -284,6 +283,14 @@ class GamechangerController extends AbstractController
         return null; // Alle haben geworfen
     }
 
+    /**
+     * WICHTIG (Einheitsschema): Die Wertung (+8 / -4) verändert die
+     * Gesamtpunkte NICHT mehr direkt. Sie ist die spielinterne Wertung,
+     * die am Ende nur die Rangfolge bestimmt — Punkte für die
+     * Gesamtwertung kommen wie überall aus der Verteilung (n..1).
+     * Referenz für Treffer sind die Punktestände VOR dem Gamechanger
+     * (sie bleiben während der Runde stabil).
+     */
     private function calculateScoring(GamechangerThrow $throw, $game): void
     {
         $thrownPoints = $throw->getThrownPoints();
@@ -293,37 +300,28 @@ class GamechangerController extends AbstractController
         $pointsScored = 0;
         $scoringReason = 'Keine besonderen Treffer';
 
-        // Regel 1: Eigene Punkte treffen = +8 Punkte
+        // Regel 1: Eigene Punkte treffen = +8 Wertung
         if ($thrownPoints == $throwingPlayer->getTotalPoints()) {
             $pointsScored = 8;
-            $scoringReason = 'Eigene Punkte getroffen (+8)';
-            
-            // Punkte direkt dem Spieler hinzufügen
-            $throwingPlayer->setTotalPoints($throwingPlayer->getTotalPoints() + 8);
+            $scoringReason = 'Eigene Punkte getroffen (+8 Wertung)';
         } else {
-            // Regel 2: Andere Spieler treffen = sie bekommen -4 Punkte
+            // Regel 2: Andere Spieler treffen = -4 Wertung für die Getroffenen
             $hitPlayers = [];
-            
+
             foreach ($allPlayers as $otherPlayer) {
-                if ($otherPlayer->getId() !== $throwingPlayer->getId() && 
+                if ($otherPlayer->getId() !== $throwingPlayer->getId() &&
                     $thrownPoints == $otherPlayer->getTotalPoints()) {
-                    
-                    // Punkte vom anderen Spieler abziehen
-                    $newPoints = max(0, $otherPlayer->getTotalPoints() - 4); // Nicht unter 0
-                    $otherPlayer->setTotalPoints($newPoints);
-                    
                     $hitPlayers[] = $otherPlayer->getName();
                 }
             }
-            
-            // Scoring-Informationen setzen basierend auf getroffenen Spielern
+
             if (!empty($hitPlayers)) {
-                $pointsScored = -4; // Für die Anzeige (zeigt den Effekt pro Spieler)
-                
+                $pointsScored = -4;
+
                 if (count($hitPlayers) == 1) {
-                    $scoringReason = $hitPlayers[0] . ' getroffen (-4 für ' . $hitPlayers[0] . ')';
+                    $scoringReason = $hitPlayers[0] . ' getroffen (-4 Wertung für ' . $hitPlayers[0] . ')';
                 } else {
-                    $scoringReason = count($hitPlayers) . ' Spieler getroffen (-4 für ' . implode(', ', $hitPlayers) . ')';
+                    $scoringReason = count($hitPlayers) . ' Spieler getroffen (-4 Wertung für ' . implode(', ', $hitPlayers) . ')';
                 }
             }
         }
@@ -333,60 +331,55 @@ class GamechangerController extends AbstractController
         $throw->setIsProcessed(true);
     }
 
-    private function undoScoringChanges(GamechangerThrow $throw): void
+    /**
+     * Netto-Wertung je Spieler aus allen Würfen. Deterministisch
+     * reproduzierbar, weil die Gesamtpunkte während der Runde stabil sind.
+     *
+     * @return array<int, int> playerId => Wertung
+     */
+    private function calculateNetMetric($game): array
     {
-        $scoringReason = $throw->getScoringReason() ?? '';
-        $pointsScored = $throw->getPointsScored();
-        $throwingPlayer = $throw->getPlayer();
-        $thrownPoints = $throw->getThrownPoints();
+        $players = $game->getOlympix()->getPlayers();
 
-        if (str_contains($scoringReason, 'Eigene Punkte getroffen')) {
-            // Entferne die +8 Punkte vom werfenden Spieler
-            $throwingPlayer->setTotalPoints($throwingPlayer->getTotalPoints() - 8);
-        } elseif (str_contains($scoringReason, 'getroffen')) {
-            // Finde ALLE Spieler die getroffen wurden und gib ihnen die 4 Punkte zurück
-            $game = $throw->getGame();
-            $allPlayers = $game->getOlympix()->getPlayers();
-            
-            foreach ($allPlayers as $player) {
-                if ($player->getId() !== $throwingPlayer->getId()) {
-                    $currentPoints = $player->getTotalPoints();
-                    
-                    // Prüfe ob dieser Spieler getroffen wurde:
-                    // 1. Seine aktuellen Punkte + 4 müssen den geworfenen Punkten entsprechen
-                    // 2. ODER seine aktuellen Punkte sind 0 und geworfene Punkte <= 4 (Schutz vor negativen Punkten)
-                    if (($currentPoints + 4 == $thrownPoints) || 
-                        ($currentPoints == 0 && $thrownPoints <= 4)) {
-                        
-                        // Gib die 4 Punkte zurück
-                        $player->setTotalPoints($currentPoints + 4);
+        $metric = [];
+        foreach ($players as $player) {
+            $metric[$player->getId()] = 0;
+        }
+
+        foreach ($this->gamechangerThrowRepository->findByGameOrderedByPlayerOrder($game->getId()) as $throw) {
+            if (!$throw->isProcessed()) {
+                continue;
+            }
+
+            $thrower = $throw->getPlayer();
+            $thrownPoints = $throw->getThrownPoints();
+
+            if ($thrownPoints == $thrower->getTotalPoints()) {
+                $metric[$thrower->getId()] += 8;
+            } else {
+                foreach ($players as $otherPlayer) {
+                    if ($otherPlayer->getId() !== $thrower->getId() &&
+                        $thrownPoints == $otherPlayer->getTotalPoints()) {
+                        $metric[$otherPlayer->getId()] -= 4;
                     }
                 }
             }
         }
+
+        return $metric;
     }
 
     private function completeGame($game): void
     {
-        $game->setStatus('completed');
-
-        // Erstelle finale GameResults basierend auf den aktuellen Punkten
-        $players = $game->getOlympix()->getPlayers()->toArray();
-        
-        // Sortiere nach Punkten (absteigende Reihenfolge)
-        usort($players, function($a, $b) {
-            return $b->getTotalPoints() <=> $a->getTotalPoints();
-        });
-
-        // Vergabe der finalen Plätze
-        foreach ($players as $position => $player) {
-            $gameResult = new GameResult();
-            $gameResult->setGame($game);
-            $gameResult->setPlayer($player);
-            $gameResult->setPosition($position + 1);
-            $gameResult->setPoints(0); // Punkte wurden bereits während des Spiels vergeben
-
-            $this->entityManager->persist($gameResult);
+        $playersById = [];
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $playersById[$player->getId()] = $player;
         }
+
+        $metric = $this->calculateNetMetric($game);
+
+        // Einheitsschema: Rangfolge nach Wertung, Punkte aus der Verteilung,
+        // Joker werden angewendet, Gesamtpunkte konsistent neu berechnet
+        $this->standardScoringService->completeGameByMetric($game, $metric, $playersById);
     }
 }

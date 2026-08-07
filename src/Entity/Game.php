@@ -450,39 +450,16 @@ class Game
         };
     }
 
+    /**
+     * EINHEITLICHES Punkteschema für alle Spielmodi: bei n Spielern gibt es
+     * n, n-1, ..., 1 Punkte nach Platzierung — egal ob Quiz, Turnier,
+     * Stoppuhr, Split or Steal oder Gamechanger. Eine eigene Verteilung am
+     * Spiel überschreibt das.
+     */
     public function getDefaultPointsDistribution(): array
     {
         if ($this->pointsDistribution) {
             return $this->pointsDistribution;
-        }
-
-        if ($this->isGamechangerGame()) {
-            return []; // Leer, da Punkte während des Spiels dynamisch vergeben werden
-        }
-
-        if ($this->isTournamentGame()) {
-            $playerCount = $this->olympix->getPlayers()->count();
-            
-            $points = [];
-            for ($i = 1; $i <= $playerCount; $i++) {
-                if ($i == 1) {
-                    $points[] = 8;
-                } elseif ($i == 2) {
-                    $points[] = 6;
-                } elseif ($i == 3) {
-                    $points[] = 4;
-                } elseif ($i == 4) {
-                    $points[] = 2;
-                } else {
-                    $points[] = 0;
-                }
-            }
-            
-            return $points;
-        }
-
-        if ($this->isSplitOrStealGame()) {
-            return [50];
         }
 
         $playerCount = $this->olympix->getPlayers()->count();
