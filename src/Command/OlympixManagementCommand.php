@@ -43,7 +43,7 @@ class OlympixManagementCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('action', InputArgument::REQUIRED, 'Action: list, delete, reset, or stats')
+            ->addArgument('action', InputArgument::REQUIRED, 'Action: list, delete, reset, stats, or recalculate')
             ->addArgument('olympixId', InputArgument::OPTIONAL, 'Olympix ID')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force action without confirmation')
             ->addOption('keep-players', null, InputOption::VALUE_NONE, 'Keep players when resetting (reset only)')
@@ -82,9 +82,16 @@ class OlympixManagementCommand extends Command
                 } else {
                     return $this->showAllStats($io);
                 }
-            
+
+            case 'recalculate':
+                if (!$olympixId) {
+                    $io->error('Olympix ID required for recalculate action');
+                    return Command::FAILURE;
+                }
+                return $this->recalculateScores((int) $olympixId, $io);
+
             default:
-                $io->error('Invalid action. Use: list, delete, reset, or stats');
+                $io->error('Invalid action. Use: list, delete, reset, stats, or recalculate');
                 return Command::FAILURE;
         }
     }
@@ -225,6 +232,39 @@ class OlympixManagementCommand extends Command
 
         $resetType = $keepPlayers ? 'reset (players kept)' : 'completely reset';
         $io->success("Olympix '{$olympix->getName()}' has been $resetType.");
+        return Command::SUCCESS;
+    }
+
+    /**
+     * Recomputes Player::totalPoints from the persisted GameResult rows
+     * (Player::calculateTotalPoints() sums GameResult::getFinalPoints()).
+     * Non-destructive: GameResult data is the source of truth and is never
+     * touched here — only the denormalized totalPoints cache column is
+     * refreshed. Safe to run any time, including after the accidental-reset
+     * bug fixed alongside this command (see PlayerController::resetPoints()).
+     */
+    private function recalculateScores(int $olympixId, SymfonyStyle $io): int
+    {
+        $olympix = $this->olympixRepository->find($olympixId);
+
+        if (!$olympix) {
+            $io->error("Olympix with ID $olympixId not found.");
+            return Command::FAILURE;
+        }
+
+        $io->title("Recalculate Scores - {$olympix->getName()}");
+
+        $rows = [];
+        foreach ($olympix->getPlayers() as $player) {
+            $before = $player->getTotalPoints();
+            $player->calculateTotalPoints();
+            $rows[] = [$player->getName(), $before, $player->getTotalPoints()];
+        }
+
+        $this->entityManager->flush();
+
+        $io->table(['Player', 'Before', 'After'], $rows);
+        $io->success("Scores for '{$olympix->getName()}' recalculated from stored game results.");
         return Command::SUCCESS;
     }
 

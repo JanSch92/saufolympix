@@ -114,7 +114,7 @@ class PlayerController extends AbstractController
         return $this->redirectToRoute('app_player_manage', ['olympixId' => $player->getOlympix()->getId()]);
     }
 
-    #[Route('/player/delete/{id}', name: 'app_player_delete')]
+    #[Route('/player/delete/{id}', name: 'app_player_delete', methods: ['POST'])]
     public function delete(int $id): Response
     {
         $player = $this->playerRepository->find($id);
@@ -140,7 +140,7 @@ class PlayerController extends AbstractController
         return $this->redirectToRoute('app_player_manage', ['olympixId' => $olympixId]);
     }
 
-    #[Route('/player/reset-jokers/{id}', name: 'app_player_reset_jokers')]
+    #[Route('/player/reset-jokers/{id}', name: 'app_player_reset_jokers', methods: ['POST'])]
     public function resetJokers(int $id): Response
     {
         $player = $this->playerRepository->find($id);
@@ -159,7 +159,7 @@ class PlayerController extends AbstractController
         return $this->redirectToRoute('app_player_manage', ['olympixId' => $player->getOlympix()->getId()]);
     }
 
-    #[Route('/player/reset-points/{id}', name: 'app_player_reset_points')]
+    #[Route('/player/reset-points/{id}', name: 'app_player_reset_points', methods: ['POST'])]
     public function resetPoints(int $id): Response
     {
         $player = $this->playerRepository->find($id);

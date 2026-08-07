@@ -84,24 +84,33 @@
                             </button>
 
                             <!-- Reset Jokers -->
-                            <a href="{{ path('app_player_reset_jokers', {id: player.id}) }}"
-                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 text-sm">
-                                Joker zurücksetzen
-                            </a>
+                            {# Echtes POST-Formular statt GET-Link: ein GET-Link fuehrt die Aktion schon
+                               bei Prefetch/Mittelklick/Long-Press aus, ganz ohne Klick auf den Button. #}
+                            <form method="post" action="{{ path('app_player_reset_jokers', {id: player.id}) }}"
+                                  onsubmit="return confirm('Joker für {{ player.name|e('js') }} wirklich zurücksetzen?')" class="inline">
+                                <button type="submit"
+                                        class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 text-sm">
+                                    Joker zurücksetzen
+                                </button>
+                            </form>
 
                             <!-- Reset Points -->
-                            <a href="{{ path('app_player_reset_points', {id: player.id}) }}"
-                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-teal-300 hover:text-teal-200 hover:bg-teal-500/10 text-sm"
-                               onclick="return confirm('Punkte wirklich zurücksetzen?')">
-                                Punkte zurücksetzen
-                            </a>
+                            <form method="post" action="{{ path('app_player_reset_points', {id: player.id}) }}"
+                                  onsubmit="return confirm('Punkte für {{ player.name|e('js') }} wirklich zurücksetzen?')" class="inline">
+                                <button type="submit"
+                                        class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-teal-300 hover:text-teal-200 hover:bg-teal-500/10 text-sm">
+                                    Punkte zurücksetzen
+                                </button>
+                            </form>
 
                             <!-- Delete Button -->
-                            <a href="{{ path('app_player_delete', {id: player.id}) }}"
-                               class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 text-sm"
-                               onclick="return confirmDelete('Spieler {{ player.name }} wirklich löschen?')">
-                                Löschen
-                            </a>
+                            <form method="post" action="{{ path('app_player_delete', {id: player.id}) }}"
+                                  onsubmit="return confirmDelete('Spieler {{ player.name|e('js') }} wirklich löschen?')" class="inline">
+                                <button type="submit"
+                                        class="inline-flex items-center min-h-[44px] px-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 text-sm">
+                                    Löschen
+                                </button>
+                            </form>
                         </div>
                     </div>
                 {% endfor %}
