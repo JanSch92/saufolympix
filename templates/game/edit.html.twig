@@ -46,13 +46,20 @@
                         name="game_type"
                         required
                         onchange="updateGameTypeOptions()"
-                        class="w-full">
+                        class="w-full"
+                        {% if not game.isPending %}disabled{% endif %}>
                     <option value="">Bitte wählen</option>
                     <option value="free_for_all" {% if game.gameType == 'free_for_all' %}selected{% endif %}>Free For All</option>
                     <option value="tournament_team" {% if game.gameType == 'tournament_team' %}selected{% endif %}>Turnier (Team)</option>
                     <option value="tournament_single" {% if game.gameType == 'tournament_single' %}selected{% endif %}>Turnier (Einzel)</option>
                     <option value="quiz" {% if game.gameType == 'quiz' %}selected{% endif %}>Quiz</option>
+                    <option value="split_or_steal" {% if game.gameType == 'split_or_steal' %}selected{% endif %}>Split or Steal</option>
+                    <option value="gamechanger" {% if game.gameType == 'gamechanger' %}selected{% endif %}>Gamechanger</option>
+                    <option value="stopwatch" {% if game.gameType == 'stopwatch' %}selected{% endif %}>Stoppuhr</option>
                 </select>
+                {% if not game.isPending %}
+                    <div class="text-sm text-gray-500 mt-1">Der Spieltyp kann nur bei noch nicht gestarteten Spielen geändert werden.</div>
+                {% endif %}
             </div>
 
             <!-- Team Size (for team tournaments) -->

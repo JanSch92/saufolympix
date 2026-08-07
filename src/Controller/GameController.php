@@ -382,13 +382,40 @@ class GameController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $name = $request->request->get('name');
-            
+
             if (empty($name)) {
                 $this->addFlash('error', 'Name ist erforderlich');
                 return $this->redirectToRoute('app_game_edit', ['id' => $id]);
             }
 
             $game->setName($name);
+
+            // Spieltyp, Teamgröße und Punkteverteilung sind nur änderbar,
+            // solange das Spiel noch nicht gestartet wurde
+            if ($game->isPending()) {
+                $gameType = $request->request->get('game_type');
+                $validGameTypes = ['free_for_all', 'tournament_team', 'tournament_single', 'quiz', 'split_or_steal', 'gamechanger', 'stopwatch'];
+
+                if ($gameType && in_array($gameType, $validGameTypes, true)) {
+                    $game->setGameType($gameType);
+
+                    if ($gameType === 'tournament_team') {
+                        $teamSize = (int) $request->request->get('team_size');
+                        $game->setTeamSize($teamSize >= 2 ? $teamSize : 2);
+                    } else {
+                        $game->setTeamSize(null);
+                    }
+                } elseif ($gameType) {
+                    $this->addFlash('error', 'Ungültiger Spieltyp — Typ wurde nicht geändert');
+                }
+
+                $pointsDistribution = $request->request->get('points_distribution');
+                if ($pointsDistribution !== null) {
+                    $points = array_map('intval', array_filter(explode(',', (string) $pointsDistribution), fn ($v) => trim($v) !== ''));
+                    $game->setPointsDistribution(!empty($points) ? $points : null);
+                }
+            }
+
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Spiel wurde bearbeitet');
