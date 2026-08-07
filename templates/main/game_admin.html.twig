@@ -11,13 +11,17 @@
                 <h1 class="text-3xl font-extrabold gradient-text">{{ olympix.name }}</h1>
                 <p class="text-gray-400 mt-2">Admin-Bereich</p>
             </div>
-            <div class="flex space-x-4">
-                <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
-                   class="btn-secondary" 
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ path('app_show_olympix', {id: olympix.id}) }}"
+                   class="btn-secondary"
                    target="_blank">
                     Live-Anzeige
                 </a>
-                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}" 
+                <form action="{{ path('app_copy_olympix', {id: olympix.id}) }}" method="POST"
+                      onsubmit="return confirm('Dieses Olympix mit allen Spielern und Spielen kopieren? Die Kopie startet bei 0 Punkten, dieses Olympix bleibt unverändert.')">
+                    <button type="submit" class="btn-secondary">Kopieren</button>
+                </form>
+                <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}"
                    class="btn-primary">
                     Spieler verwalten
                 </a>
