@@ -25,7 +25,7 @@
                     <div class="flex gap-2 shrink-0">
                         <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" class="btn-secondary">Live-Anzeige</a>
                         <form action="{{ path('app_copy_olympix', {id: olympix.id}) }}" method="POST"
-                              onsubmit="return confirm('Olympix mit allen Spielern und Spielen kopieren?')">
+                              onsubmit="return appConfirmSubmit(event, this, 'Olympix mit allen Spielern und Spielen kopieren?')">
                             <button type="submit" class="btn-secondary">Kopieren</button>
                         </form>
                         <a href="{{ path('app_game_admin', {id: olympix.id}) }}" class="btn-primary">Verwalten</a>
@@ -57,7 +57,7 @@
                     <div class="flex gap-2 shrink-0">
                         <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" class="btn-secondary">Endstand</a>
                         <form action="{{ path('app_copy_olympix', {id: olympix.id}) }}" method="POST"
-                              onsubmit="return confirm('Olympix mit allen Spielern und Spielen kopieren?')">
+                              onsubmit="return appConfirmSubmit(event, this, 'Olympix mit allen Spielern und Spielen kopieren?')">
                             <button type="submit" class="btn-primary">Kopieren</button>
                         </form>
                     </div>

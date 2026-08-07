@@ -418,6 +418,101 @@
         </div>
     </footer>
 
+    <!-- App-Modal-System: Ersatz für alert/confirm/prompt -->
+    <div id="app-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0, 0, 0, 0.8);">
+        <div class="rounded-xl border border-party-purple/40 p-6 max-w-md w-full" style="background: #111a2e; box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);">
+            <h3 id="app-modal-title" class="text-lg font-bold text-gray-100 mb-3"></h3>
+            <div id="app-modal-message" class="text-gray-300 mb-5 whitespace-pre-line"></div>
+            <input type="text" id="app-modal-input" class="w-full mb-5 hidden">
+            <div class="flex gap-3 justify-end">
+                <button type="button" id="app-modal-cancel" class="btn-secondary">Abbrechen</button>
+                <button type="button" id="app-modal-ok" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+    <div id="app-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-xl text-gray-100 text-sm font-medium" style="background: #1e293b; border: 1px solid rgba(148, 163, 184, 0.3); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);"></div>
+
+    <script>
+        // ---------- App-Modal-System (keine nativen alert/confirm/prompt!) ----------
+        (function () {
+            const modal = document.getElementById('app-modal');
+            const titleEl = document.getElementById('app-modal-title');
+            const messageEl = document.getElementById('app-modal-message');
+            const inputEl = document.getElementById('app-modal-input');
+            const okBtn = document.getElementById('app-modal-ok');
+            const cancelBtn = document.getElementById('app-modal-cancel');
+            let resolver = null;
+
+            function open(options) {
+                titleEl.textContent = options.title || 'Bestätigen';
+                messageEl.textContent = options.message || '';
+                inputEl.classList.toggle('hidden', !options.input);
+                inputEl.value = options.inputValue || '';
+                okBtn.textContent = options.okText || 'OK';
+                okBtn.className = options.danger ? 'btn-danger' : 'btn-primary';
+                cancelBtn.classList.toggle('hidden', options.hideCancel === true);
+                modal.classList.remove('hidden');
+                if (options.input) {
+                    setTimeout(() => { inputEl.focus(); inputEl.select(); }, 50);
+                }
+                return new Promise(resolve => { resolver = resolve; });
+            }
+
+            function close(result) {
+                modal.classList.add('hidden');
+                if (resolver) { resolver(result); resolver = null; }
+            }
+
+            okBtn.addEventListener('click', () => close(inputEl.classList.contains('hidden') ? true : inputEl.value));
+            cancelBtn.addEventListener('click', () => close(inputEl.classList.contains('hidden') ? false : null));
+            modal.addEventListener('click', e => { if (e.target === modal) close(inputEl.classList.contains('hidden') ? false : null); });
+            inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') okBtn.click(); });
+            document.addEventListener('keydown', e => {
+                if (!modal.classList.contains('hidden') && e.key === 'Escape') cancelBtn.click();
+            });
+
+            window.appConfirm = (message, options = {}) =>
+                open({ message, title: options.title || 'Bestätigen', okText: options.okText || 'Ja', danger: options.danger });
+
+            window.appAlert = (message, options = {}) =>
+                open({ message, title: options.title || 'Hinweis', okText: 'OK', hideCancel: true });
+
+            window.appPrompt = (message, defaultValue = '', options = {}) =>
+                open({ message, title: options.title || 'Eingabe', input: true, inputValue: defaultValue, okText: options.okText || 'Speichern' });
+
+            let toastTimer = null;
+            window.appToast = (message) => {
+                const toast = document.getElementById('app-toast');
+                toast.textContent = message;
+                toast.classList.remove('hidden');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
+            };
+
+            // Für Links: onclick="return appConfirmLink(event, this, 'Frage?')"
+            window.appConfirmLink = (event, el, message, options = {}) => {
+                event.preventDefault();
+                appConfirm(message, options).then(ok => { if (ok) window.location.href = el.href; });
+                return false;
+            };
+
+            // Für Formulare: onsubmit="return appConfirmSubmit(event, this, 'Frage?')"
+            window.appConfirmSubmit = (event, form, message, options = {}) => {
+                if (form.dataset.appConfirmed === '1') {
+                    return true;
+                }
+                event.preventDefault();
+                appConfirm(message, options).then(ok => {
+                    if (ok) {
+                        form.dataset.appConfirmed = '1';
+                        form.submit();
+                    }
+                });
+                return false;
+            };
+        })();
+    </script>
+
     <!-- JavaScript -->
     <script>
         // Auto-refresh for public display
@@ -567,11 +662,6 @@
             });
 
             return isValid;
-        }
-
-        // Confirm deletion
-        function confirmDelete(message) {
-            return confirm(message || 'Sind Sie sicher, dass Sie dieses Element löschen möchten?');
         }
 
         // Close flash messages

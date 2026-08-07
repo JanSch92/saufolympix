@@ -18,14 +18,14 @@
                     Live-Anzeige
                 </a>
                 <form action="{{ path('app_copy_olympix', {id: olympix.id}) }}" method="POST"
-                      onsubmit="return confirm('Dieses Olympix mit allen Spielern und Spielen kopieren? Die Kopie startet bei 0 Punkten, dieses Olympix bleibt unverändert.')">
+                      onsubmit="return appConfirmSubmit(event, this, 'Dieses Olympix mit allen Spielern und Spielen kopieren? Die Kopie startet bei 0 Punkten, dieses Olympix bleibt unverändert.')">
                     <button type="submit" class="btn-secondary">Kopieren</button>
                 </form>
                 <form id="rename-olympix-form" action="{{ path('app_rename_olympix', {id: olympix.id}) }}" method="POST" class="hidden">
                     <input type="hidden" name="name" id="rename-olympix-name">
                 </form>
                 <button type="button" class="btn-secondary"
-                        onclick="const n = prompt('Neuer Name für dieses Olympix:', '{{ olympix.name|e('js') }}'); if (n && n.trim()) { document.getElementById('rename-olympix-name').value = n.trim(); document.getElementById('rename-olympix-form').submit(); }">
+                        onclick="appPrompt('Neuer Name für dieses Olympix:', '{{ olympix.name|e('js') }}', {title: 'Olympix umbenennen'}).then(n => { if (n && n.trim()) { document.getElementById('rename-olympix-name').value = n.trim(); document.getElementById('rename-olympix-form').submit(); } })">
                     Umbenennen
                 </button>
                 <a href="{{ path('app_player_manage', {olympixId: olympix.id}) }}"
@@ -271,11 +271,11 @@
                                                         {% endif %}
                                                         {% if game.status != 'pending' %}
                                                             <a href="{{ path('app_game_reset', {id: game.id}) }}" class="block px-4 py-2 text-sm text-amber-300 hover:bg-night-700"
-                                                               onclick="return confirm('Spiel komplett zurücksetzen? Alle Ergebnisse, Antworten und Versuche dieses Spiels werden gelöscht, eingesetzte Joker gehen an die Spieler zurück.')">
+                                                               onclick="return appConfirmLink(event, this, 'Spiel komplett zurücksetzen? Alle Ergebnisse, Antworten und Versuche dieses Spiels werden gelöscht, eingesetzte Joker gehen an die Spieler zurück.')">
                                                                 Zurücksetzen
                                                             </a>
                                                         {% endif %}
-                                                        <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-pink-400 hover:bg-night-700" onclick="return confirmDelete('Spiel wirklich löschen?')">
+                                                        <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-pink-400 hover:bg-night-700" onclick="return appConfirmLink(event, this, 'Spiel wirklich löschen?', {danger: true, okText: \'Löschen\'})">
                                                             Löschen
                                                         </a>
                                                     </div>
@@ -508,7 +508,7 @@
                     </button>
 
                     <form action="{{ path('app_reset_olympix', {id: olympix.id}) }}" method="POST"
-                          onsubmit="return confirm('WIRKLICH das komplette Olympix zurücksetzen?\n\nAlle Spiele werden wieder auf wartend gesetzt, alle Ergebnisse gelöscht, alle Punkte auf 0, alle Joker frisch. Spieler und Spielplan bleiben erhalten.')">
+                          onsubmit="return appConfirmSubmit(event, this, 'WIRKLICH das komplette Olympix zurücksetzen?\n\nAlle Spiele werden wieder auf wartend gesetzt, alle Ergebnisse gelöscht, alle Punkte auf 0, alle Joker frisch. Spieler und Spielplan bleiben erhalten.')">
                         <button type="submit" class="w-full btn-danger text-sm">
                             Olympix zurücksetzen
                         </button>
@@ -629,13 +629,14 @@ function hideQRCode() {
 function copyPlayerLink() {
     const playerUrl = '{{ url('app_player_access', {olympixId: olympix.id}) }}';
     navigator.clipboard.writeText(playerUrl).then(() => {
-        alert('Link kopiert!');
+        appToast('Link kopiert');
     });
 }
 
 // Refresh all player scores
 function refreshAllPlayerScores() {
-    if (confirm('Alle Spielerpunkte neu berechnen? Dies kann bei vielen Spielen etwas dauern.')) {
+    appConfirm('Alle Spielerpunkte neu berechnen? Dies kann bei vielen Spielen etwas dauern.').then(ok => {
+        if (!ok) return;
         fetch('/api/olympix/{{ olympix.id }}/refresh', {
             method: 'POST',
             headers: {
@@ -645,17 +646,17 @@ function refreshAllPlayerScores() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Alle Punkte wurden neu berechnet!');
-                location.reload();
+                appToast('Alle Punkte wurden neu berechnet');
+                setTimeout(() => location.reload(), 800);
             } else {
-                alert('Fehler beim Berechnen der Punkte');
+                appAlert('Fehler beim Berechnen der Punkte');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Fehler beim Berechnen der Punkte');
+            appAlert('Fehler beim Berechnen der Punkte');
         });
-    }
+    });
 }
 
 // Enhanced Drag & Drop für Spiele-Sortierung
@@ -737,12 +738,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.classList.add('btn-success');
                 }, 2000);
             } else {
-                alert('Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'));
+                appAlert('Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Fehler beim Speichern der Reihenfolge');
+            appAlert('Fehler beim Speichern der Reihenfolge');
         });
     };
 });

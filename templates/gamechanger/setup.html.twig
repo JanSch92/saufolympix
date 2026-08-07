@@ -120,7 +120,7 @@
                 Spiel fortsetzen
             </a>
             {% if realThrows|length > 0 %}
-            <button onclick="if(confirm('Wirklich alle Würfe zurücksetzen? Das Spiel startet komplett neu!')) { window.location.href = window.location.href; }"
+            <button onclick="appConfirm('Wirklich alle Würfe zurücksetzen? Das Spiel startet komplett neu!', {danger: true}).then(ok => { if (ok) window.location.href = window.location.href; })"
                     class="btn-secondary">
                 Komplett neu starten
             </button>
@@ -173,7 +173,7 @@
 
                 <button type="submit"
                         class="btn-primary text-lg px-8 py-3"
-                        onclick="return confirm('{% if existing_throws|length > 0 %}Wirklich neu starten? Alle bisherigen Würfe werden gelöscht!{% else %}Spiel mit zufälliger Reihenfolge starten?{% endif %}')">
+                        onclick="return appConfirmLink(event, this, '{% if existing_throws|length > 0 %}Wirklich neu starten? Alle bisherigen Würfe werden gelöscht!{% else %}Spiel mit zufälliger Reihenfolge starten?{% endif %}')">
                     {% if existing_throws|length > 0 %}
                         Spiel neu starten
                     {% else %}

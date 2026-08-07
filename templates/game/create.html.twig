@@ -296,76 +296,70 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateGameTypeOptions();
         
-        // Form validation
+        // Form validation — komplett über App-Modals, keine nativen Dialoge
         const form = document.getElementById('gameForm');
         form.addEventListener('submit', function(e) {
+            if (form.dataset.appConfirmed === '1') {
+                return; // Bereits über die Modals bestätigt
+            }
+            e.preventDefault();
+
             const gameType = document.getElementById('game_type').value;
             const gameName = document.getElementById('name').value.trim();
             const currentPlayers = {{ olympix.players|length }};
-            
-            if (!gameName) {
-                e.preventDefault();
-                alert('Bitte gib einen Spielnamen ein');
-                return;
-            }
-            
-            if (!gameType) {
-                e.preventDefault();
-                alert('Bitte wähle einen Spieltyp aus');
-                return;
-            }
-            
-            // Check player requirements - *** ERWEITERT UM GAMECHANGER ***
-            const requirements = {
-                'free_for_all': { min: 2 },
-                'tournament_team': { min: 4, max: 16 },
-                'tournament_single': { min: 2, max: 16 },
-                'quiz': { min: 1 },
-                'split_or_steal': { min: 2 },
-                'gamechanger': { min: 2 }, // *** NEU HINZUGEFÜGT ***
-                'stopwatch': { min: 2 }
-            };
-            
-            const req = requirements[gameType];
-            if (req) {
-                if (currentPlayers < req.min) {
-                    e.preventDefault();
-                    alert(`Für ${gameType} sind mindestens ${req.min} Spieler erforderlich. Aktuell sind nur ${currentPlayers} Spieler vorhanden.`);
+
+            (async () => {
+                if (!gameName) {
+                    await appAlert('Bitte gib einen Spielnamen ein');
                     return;
                 }
-                
-                if (req.max && currentPlayers > req.max) {
-                    const proceed = confirm(`Für ${gameType} sind maximal ${req.max} Spieler empfohlen. Aktuell sind ${currentPlayers} Spieler vorhanden. Trotzdem fortfahren?`);
-                    if (!proceed) {
-                        e.preventDefault();
+
+                if (!gameType) {
+                    await appAlert('Bitte wähle einen Spieltyp aus');
+                    return;
+                }
+
+                const requirements = {
+                    'free_for_all': { min: 2 },
+                    'tournament_team': { min: 4, max: 16 },
+                    'tournament_single': { min: 2, max: 16 },
+                    'quiz': { min: 1 },
+                    'split_or_steal': { min: 2 },
+                    'gamechanger': { min: 2 },
+                    'stopwatch': { min: 2 }
+                };
+
+                const req = requirements[gameType];
+                if (req) {
+                    if (currentPlayers < req.min) {
+                        await appAlert(`Für ${gameType} sind mindestens ${req.min} Spieler erforderlich. Aktuell sind nur ${currentPlayers} Spieler vorhanden.`);
+                        return;
+                    }
+
+                    if (req.max && currentPlayers > req.max) {
+                        if (!await appConfirm(`Für ${gameType} sind maximal ${req.max} Spieler empfohlen. Aktuell sind ${currentPlayers} Spieler vorhanden. Trotzdem fortfahren?`)) {
+                            return;
+                        }
+                    }
+                }
+
+                if (gameType === 'split_or_steal' && currentPlayers % 2 !== 0) {
+                    if (!await appConfirm(`Bei ${currentPlayers} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`)) {
                         return;
                     }
                 }
-            }
-            
-            // Special warning for Split or Steal with odd number
-            if (gameType === 'split_or_steal' && currentPlayers % 2 !== 0) {
-                const proceed = confirm(`Bei ${currentPlayers} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`);
-                if (!proceed) {
-                    e.preventDefault();
-                    return;
+
+                if (gameType === 'gamechanger') {
+                    if (!await appConfirm(`Gamechanger-Spiel "${gameName}" mit ${currentPlayers} Spielern erstellen?\n\nJeder Spieler wirft genau einmal in zufälliger Reihenfolge. Spieldauer: ca. 10-20 Minuten.`)) {
+                        return;
+                    }
                 }
-            }
-            
-            // Special info for Gamechanger - *** NEU HINZUGEFÜGT ***
-            if (gameType === 'gamechanger') {
-                const proceed = confirm(`Gamechanger-Spiel "${gameName}" mit ${currentPlayers} Spielern erstellen?\n\nJeder Spieler wirft genau einmal in zufälliger Reihenfolge. Spieldauer: ca. 10-20 Minuten.`);
-                if (!proceed) {
-                    e.preventDefault();
-                    return;
+
+                if (await appConfirm(`Spiel "${gameName}" vom Typ "${gameType}" erstellen?`, {okText: 'Erstellen'})) {
+                    form.dataset.appConfirmed = '1';
+                    form.submit();
                 }
-            }
-            
-            // Submit confirmation
-            const proceed = confirm(`Spiel "${gameName}" vom Typ "${gameType}" erstellen?`);
-            if (!proceed) {
-                e.preventDefault();
-            }
+            })();
         });
     });
 </script>

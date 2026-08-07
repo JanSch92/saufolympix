@@ -62,7 +62,7 @@
             <p class="text-gray-400 mb-4">Warte auf die Abgaben der Spieler… Das Spiel wird automatisch ausgewertet, sobald alle fertig sind.</p>
             {% if attempts|length > 0 %}
                 <a href="{{ path('app_stopwatch_evaluate', {gameId: game.id}) }}" class="btn-secondary"
-                   onclick="return confirm('Es haben noch nicht alle Spieler abgegeben. Trotzdem auswerten?')">
+                   onclick="return appConfirmLink(event, this, 'Es haben noch nicht alle Spieler abgegeben. Trotzdem auswerten?')">
                     Vorzeitig auswerten ({{ attempts|length }} Abgaben)
                 </a>
             {% endif %}

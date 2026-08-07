@@ -36,7 +36,7 @@
                 </p>
             </div>
             <form action="{{ path('app_quiz_generate', {gameId: game.id}) }}" method="POST"
-                  onsubmit="return confirm('Vorhandene Fragen werden ersetzt. Fortfahren?')">
+                  onsubmit="return appConfirmSubmit(event, this, 'Vorhandene Fragen werden ersetzt. Fortfahren?')">
                 <button type="submit" class="btn-success whitespace-nowrap">
                     10 Fragen generieren
                 </button>
@@ -110,7 +110,7 @@
                             <div class="flex items-center space-x-2 ml-4">
                                 <a href="{{ path('app_quiz_question_delete', {id: question.id}) }}"
                                    class="text-pink-400 hover:text-pink-300 text-sm"
-                                   onclick="return confirmDelete('Frage wirklich löschen?')">
+                                   onclick="return appConfirmLink(event, this, 'Frage wirklich löschen?', {danger: true, okText: \'Löschen\'})">
                                     Löschen
                                 </a>
                             </div>

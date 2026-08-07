@@ -368,7 +368,7 @@ document.getElementById('throwForm')?.addEventListener('submit', async function(
 
 // Undo Last Throw
 async function undoLastThrow() {
-    if (!confirm('Letzten Wurf wirklich rückgängig machen?')) {
+    if (!await appConfirm('Letzten Wurf wirklich rückgängig machen?')) {
         return;
     }
 

@@ -123,7 +123,7 @@
             start(identity.id);
         } else {
             document.getElementById('confirm-player').addEventListener('click', () => {
-                if (!select.value) { alert('Bitte wähle deinen Namen aus!'); return; }
+                if (!select.value) { appAlert('Bitte wähle deinen Namen aus!'); return; }
                 const name = select.options[select.selectedIndex].textContent.trim();
                 saveIdentity(select.value, name);
                 document.getElementById('player-select-block').classList.add('hidden');
@@ -237,7 +237,7 @@
 
     document.getElementById('q-submit').addEventListener('click', () => {
         const value = document.getElementById('q-answer').value;
-        if (value === '' || value === null) { alert('Bitte gib deine Schätzung ein!'); return; }
+        if (value === '' || value === null) { appAlert('Bitte gib deine Schätzung ein!'); return; }
         document.getElementById('q-submit').disabled = true;
 
         fetch(`/quiz/answer/${gameId}`, {

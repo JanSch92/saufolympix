@@ -80,7 +80,7 @@
                             <span class="text-sm text-emerald-400">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
                             <a href="{{ path('app_joker_cancel', {id: joker.id}) }}"
                                class="text-pink-400 hover:text-pink-300 text-sm"
-                               onclick="return confirm('Joker wirklich stornieren?')">
+                               onclick="return appConfirmLink(event, this, 'Joker wirklich stornieren?')">
                                 ✗ Stornieren
                             </a>
                         </div>
@@ -110,7 +110,7 @@
                             <span class="text-sm text-purple-300/80">Aktiviert: {{ joker.usedAt|date('H:i') }}</span>
                             <a href="{{ path('app_joker_cancel', {id: joker.id}) }}"
                                class="text-pink-400 hover:text-pink-300 text-sm"
-                               onclick="return confirm('Joker wirklich stornieren?')">
+                               onclick="return appConfirmLink(event, this, 'Joker wirklich stornieren?')">
                                 ✗ Stornieren
                             </a>
                         </div>

@@ -180,6 +180,14 @@ class GameTypesFlowTest extends FunctionalTestCase
         $this->assertSame('active', $game->getStatus());
         $this->assertNotNull($game->getTournament());
 
+        // Bracket-Seite rendert (Formulare zeigen auf die update-match-Route)
+        $this->client->request('GET', '/game/bracket/' . $game->getId());
+        $this->assertResponseIsSuccessful();
+        $this->assertStringContainsString(
+            '/game/bracket/' . $game->getId() . '/update-match',
+            $this->client->getResponse()->getContent()
+        );
+
         // Bracket durchspielen: immer participant1 gewinnen lassen
         for ($i = 0; $i < 10; $i++) {
             $this->entityManager->clear();

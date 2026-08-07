@@ -135,9 +135,10 @@
                                     </div>
                                 {% elseif match.participant1 and match.participant2 %}
                                     <div class="mt-3 text-center">
-                                        <form action="{{ path('app_game_match_result', {gameId: game.id, matchId: match.id}) }}" 
-                                              method="POST" 
+                                        <form action="{{ path('app_game_bracket_update_match', {gameId: game.id}) }}"
+                                              method="POST"
                                               class="space-y-2">
+                                            <input type="hidden" name="match_id" value="{{ match.id }}">
                                             <select name="winner_id" 
                                                     class="w-full text-sm"
                                                     onchange="updateWinnerType(this)">
@@ -215,9 +216,10 @@
                             </div>
                         {% elseif match.participant1 and match.participant2 %}
                             <div class="mt-3 text-center">
-                                <form action="{{ path('app_game_match_result', {gameId: game.id, matchId: match.id}) }}" 
-                                      method="POST" 
+                                <form action="{{ path('app_game_bracket_update_match', {gameId: game.id}) }}"
+                                      method="POST"
                                       class="space-y-2">
+                                    <input type="hidden" name="match_id" value="{{ match.id }}">
                                     <select name="winner_id" 
                                             class="w-full text-sm"
                                             onchange="updateWinnerType(this)">

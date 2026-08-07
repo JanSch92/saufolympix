@@ -19,7 +19,7 @@
                 {% if existing_matches %}
                     <a href="{{ path('app_split_or_steal_reset', {gameId: game.id}) }}"
                        class="btn-danger"
-                       onclick="return confirm('Alle Matches zurücksetzen?')">
+                       onclick="return appConfirmLink(event, this, 'Alle Matches zurücksetzen?')">
                         Zurücksetzen
                     </a>
                 {% endif %}
@@ -253,33 +253,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const pointsInput = document.getElementById('points_at_stake');
 
     form.addEventListener('submit', function(e) {
-        const points = parseInt(pointsInput.value);
-
-        if (points < 1 || points > 1000) {
-            e.preventDefault();
-            alert('Punkte müssen zwischen 1 und 1000 liegen');
+        if (form.dataset.appConfirmed === '1') {
             return;
         }
+        e.preventDefault();
 
-        const playerCount = {{ players|length }};
-        if (playerCount < 2) {
-            e.preventDefault();
-            alert('Mindestens 2 Spieler erforderlich');
-            return;
-        }
+        (async () => {
+            const points = parseInt(pointsInput.value);
 
-        if (playerCount % 2 !== 0) {
-            const proceed = confirm(`Bei ${playerCount} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`);
-            if (!proceed) {
-                e.preventDefault();
+            if (points < 1 || points > 1000) {
+                await appAlert('Punkte müssen zwischen 1 und 1000 liegen');
                 return;
             }
-        }
 
-        const proceed = confirm('Neue Paarungen erstellen? Bestehende Matches werden überschrieben.');
-        if (!proceed) {
-            e.preventDefault();
-        }
+            const playerCount = {{ players|length }};
+            if (playerCount < 2) {
+                await appAlert('Mindestens 2 Spieler erforderlich');
+                return;
+            }
+
+            if (playerCount % 2 !== 0) {
+                if (!await appConfirm(`Bei ${playerCount} Spielern bleibt ein Spieler ohne Match. Trotzdem fortfahren?`)) {
+                    return;
+                }
+            }
+
+            if (await appConfirm('Neue Paarungen erstellen? Bestehende Matches werden überschrieben.')) {
+                form.dataset.appConfirmed = '1';
+                form.submit();
+            }
+        })();
     });
 });
 </script>
