@@ -14,6 +14,7 @@ use App\Repository\SplitOrStealMatchRepository;
 use App\Repository\GamechangerThrowRepository; // *** NEU HINZUGEFÜGT ***
 use App\Entity\QuizQuestion;
 use App\Repository\QuizQuestionRepository;
+use App\Service\GameResetService;
 use App\Service\JokerApplicationService;
 use App\Service\QuizQuestionGeneratorService;
 use App\Service\StopwatchEvaluationService;
@@ -472,7 +473,7 @@ class GameController extends AbstractController
     }
 
     #[Route('/game/reset/{id}', name: 'app_game_reset')]
-    public function reset(int $id): Response
+    public function reset(int $id, GameResetService $gameResetService): Response
     {
         $game = $this->gameRepository->find($id);
 
@@ -480,25 +481,16 @@ class GameController extends AbstractController
             throw $this->createNotFoundException('Spiel nicht gefunden');
         }
 
-        if (!$game->isCompleted()) {
-            $this->addFlash('error', 'Nur abgeschlossene Spiele können zurückgesetzt werden');
+        if ($game->isPending()) {
+            $this->addFlash('error', 'Das Spiel wurde noch nicht gestartet — nichts zurückzusetzen');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Remove all game results
-        $gameResults = $this->gameResultRepository->findBy(['game' => $game]);
-        foreach ($gameResults as $result) {
-            $this->entityManager->remove($result);
-        }
+        // Kompletter Reset: Ergebnisse, Fragen/Antworten, Versuche, Matches,
+        // Würfe, Turnierdaten weg — eingesetzte Joker zurück an die Spieler
+        $gameResetService->resetGameAndRecalculate($game);
 
-        // Reset game status
-        $game->setStatus('pending');
-        $this->entityManager->flush();
-
-        // Update all player total points
-        $this->updatePlayerTotalPoints($game->getOlympix());
-
-        $this->addFlash('success', 'Spiel "' . $game->getName() . '" wurde zurückgesetzt');
+        $this->addFlash('success', 'Spiel "' . $game->getName() . '" wurde komplett zurückgesetzt');
         return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
     }
 

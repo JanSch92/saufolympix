@@ -69,6 +69,26 @@ class MainController extends AbstractController
         return $this->redirectToRoute('app_index');
     }
 
+    /**
+     * Setzt ein komplettes Olympix zurück: alle Spiele wieder "wartend",
+     * alle Spieler auf 0 Punkte mit frischen Jokern. Spieler und Spielplan bleiben.
+     */
+    #[Route('/olympix/reset/{id}', name: 'app_reset_olympix', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function resetOlympix(int $id, \App\Service\GameResetService $gameResetService): Response
+    {
+        $olympix = $this->olympixRepository->find($id);
+
+        if (!$olympix) {
+            throw $this->createNotFoundException('Olympix nicht gefunden');
+        }
+
+        $gameResetService->resetOlympix($olympix);
+
+        $this->addFlash('success', 'Olympix "' . $olympix->getName() . '" wurde komplett zurückgesetzt — alle Spiele wartend, alle Punkte auf 0, Joker frisch');
+
+        return $this->redirectToRoute('app_game_admin', ['id' => $id]);
+    }
+
     #[Route('/olympix/rename/{id}', name: 'app_rename_olympix', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function renameOlympix(int $id, Request $request): Response
     {

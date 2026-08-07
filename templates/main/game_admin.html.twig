@@ -45,28 +45,6 @@
             </button>
         </div>
         
-        <div id="qrCodeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="card card-highlight p-8 max-w-md w-full">
-                <div class="text-center">
-                    <h3 class="text-lg font-bold text-gray-100 mb-4">Spieler-Zugang QR-Code</h3>
-                    <div class="mb-4 qr-code-container inline-block">
-                        <img src="{{ path('app_qr_code', {olympixId: olympix.id}) }}" alt="QR-Code für Spieler-Zugang" width="240" height="240">
-                    </div>
-                    <p class="text-sm text-gray-400 mb-4">
-                        Spieler können diesen Code scannen um ihre Punkte zu sehen und Joker zu verwenden
-                    </p>
-                    <div class="flex space-x-4">
-                        <button onclick="hideQRCode()" class="btn-secondary flex-1">
-                            Schließen
-                        </button>
-                        <button onclick="copyPlayerLink()" class="btn-primary flex-1">
-                            Link kopieren
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <div class="text-sm text-gray-400">
             <strong>Direkt-Link:</strong>
             <code class="bg-night-700/60 border border-gray-700/60 text-purple-200 p-1 rounded text-xs">{{ url('app_player_access', {olympixId: olympix.id}) }}</code>
@@ -289,6 +267,12 @@
                                                         {% if game.status == 'active' %}
                                                             <a href="{{ path('app_game_complete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-amber-300 hover:bg-night-700">
                                                                 Abschließen
+                                                            </a>
+                                                        {% endif %}
+                                                        {% if game.status != 'pending' %}
+                                                            <a href="{{ path('app_game_reset', {id: game.id}) }}" class="block px-4 py-2 text-sm text-amber-300 hover:bg-night-700"
+                                                               onclick="return confirm('Spiel komplett zurücksetzen? Alle Ergebnisse, Antworten und Versuche dieses Spiels werden gelöscht, eingesetzte Joker gehen an die Spieler zurück.')">
+                                                                Zurücksetzen
                                                             </a>
                                                         {% endif %}
                                                         <a href="{{ path('app_game_delete', {id: game.id}) }}" class="block px-4 py-2 text-sm text-pink-400 hover:bg-night-700" onclick="return confirmDelete('Spiel wirklich löschen?')">
@@ -522,8 +506,15 @@
                     <button onclick="refreshAllPlayerScores()" class="w-full btn-secondary text-sm">
                         Alle Punkte neu berechnen
                     </button>
-                    
-                    <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" 
+
+                    <form action="{{ path('app_reset_olympix', {id: olympix.id}) }}" method="POST"
+                          onsubmit="return confirm('WIRKLICH das komplette Olympix zurücksetzen?\n\nAlle Spiele werden wieder auf wartend gesetzt, alle Ergebnisse gelöscht, alle Punkte auf 0, alle Joker frisch. Spieler und Spielplan bleiben erhalten.')">
+                        <button type="submit" class="w-full btn-danger text-sm">
+                            Olympix zurücksetzen
+                        </button>
+                    </form>
+
+                    <a href="{{ path('app_show_olympix', {id: olympix.id}) }}"
                        class="block w-full btn-primary text-sm text-center"
                        target="_blank">
                         Live-Anzeige öffnen
@@ -536,6 +527,30 @@
                         </a>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR-Modal: bewusst außerhalb aller Karten (backdrop-filter erzeugt eigene
+     Stacking-Contexts, in denen position:fixed + z-index nicht greifen) -->
+<div id="qrCodeModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0, 0, 0, 0.8);">
+    <div class="rounded-xl border border-party-purple/40 p-8 max-w-md w-full" style="background: #111a2e; box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);">
+        <div class="text-center">
+            <h3 class="text-lg font-bold text-gray-100 mb-4">Spieler-Zugang QR-Code</h3>
+            <div class="mb-4 qr-code-container inline-block">
+                <img src="{{ path('app_qr_code', {olympixId: olympix.id}) }}" alt="QR-Code für Spieler-Zugang" width="240" height="240">
+            </div>
+            <p class="text-sm text-gray-400 mb-4">
+                Spieler können diesen Code scannen um ihre Punkte zu sehen und Joker zu verwenden
+            </p>
+            <div class="flex space-x-4">
+                <button onclick="hideQRCode()" class="btn-secondary flex-1">
+                    Schließen
+                </button>
+                <button onclick="copyPlayerLink()" class="btn-primary flex-1">
+                    Link kopieren
+                </button>
             </div>
         </div>
     </div>
