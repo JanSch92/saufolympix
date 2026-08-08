@@ -646,7 +646,8 @@
         
         <div class="overflow-y-auto custom-scrollbar p-4 space-y-3" id="game-history">
           {% for game in olympix.gamesByOrder %}
-          <div class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border border-party-purple/15 hover:border-party-purple/40 {% if game.status == 'completed' %}bg-emerald-500/10 border-emerald-500/30{% elseif game.status == 'active' %}bg-party-purple/10 border-party-purple/40 pulse-glow{% else %}bg-night-800/40{% endif %}">
+          {# Klick auf ein Spiel -> Detailansicht mit Punkten und Joker-Historie #}
+          <a href="{{ path('app_game_details', {id: game.id}) }}" class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border border-party-purple/15 hover:border-party-purple/40 {% if game.status == 'completed' %}bg-emerald-500/10 border-emerald-500/30{% elseif game.status == 'active' %}bg-party-purple/10 border-party-purple/40 pulse-glow{% else %}bg-night-800/40{% endif %}">
             <div class="flex-1 min-w-0">
               <p class="font-medium truncate text-gray-100">{{ game.name }}</p>
               <p class="text-xs text-gray-400 uppercase tracking-wide">{{ game.gameType|replace({'_':' '}) }}</p>
@@ -672,7 +673,7 @@
                 </div>
               {% endif %}
             </div>
-          </div>
+          </a>
           {% endfor %}
         </div>
       </div>

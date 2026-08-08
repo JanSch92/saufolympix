@@ -349,30 +349,48 @@ class QuizController extends AbstractController
         $totalPlayers = $game->getOlympix()->getPlayers()->count();
         $playerId = $request->query->getInt('player');
 
+        // Eine Frage ist erst DURCH, wenn alle geantwortet UND alle die
+        // Auswertung mit "Weiter" bestätigt haben (Barriere pro Frage).
         $current = null;
         $index = 0;
+        $phase = 'question';
         foreach ($questions as $i => $question) {
-            if (count($this->quizAnswerRepository->findByQuestion($question->getId())) < $totalPlayers) {
+            $answers = $this->quizAnswerRepository->findByQuestion($question->getId());
+
+            if (count($answers) < $totalPlayers) {
                 $current = $question;
                 $index = $i;
+                $phase = 'question';
+                break;
+            }
+
+            $seen = count(array_filter($answers, fn ($a) => $a->isResultSeen()));
+            if ($seen < $totalPlayers) {
+                $current = $question;
+                $index = $i;
+                $phase = 'result';
                 break;
             }
         }
 
-        if (!$current) {
-            // Alle Fragen komplett beantwortet: Quiz abschließen (idempotent)
-            if ($game->isActive() && count($questions) > 0 && $this->allPlayersAnswered($game)) {
-                $this->calculateQuizResults($game);
-                $game->setStatus('completed');
-                foreach ($game->getOlympix()->getPlayers() as $p) {
-                    $p->calculateTotalPoints();
-                }
-                $this->entityManager->flush();
+        // Abschluss der WERTUNG bereits, sobald alle Antworten da sind — die
+        // Weiter-Barriere der letzten Frage hält nur die Anzeige, nicht die Punkte
+        if ($game->isActive() && count($questions) > 0 && $this->allPlayersAnswered($game)) {
+            $this->calculateQuizResults($game);
+            $game->setStatus('completed');
+            foreach ($game->getOlympix()->getPlayers() as $p) {
+                $p->calculateTotalPoints();
             }
+            $this->entityManager->flush();
+        }
+
+        if (!$current) {
+            $lastQuestion = count($questions) > 0 ? end($questions) : null;
 
             return $this->json([
                 'quiz_completed' => true,
                 'total' => count($questions),
+                'last_question_id' => $lastQuestion?->getId(),
                 'dashboard_url' => $playerId > 0
                     ? $this->generateUrl('app_player_dashboard', ['olympixId' => $game->getOlympix()->getId(), 'playerId' => $playerId])
                     : null,
@@ -381,24 +399,92 @@ class QuizController extends AbstractController
 
         $answers = $this->quizAnswerRepository->findByQuestion($current->getId());
         $playerAnswered = false;
+        $playerContinued = false;
+        $continued = 0;
         foreach ($answers as $answer) {
+            if ($answer->isResultSeen()) {
+                $continued++;
+            }
             if ($answer->getPlayer()->getId() === $playerId) {
                 $playerAnswered = true;
-                break;
+                $playerContinued = $answer->isResultSeen();
             }
         }
 
         return $this->json([
             'quiz_completed' => false,
+            'phase' => $phase,
             'question' => [
                 'id' => $current->getId(),
-                'text' => $current->getQuestion(),
+                'text' => $phase === 'question' ? $current->getQuestion() : null,
                 'index' => $index + 1,
                 'total' => count($questions),
             ],
             'answered' => count($answers),
+            'continued' => $continued,
             'total_players' => $totalPlayers,
             'player_answered' => $playerAnswered,
+            'player_continued' => $playerContinued,
+        ]);
+    }
+
+    /**
+     * Frage-für-Frage-Modus: Spieler bestätigt die Auswertung ("Weiter").
+     * Erst wenn ALLE Spieler bestätigt haben, wird die nächste Frage aktuell.
+     */
+    #[Route('/quiz/continue/{gameId}', name: 'app_quiz_continue', methods: ['POST'])]
+    public function continueAfterResult(int $gameId, Request $request): Response
+    {
+        $game = $this->gameRepository->find($gameId);
+
+        if (!$game || !$game->isQuizGame()) {
+            return $this->json(['success' => false, 'error' => 'Quiz nicht gefunden'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $playerId = (int) ($data['player_id'] ?? 0);
+        $questionId = (int) ($data['question_id'] ?? 0);
+
+        if (!$playerId || !$questionId) {
+            return $this->json(['success' => false, 'error' => 'Ungültige Daten'], 400);
+        }
+
+        $question = $this->quizQuestionRepository->find($questionId);
+        if (!$question || $question->getGame()->getId() !== $gameId) {
+            return $this->json(['success' => false, 'error' => 'Frage nicht gefunden'], 404);
+        }
+
+        $totalPlayers = $game->getOlympix()->getPlayers()->count();
+        $answers = $this->quizAnswerRepository->findByQuestion($questionId);
+
+        // Weiter geht erst, wenn die Frage komplett beantwortet ist
+        if (count($answers) < $totalPlayers) {
+            return $this->json(['success' => false, 'error' => 'Die Frage ist noch nicht komplett beantwortet'], 400);
+        }
+
+        $continued = 0;
+        $found = false;
+        foreach ($answers as $answer) {
+            if ($answer->getPlayer()->getId() === $playerId) {
+                $answer->setResultSeen(true); // idempotent
+                $found = true;
+            }
+            if ($answer->isResultSeen()) {
+                $continued++;
+            }
+        }
+
+        if (!$found) {
+            return $this->json(['success' => false, 'error' => 'Keine Antwort dieses Spielers vorhanden'], 404);
+        }
+
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'continued' => $continued,
+            'total_players' => $totalPlayers,
+            'all_continued' => $continued >= $totalPlayers,
         ]);
     }
 

@@ -60,7 +60,11 @@
             </div>
             <div class="space-y-2 mb-4" id="result-list"></div>
             <button type="button" id="result-continue" class="btn-primary w-full text-lg mb-3">Weiter</button>
-            <div class="text-center text-gray-500 text-sm">Automatisch weiter in <span id="result-countdown">60</span> s …</div>
+            <div class="text-center text-gray-500 text-sm" id="result-countdown-line">Automatisch weiter in <span id="result-countdown">60</span> s …</div>
+            <div class="hidden text-center py-2" id="result-waiting">
+                <div class="loading-spinner mx-auto mb-2"></div>
+                <div class="text-gray-400 text-sm">Warten auf die anderen — <span id="continue-count">–</span> haben Weiter gedrückt …</div>
+            </div>
         </div>
 
         <!-- Quiz beendet -->
@@ -84,7 +88,6 @@
     let playerId = null;
     let lastQuestionId = null;
     let currentQuestion = null;
-    let busy = false;          // Auswertung läuft gerade — Polling pausieren
     let pollTimer = null;
 
     // ---------- Geräte-Identität ----------
@@ -137,35 +140,41 @@
         }
     }
 
-    // ---------- Frage-für-Frage-Ablauf ----------
+    // ---------- Frage-für-Frage-Ablauf (Barriere: ALLE müssen Weiter drücken) ----------
+    let resultShownFor = null;   // Frage, deren Auswertung gerade angezeigt wird
+    let continuedFor = null;     // Frage, für die dieser Spieler schon Weiter gedrückt hat
+    let countdownTimer = null;
+
+    function stopCountdown() {
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
     function poll() {
-        if (busy || !playerId) return;
+        if (!playerId) return;
         fetch(`/api/quiz/${gameId}/current?player=${playerId}`)
             .then(r => r.json())
             .then(data => {
-                if (busy) return;
-
                 if (data.quiz_completed) {
-                    if (lastQuestionId) {
-                        const qid = lastQuestionId;
-                        lastQuestionId = null;
-                        showResult(qid, showDone);
-                    } else {
-                        showDone();
-                    }
+                    stopCountdown();
+                    showDone();
                     return;
                 }
 
-                if (data.question.id !== lastQuestionId) {
-                    // Neue Frage: falls vorher eine lief, erst deren Auswertung zeigen
-                    const prev = lastQuestionId;
-                    lastQuestionId = data.question.id;
-                    currentQuestion = data.question;
-                    if (prev) {
-                        showResult(prev, () => showQuestion(data));
-                    } else {
-                        showQuestion(data);
+                if (data.phase === 'result') {
+                    // Frage komplett beantwortet: Auswertung zeigen, bis ALLE Weiter gedrückt haben
+                    if (resultShownFor !== data.question.id) {
+                        renderResult(data.question.id);
                     }
+                    updateContinueUi(data);
+                    return;
+                }
+
+                // Neue Frage ist dran
+                stopCountdown();
+                if (data.question.id !== lastQuestionId) {
+                    lastQuestionId = data.question.id;
+                    resultShownFor = null;
+                    showQuestion(data);
                     return;
                 }
 
@@ -193,8 +202,9 @@
         }
     }
 
-    function showResult(questionId, next) {
-        busy = true;
+    function renderResult(questionId) {
+        resultShownFor = questionId;
+        lastQuestionId = questionId;
         fetch(`/api/quiz/question/${questionId}/result`)
             .then(r => r.json())
             .then(data => {
@@ -214,35 +224,57 @@
                 });
                 show('result-screen');
 
-                // Weiter per Button ODER automatisch nach 60 s — beides nur EINMAL
-                let finished = false;
+                // Weiter-Button aktiv, 60 s Auto-Fallback — beides nur EINMAL
+                document.getElementById('result-continue').classList.remove('hidden');
+                document.getElementById('result-countdown-line').classList.remove('hidden');
+                document.getElementById('result-waiting').classList.add('hidden');
+
+                stopCountdown();
                 let left = RESULT_SECONDS;
                 document.getElementById('result-countdown').textContent = left;
-                const cd = setInterval(() => {
+                countdownTimer = setInterval(() => {
                     left--;
                     document.getElementById('result-countdown').textContent = Math.max(left, 0);
-                    if (left <= 0) proceed();
+                    if (left <= 0) continueQuestion(questionId);
                 }, 1000);
-
-                function proceed() {
-                    if (finished) return;
-                    finished = true;
-                    clearInterval(cd);
-                    resultProceed = null;
-                    busy = false;
-                    next();
-                    poll();
-                }
-
-                resultProceed = proceed;
             })
-            .catch(() => { busy = false; next(); });
+            .catch(() => { resultShownFor = null; });
     }
 
-    // Ein globaler Listener — führt immer den Weiter-Schritt der AKTUELLEN Auswertung aus
-    let resultProceed = null;
+    function continueQuestion(questionId) {
+        if (continuedFor === questionId) return;
+        continuedFor = questionId;
+        stopCountdown();
+        showContinueWaiting();
+
+        fetch(`/quiz/continue/${gameId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player_id: playerId, question_id: questionId }),
+        })
+            .then(r => r.json())
+            .then(() => poll())
+            .catch(() => { continuedFor = null; });
+    }
+
+    function showContinueWaiting() {
+        document.getElementById('result-continue').classList.add('hidden');
+        document.getElementById('result-countdown-line').classList.add('hidden');
+        document.getElementById('result-waiting').classList.remove('hidden');
+    }
+
+    function updateContinueUi(data) {
+        document.getElementById('continue-count').textContent = `${data.continued}/${data.total_players}`;
+        if (data.player_continued && continuedFor !== data.question.id) {
+            // z.B. nach Seiten-Reload: schon bestätigt -> Wartezustand zeigen
+            continuedFor = data.question.id;
+            stopCountdown();
+            showContinueWaiting();
+        }
+    }
+
     document.getElementById('result-continue').addEventListener('click', () => {
-        if (resultProceed) resultProceed();
+        if (resultShownFor) continueQuestion(resultShownFor);
     });
 
     function showDone() {
@@ -274,15 +306,9 @@
                     return;
                 }
                 document.getElementById('wait-count').textContent = `${data.answered}/${data.total_players}`;
-                if (data.quiz_completed) {
-                    const qid = lastQuestionId;
-                    lastQuestionId = null;
-                    showResult(qid, showDone);
-                } else if (data.question_complete) {
-                    poll();
-                } else {
-                    show('wait-screen');
-                }
+                show('wait-screen');
+                // Der Server entscheidet, wann die Auswertung kommt (Barriere)
+                poll();
             })
             .catch(() => {
                 document.getElementById('q-submit').disabled = false;

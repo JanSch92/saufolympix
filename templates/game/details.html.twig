@@ -1,0 +1,234 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ game.name }} - Details{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto">
+    <!-- Kopf -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold gradient-text">{{ game.name }}</h1>
+            <p class="text-gray-400 mt-1">
+                {{ game.gameTypeLabel }} · {{ olympix.name }} ·
+                {% if game.isCompleted %}
+                    <span class="text-emerald-400 font-semibold">Abgeschlossen</span>
+                {% elseif game.isActive %}
+                    <span class="text-amber-400 font-semibold">Läuft gerade</span>
+                {% else %}
+                    <span class="text-gray-500 font-semibold">Wartend</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ path('app_game_admin', {id: olympix.id}) }}" class="btn-secondary">Zur Verwaltung</a>
+            <a href="{{ path('app_show_olympix', {id: olympix.id}) }}" class="btn-secondary">Live-Display</a>
+            {% if game.isTournamentGame and game.tournament %}
+                <a href="{{ path('app_game_bracket', {id: game.id}) }}" class="btn-secondary">Turnierbaum</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if game.gameResults|length > 0 %}
+        <!-- Ergebnis mit Punkten und Joker-Wirkung -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Ergebnis &amp; Punkte</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-sm text-gray-400 border-b border-gray-700/60">
+                            <th class="py-2 pr-4">Platz</th>
+                            <th class="py-2 pr-4">Spieler</th>
+                            <th class="py-2 pr-4">Punkte</th>
+                            <th class="py-2 pr-4">Joker</th>
+                            <th class="py-2 text-right">Endpunkte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr class="border-b border-gray-800/60">
+                            <td class="py-3 pr-4">
+                                <span class="inline-flex w-8 h-8 rounded-lg items-center justify-center text-sm font-bold
+                                    {% if result.position == 1 %}bg-[#d3a625] text-[#1c1917]
+                                    {% elseif result.position == 2 %}bg-[#9ca3af] text-[#1f2937]
+                                    {% elseif result.position == 3 %}bg-[#a16207] text-white
+                                    {% else %}bg-night-600/80 text-gray-400{% endif %}">
+                                    {{ result.position }}
+                                </span>
+                            </td>
+                            <td class="py-3 pr-4 font-semibold text-gray-100">{{ result.player.name }}</td>
+                            <td class="py-3 pr-4 text-gray-300">{{ result.points }}</td>
+                            <td class="py-3 pr-4">
+                                {% if result.jokerDoubleApplied %}
+                                    <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                        Verdoppelt: {{ result.points }} → {{ result.finalPoints }}
+                                    </span>
+                                {% endif %}
+                                {% for info in joker_infos %}
+                                    {% if info.type == 'swap' and info.applied and (info.player.id == result.player.id or (info.target and info.target.id == result.player.id)) %}
+                                        <span class="px-2 py-1 rounded text-xs font-semibold bg-party-purple/15 text-purple-300 border border-party-purple/40">
+                                            Getauscht ({{ info.player.name }} ↔ {{ info.target.name }})
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td class="py-3 text-right text-xl font-extrabold text-amber-400">{{ result.finalPoints }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Joker in diesem Spiel: komplett nachvollziehbar -->
+    <div class="card p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Joker in diesem Spiel</h2>
+        {% if joker_infos|length == 0 %}
+            <p class="text-gray-500">Keine Joker in diesem Spiel eingesetzt.</p>
+        {% else %}
+            <div class="space-y-3">
+                {% for info in joker_infos %}
+                    <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4">
+                        {% if info.type == 'double' %}
+                            <div class="font-semibold text-emerald-300">Doppelte Punkte: {{ info.player.name }}</div>
+                            {% if info.applied and info.points_before is defined %}
+                                <div class="text-gray-300 text-sm mt-1">
+                                    {{ info.player.name }} hat die Punkte in diesem Spiel verdoppelt:
+                                    <strong>{{ info.points_before }} → {{ info.points_after }} Punkte</strong>
+                                </div>
+                            {% elseif info.applied %}
+                                <div class="text-gray-400 text-sm mt-1">Angewendet.</div>
+                            {% else %}
+                                <div class="text-gray-400 text-sm mt-1">Vorgemerkt — wird beim Abschluss des Spiels angewendet.</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="font-semibold text-purple-300">Punktetausch: {{ info.player.name }} ↔ {{ info.target ? info.target.name : '?' }}</div>
+                            {% if info.applied and info.source_earned_position is defined %}
+                                <div class="text-gray-300 text-sm mt-1">
+                                    {{ info.player.name }} hat Platz {{ info.source_earned_position }} erspielt und durch den Tausch
+                                    <strong>Platz {{ info.source_now_position }} ({{ info.source_now_points }} Punkte)</strong> übernommen —
+                                    {{ info.target.name }} bekam dafür <strong>Platz {{ info.source_earned_position }} ({{ info.target_now_points }} Punkte)</strong>.
+                                </div>
+                            {% elseif info.applied %}
+                                <div class="text-gray-400 text-sm mt-1">Angewendet.</div>
+                            {% else %}
+                                <div class="text-gray-400 text-sm mt-1">Vorgemerkt — wird beim Abschluss des Spiels angewendet.</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Punkteverteilung -->
+    <div class="card p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-100 mb-4">Punkteverteilung</h2>
+        <div class="flex flex-wrap gap-2">
+            {% for points in distribution %}
+                <div class="px-3 py-2 rounded-lg bg-night-700/40 border border-gray-700/60 text-sm">
+                    <span class="text-gray-400">Platz {{ loop.index }}:</span>
+                    <span class="font-bold text-amber-400">{{ points }} P.</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if game.isQuizGame and quiz_questions is defined and quiz_questions|length > 0 %}
+        <!-- Quiz: alle Fragen mit allen Antworten -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Fragen &amp; Antworten</h2>
+            <div class="space-y-4">
+                {% for question in quiz_questions %}
+                    <div class="bg-night-700/40 border border-gray-700/60 rounded-lg p-4">
+                        <div class="font-semibold text-gray-100">Frage {{ loop.index }}: {{ question.question }}</div>
+                        <div class="text-sm text-emerald-400 mt-1">Richtige Antwort: {{ question.correctAnswer|number_format(0, ',', '.') }}</div>
+                        {% set sortedAnswers = question.quizAnswers|sort((a, b) => a.distanceFromCorrectAnswer <=> b.distanceFromCorrectAnswer) %}
+                        <div class="mt-3 space-y-1">
+                            {% for answer in sortedAnswers %}
+                                <div class="flex items-center justify-between text-sm px-3 py-1.5 rounded bg-night-800/60">
+                                    <span class="text-gray-200">{{ answer.player.name }}
+                                        <span class="text-gray-500">{{ answer.answer|number_format(0, ',', '.') }}</span>
+                                    </span>
+                                    <span class="font-semibold text-amber-400">+{{ answer.pointsEarned }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if game.isStopwatchGame and game.stopwatchAttempts|length > 0 %}
+        <!-- Stoppuhr: alle Zeiten -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-4">
+                Zeiten
+                {% if game.stopwatchTarget %}
+                    <span class="text-base font-normal text-gray-400">— Zielzeit {{ game.stopwatchTarget|number_format(2, ',', '') }} s</span>
+                {% endif %}
+            </h2>
+            <div class="space-y-2">
+                {% for attempt in game.stopwatchAttempts|sort((a, b) => a.deviation <=> b.deviation) %}
+                    <div class="flex items-center justify-between px-4 py-2 rounded-lg bg-night-700/40">
+                        <span class="font-semibold text-gray-100">{{ attempt.player.name }}</span>
+                        <span class="text-gray-300">{{ attempt.elapsedSeconds|number_format(2, ',', '') }} s
+                            <span class="text-sm {{ attempt.deviation < 0.5 ? 'text-emerald-400' : attempt.deviation < 2 ? 'text-amber-400' : 'text-red-400' }}">
+                                (± {{ attempt.deviation|number_format(2, ',', '') }} s)
+                            </span>
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if game.isSplitOrStealGame and split_or_steal_matches is defined and split_or_steal_matches|length > 0 %}
+        <!-- Split or Steal: alle Duelle -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Duelle</h2>
+            <div class="space-y-2">
+                {% for match in split_or_steal_matches %}
+                    <div class="px-4 py-3 rounded-lg bg-night-700/40">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-gray-100">{{ match.player1.name }} vs {{ match.player2.name }}</span>
+                            <span class="text-sm text-gray-400">{{ match.pointsAtStake }} Beute</span>
+                        </div>
+                        {% if match.isCompleted %}
+                            <div class="text-sm text-gray-300 mt-1">
+                                {{ match.player1.name }}: <strong>{{ match.player1Choice == 'split' ? 'Teilen' : 'Stehlen' }}</strong> ({{ match.player1Points }} Beute) ·
+                                {{ match.player2.name }}: <strong>{{ match.player2Choice == 'split' ? 'Teilen' : 'Stehlen' }}</strong> ({{ match.player2Points }} Beute)
+                            </div>
+                        {% else %}
+                            <div class="text-sm text-gray-500 mt-1">Noch nicht entschieden</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if game.isGamechangerGame and gamechanger_throws is defined and gamechanger_throws|length > 0 %}
+        <!-- Gamechanger: alle Würfe -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-100 mb-4">Würfe</h2>
+            <div class="space-y-2">
+                {% for throw in gamechanger_throws %}
+                    {% if throw.isProcessed %}
+                    <div class="flex items-center justify-between px-4 py-2 rounded-lg bg-night-700/40">
+                        <span class="text-gray-100"><span class="text-gray-500">{{ throw.playerOrder }}.</span>
+                            <span class="font-semibold">{{ throw.player.name }}</span>
+                            <span class="text-gray-400 text-sm">wirft {{ throw.thrownPoints }}</span>
+                        </span>
+                        <span class="text-sm font-semibold {{ throw.pointsScored > 0 ? 'text-emerald-400' : throw.pointsScored < 0 ? 'text-red-400' : 'text-gray-500' }}">
+                            {% if throw.pointsScored != 0 %}{{ throw.pointsScored > 0 ? '+' : '' }}{{ throw.pointsScored }} Wertung{% else %}kein Treffer{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

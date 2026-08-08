@@ -627,7 +627,7 @@
                 <span>Live-Rangliste</span>
             </div>
             
-            <div id="ranking-list">
+            <div id="ranking-list" data-anchor="ranking">
                 {% if players is defined %}
                     {% set sharedPosition = 0 %}
                     {% set lastPoints = null %}
@@ -651,6 +651,27 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- Beendete Spiele: antippen -> Details mit Punkten und Joker-Historie -->
+        {% set completedGames = olympix.gamesByOrder|filter(g => g.isCompleted) %}
+        {% if completedGames|length > 0 %}
+        <div class="ranking-card" style="margin-top: 1rem;">
+            <div class="ranking-header">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <span>Beendete Spiele</span>
+            </div>
+            <div>
+                {% for g in completedGames %}
+                    <a href="{{ path('app_game_details', {id: g.id}) }}" class="ranking-item" style="text-decoration: none;">
+                        <div class="ranking-name">{{ g.name }}</div>
+                        <div class="ranking-points" style="font-size: 0.75rem; color: #94a3b8;">{{ g.gameTypeLabel }}</div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Mobile Navigation -->

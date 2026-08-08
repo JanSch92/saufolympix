@@ -23,6 +23,11 @@ class QuizAnswer
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $answeredAt = null;
 
+    // Frage-für-Frage-Modus: Spieler hat die Auswertung gesehen und
+    // "Weiter" gedrückt — erst wenn ALLE weiter sind, kommt die nächste Frage
+    #[ORM\Column(options: ['default' => false])]
+    private bool $resultSeen = false;
+
     #[ORM\ManyToOne(inversedBy: 'quizAnswers')]
     #[ORM\JoinColumn(nullable: false)]
     private ?QuizQuestion $quizQuestion = null;
@@ -74,6 +79,18 @@ class QuizAnswer
     public function setAnsweredAt(\DateTimeInterface $answeredAt): static
     {
         $this->answeredAt = $answeredAt;
+
+        return $this;
+    }
+
+    public function isResultSeen(): bool
+    {
+        return $this->resultSeen;
+    }
+
+    public function setResultSeen(bool $resultSeen): static
+    {
+        $this->resultSeen = $resultSeen;
 
         return $this;
     }

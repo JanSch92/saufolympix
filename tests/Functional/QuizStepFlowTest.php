@@ -26,6 +26,26 @@ class QuizStepFlowTest extends FunctionalTestCase
         return json_decode($this->client->getResponse()->getContent(), true);
     }
 
+    private function continueResult(Game $game, int $playerId, int $questionId): array
+    {
+        $this->client->request(
+            'POST',
+            '/quiz/continue/' . $game->getId(),
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['player_id' => $playerId, 'question_id' => $questionId])
+        );
+
+        return json_decode($this->client->getResponse()->getContent(), true);
+    }
+
+    /** Alle Spieler bestätigen die Auswertung einer Frage ("Weiter"). */
+    private function continueAll(Game $game, array $players, int $questionId): void
+    {
+        foreach ($players as $player) {
+            $this->continueResult($game, $player->getId(), $questionId);
+        }
+    }
+
     public function testStepByStepFlowCompletesQuiz(): void
     {
         $olympix = $this->createOlympix();
@@ -60,12 +80,15 @@ class QuizStepFlowTest extends FunctionalTestCase
         $this->assertFalse($dup['success']);
         $this->assertResponseStatusCodeSame(409);
 
-        // Spieler 2 antwortet: Frage 1 komplett -> Frage 2 wird aktuell
+        // Spieler 2 antwortet: Frage 1 komplett -> BARRIERE: erst die Auswertung,
+        // die nächste Frage kommt ERST, wenn ALLE "Weiter" gedrückt haben
         $result = $this->answer($game, $players[1]->getId(), $q1, '99');
         $this->assertTrue($result['question_complete']);
 
         $data = $this->currentQuestion($game, $players[1]->getId());
-        $this->assertSame(2, $data['question']['index']);
+        $this->assertSame('result', $data['phase'], 'Nach der letzten Antwort kommt die Auswertungs-Phase, NICHT die nächste Frage');
+        $this->assertSame($q1, $data['question']['id']);
+        $this->assertSame(0, $data['continued']);
 
         // Auswertung von Frage 1 abrufbar
         $this->client->request('GET', '/api/quiz/question/' . $q1 . '/result');
@@ -75,13 +98,35 @@ class QuizStepFlowTest extends FunctionalTestCase
         $this->assertSame(2, $resultData['entries'][0]['points'], 'Näherer Tipp bekommt 2 Punkte');
         $this->assertSame(1, $resultData['entries'][1]['points']);
 
-        // Restliche Fragen durchspielen
+        // Spieler 1 drückt Weiter: Frage bleibt in der Auswertungs-Phase (1/2)
+        $cont = $this->continueResult($game, $players[0]->getId(), $q1);
+        $this->assertTrue($cont['success']);
+        $this->assertFalse($cont['all_continued']);
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $this->assertSame('result', $data['phase'], 'Solange nicht ALLE Weiter gedrückt haben, bleibt die Auswertung stehen');
+        $this->assertSame(1, $data['continued']);
+        $this->assertTrue($data['player_continued']);
+
+        // Spieler 2 drückt Weiter: JETZT wird Frage 2 aktuell
+        $cont = $this->continueResult($game, $players[1]->getId(), $q1);
+        $this->assertTrue($cont['all_continued']);
+
+        $data = $this->currentQuestion($game, $players[1]->getId());
+        $this->assertSame('question', $data['phase']);
+        $this->assertSame(2, $data['question']['index']);
+
+        // Restliche Fragen durchspielen (antworten + alle bestätigen die Auswertung)
         while (true) {
             $data = $this->currentQuestion($game, $players[0]->getId());
             if ($data['quiz_completed']) {
                 break;
             }
             $qid = $data['question']['id'];
+            if ($data['phase'] === 'result') {
+                $this->continueAll($game, $players, $qid);
+                continue;
+            }
             foreach ($players as $player) {
                 $this->answer($game, $player->getId(), $qid, '10');
             }
@@ -142,12 +187,68 @@ class QuizStepFlowTest extends FunctionalTestCase
             }
         }
 
+        // Barriere: quiz_completed kommt erst, wenn alle jede Auswertung bestätigt haben
+        foreach ($game->getQuizQuestions() as $question) {
+            $this->continueAll($game, $players, $question->getId());
+        }
+
         $data = $this->currentQuestion($game, $players[0]->getId());
         $this->assertTrue($data['quiz_completed']);
         $this->assertSame(
             '/player-dashboard/' . $olympix->getId() . '/' . $players[0]->getId(),
             $data['dashboard_url']
         );
+    }
+
+    public function testContinueRejectedWhileQuestionIncomplete(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $qid = $data['question']['id'];
+
+        // Nur Spieler 1 hat geantwortet — Weiter ist noch NICHT möglich
+        $this->answer($game, $players[0]->getId(), $qid, '5');
+        $cont = $this->continueResult($game, $players[0]->getId(), $qid);
+        $this->assertFalse($cont['success'], 'Weiter darf erst nach vollständiger Beantwortung möglich sein');
+        $this->assertResponseStatusCodeSame(400);
+
+        // Auch die Wertung bleibt in der Frage-Phase
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $this->assertSame('question', $data['phase']);
+    }
+
+    public function testResultPhaseHidesQuestionTextOfNextQuestion(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'quiz');
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $qid = $data['question']['id'];
+        $this->answer($game, $players[0]->getId(), $qid, '5');
+        $this->answer($game, $players[1]->getId(), $qid, '9');
+
+        // In der Auswertungs-Phase wird KEIN Fragetext ausgeliefert
+        $data = $this->currentQuestion($game, $players[0]->getId());
+        $this->assertSame('result', $data['phase']);
+        $this->assertNull($data['question']['text']);
+
+        // Doppeltes Weiter desselben Spielers zählt nur einmal
+        $this->continueResult($game, $players[0]->getId(), $qid);
+        $again = $this->continueResult($game, $players[0]->getId(), $qid);
+        $this->assertTrue($again['success']);
+        $this->assertSame(1, $again['continued'], 'Doppeltes Weiter darf nur einmal zählen');
     }
 
     public function testQuestionResultTieGetsEqualPoints(): void

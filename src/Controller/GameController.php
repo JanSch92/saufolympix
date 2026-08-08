@@ -367,6 +367,86 @@ class GameController extends AbstractController
         return $this->render('game/manage.html.twig', $data);
     }
 
+    /**
+     * Detailansicht eines Spiels: Ergebnisse, Punkte und VOLLE Joker-
+     * Transparenz (wer hat verdoppelt, wer hat mit wem getauscht) plus
+     * spielmodus-spezifische Rohdaten (Antworten, Zeiten, Würfe, Matches).
+     */
+    #[Route('/game/details/{id}', name: 'app_game_details')]
+    public function details(int $id): Response
+    {
+        $game = $this->gameRepository->find($id);
+
+        if (!$game) {
+            throw $this->createNotFoundException('Spiel nicht gefunden');
+        }
+
+        // Ergebnisse nach Platz sortiert
+        $results = $game->getGameResults()->toArray();
+        usort($results, fn ($a, $b) => [$a->getPosition(), $a->getPlayer()->getName()] <=> [$b->getPosition(), $b->getPlayer()->getName()]);
+
+        $resultsByPlayerId = [];
+        foreach ($results as $result) {
+            $resultsByPlayerId[$result->getPlayer()->getId()] = $result;
+        }
+
+        // Joker dieses Spiels aufbereiten: Verdopplungen + Tausche nachvollziehbar
+        $jokerInfos = [];
+        foreach ($this->jokerRepository->findBy(['game' => $game]) as $joker) {
+            $info = [
+                'type' => $joker->getJokerType(),
+                'player' => $joker->getPlayer(),
+                'target' => $joker->getTargetPlayer(),
+                'applied' => (bool) $joker->isIsUsed(),
+            ];
+
+            if ($joker->getJokerType() === 'double') {
+                $result = $resultsByPlayerId[$joker->getPlayer()?->getId()] ?? null;
+                if ($result && $result->isJokerDoubleApplied()) {
+                    $info['points_before'] = $result->getPoints();
+                    $info['points_after'] = $result->getFinalPoints();
+                }
+            }
+
+            if ($joker->getJokerType() === 'swap') {
+                $sourceResult = $resultsByPlayerId[$joker->getPlayer()?->getId()] ?? null;
+                $targetResult = $resultsByPlayerId[$joker->getTargetPlayer()?->getId()] ?? null;
+                if ($sourceResult && $targetResult && $info['applied']) {
+                    // Nach dem Tausch: der Quell-Spieler hat den Platz, den der
+                    // Ziel-Spieler erspielt hatte — und umgekehrt
+                    $info['source_earned_position'] = $targetResult->getPosition();
+                    $info['source_now_position'] = $sourceResult->getPosition();
+                    $info['source_now_points'] = $sourceResult->getPoints();
+                    $info['target_now_points'] = $targetResult->getPoints();
+                }
+            }
+
+            $jokerInfos[] = $info;
+        }
+
+        $data = [
+            'game' => $game,
+            'olympix' => $game->getOlympix(),
+            'results' => $results,
+            'joker_infos' => $jokerInfos,
+            'distribution' => $game->getDefaultPointsDistribution(),
+        ];
+
+        if ($game->isGamechangerGame()) {
+            $data['gamechanger_throws'] = $this->gamechangerThrowRepository->findByGameOrderedByPlayerOrder($id);
+        }
+
+        if ($game->isSplitOrStealGame()) {
+            $data['split_or_steal_matches'] = $this->splitOrStealMatchRepository->findByGameOrderedByCreated($id);
+        }
+
+        if ($game->isQuizGame()) {
+            $data['quiz_questions'] = $this->quizQuestionRepository->findByGameOrdered($id);
+        }
+
+        return $this->render('game/details.html.twig', $data);
+    }
+
     #[Route('/game/edit/{id}', name: 'app_game_edit')]
     public function edit(int $id, Request $request): Response
     {
