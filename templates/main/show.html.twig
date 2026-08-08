@@ -937,14 +937,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const gameName = game.name || 'Unbekanntes Spiel';
       const gameType = (game.type || 'Unbekannt').replace(/_/g, ' ');
 
+      // Klick auf ein Spiel -> Detailansicht (Punkte + Joker-Historie)
       html += `
-        <div class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border hover:border-party-purple/40 ${cardClass}">
+        <a href="/game/details/${game.id}" class="flex items-center justify-between p-3 rounded-lg transition-all hover:bg-night-700/50 border hover:border-party-purple/40 ${cardClass}">
           <div class="flex-1 min-w-0">
             <p class="font-medium truncate text-gray-100">${gameName}</p>
             <p class="text-xs text-gray-400 uppercase tracking-wide">${gameType}</p>
           </div>
           <div class="text-lg ml-3">${iconHtml}</div>
-        </div>
+        </a>
       `;
     });
     
