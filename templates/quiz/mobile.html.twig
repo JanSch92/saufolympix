@@ -59,7 +59,8 @@
                 <div class="text-3xl font-extrabold text-emerald-400" id="result-correct">–</div>
             </div>
             <div class="space-y-2 mb-4" id="result-list"></div>
-            <div class="text-center text-gray-500 text-sm">Nächste Frage in <span id="result-countdown">8</span> s …</div>
+            <button type="button" id="result-continue" class="btn-primary w-full text-lg mb-3">Weiter</button>
+            <div class="text-center text-gray-500 text-sm">Automatisch weiter in <span id="result-countdown">60</span> s …</div>
         </div>
 
         <!-- Quiz beendet -->
@@ -76,7 +77,9 @@
     const gameId = {{ game.id }};
     const olympixId = {{ game.olympix.id }};
     const identityKey = `olympix_${olympixId}_selected_player`;
-    const RESULT_SECONDS = 8;
+    // Ergebnisanzeige bleibt stehen, bis der Spieler "Weiter" drückt —
+    // nach 60 Sekunden geht es automatisch weiter (Fallback).
+    const RESULT_SECONDS = 60;
 
     let playerId = null;
     let lastQuestionId = null;
@@ -211,21 +214,36 @@
                 });
                 show('result-screen');
 
+                // Weiter per Button ODER automatisch nach 60 s — beides nur EINMAL
+                let finished = false;
                 let left = RESULT_SECONDS;
                 document.getElementById('result-countdown').textContent = left;
                 const cd = setInterval(() => {
                     left--;
                     document.getElementById('result-countdown').textContent = Math.max(left, 0);
-                    if (left <= 0) {
-                        clearInterval(cd);
-                        busy = false;
-                        next();
-                        poll();
-                    }
+                    if (left <= 0) proceed();
                 }, 1000);
+
+                function proceed() {
+                    if (finished) return;
+                    finished = true;
+                    clearInterval(cd);
+                    resultProceed = null;
+                    busy = false;
+                    next();
+                    poll();
+                }
+
+                resultProceed = proceed;
             })
             .catch(() => { busy = false; next(); });
     }
+
+    // Ein globaler Listener — führt immer den Weiter-Schritt der AKTUELLEN Auswertung aus
+    let resultProceed = null;
+    document.getElementById('result-continue').addEventListener('click', () => {
+        if (resultProceed) resultProceed();
+    });
 
     function showDone() {
         clearInterval(pollTimer);
