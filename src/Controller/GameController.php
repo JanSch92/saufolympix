@@ -447,6 +447,75 @@ class GameController extends AbstractController
         return $this->render('game/details.html.twig', $data);
     }
 
+    /**
+     * Admin vergibt Extrapunkte für ein abgeschlossenes Spiel — mit Begründung,
+     * damit jeder Punktestand nachvollziehbar bleibt. Der Wert wird GESETZT
+     * (0 = Extrapunkte entfernen) und zählt in die Endpunkte des Spiels.
+     */
+    #[Route('/game/bonus/{id}', name: 'app_game_bonus', methods: ['POST'])]
+    public function setBonusPoints(int $id, Request $request): Response
+    {
+        $game = $this->gameRepository->find($id);
+
+        if (!$game) {
+            throw $this->createNotFoundException('Spiel nicht gefunden');
+        }
+
+        if (!$game->isCompleted()) {
+            $this->addFlash('error', 'Extrapunkte können nur für abgeschlossene Spiele vergeben werden');
+            return $this->redirectToRoute('app_game_details', ['id' => $id]);
+        }
+
+        $playerId = (int) $request->request->get('player_id');
+        $bonusRaw = trim((string) $request->request->get('bonus_points', ''));
+        $reason = trim((string) $request->request->get('bonus_reason', ''));
+
+        if (preg_match('/^-?\d+$/', $bonusRaw) !== 1) {
+            $this->addFlash('error', 'Extrapunkte müssen eine ganze Zahl sein');
+            return $this->redirectToRoute('app_game_details', ['id' => $id]);
+        }
+
+        $bonus = (int) $bonusRaw;
+        if ($bonus < -100 || $bonus > 100) {
+            $this->addFlash('error', 'Extrapunkte müssen zwischen -100 und 100 liegen');
+            return $this->redirectToRoute('app_game_details', ['id' => $id]);
+        }
+
+        if ($bonus !== 0 && $reason === '') {
+            $this->addFlash('error', 'Bitte gib eine Begründung für die Extrapunkte an');
+            return $this->redirectToRoute('app_game_details', ['id' => $id]);
+        }
+
+        $result = $this->gameResultRepository->findByPlayerAndGame($playerId, $id);
+        if (!$result) {
+            $this->addFlash('error', 'Kein Ergebnis für diesen Spieler in diesem Spiel');
+            return $this->redirectToRoute('app_game_details', ['id' => $id]);
+        }
+
+        $result->setBonusPoints($bonus);
+        $result->setBonusReason($bonus !== 0 ? $reason : null);
+
+        // Gesamtpunkte sauber neu berechnen — Invariante bleibt erhalten
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $player->calculateTotalPoints();
+        }
+        $this->entityManager->flush();
+
+        if ($bonus === 0) {
+            $this->addFlash('success', 'Extrapunkte für ' . $result->getPlayer()->getName() . ' entfernt');
+        } else {
+            $this->addFlash('success', sprintf(
+                'Extrapunkte gesetzt: %s%d für %s (%s)',
+                $bonus > 0 ? '+' : '',
+                $bonus,
+                $result->getPlayer()->getName(),
+                $reason
+            ));
+        }
+
+        return $this->redirectToRoute('app_game_details', ['id' => $id]);
+    }
+
     #[Route('/game/edit/{id}', name: 'app_game_edit')]
     public function edit(int $id, Request $request): Response
     {

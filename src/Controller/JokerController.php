@@ -37,9 +37,10 @@ class JokerController extends AbstractController
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
-        // Check if game is active
-        if ($game->getStatus() !== 'active') {
-            $this->addFlash('error', 'Joker kann nur bei aktiven Spielen verwendet werden');
+        // Auf abgeschlossene Spiele kann kein Joker mehr gelegt werden —
+        // wartende und laufende Spiele sind erlaubt (angewendet wird am Spielende)
+        if ($game->isCompleted()) {
+            $this->addFlash('error', 'Das Spiel ist bereits abgeschlossen — Joker nicht mehr möglich');
             return $this->redirectToRoute('app_game_admin', ['id' => $game->getOlympix()->getId()]);
         }
 
@@ -89,6 +90,19 @@ class JokerController extends AbstractController
         // Check if player still has swap joker available (global for olympix)
         if (!$player->hasJokerSwapAvailable()) {
             $this->addFlash('error', 'Punkte tauschen Joker bereits verwendet');
+            return $this->redirectToRoute('app_game_admin', ['id' => $olympix->getId()]);
+        }
+
+        // Auf abgeschlossene Spiele kann kein Joker mehr gelegt werden
+        if ($game->isCompleted()) {
+            $this->addFlash('error', 'Das Spiel ist bereits abgeschlossen — Joker nicht mehr möglich');
+            return $this->redirectToRoute('app_game_admin', ['id' => $olympix->getId()]);
+        }
+
+        // WICHTIG: Pro Spiel ist insgesamt nur EIN Tausch erlaubt —
+        // gilt auch für die Admin-Verwaltung, nicht nur für die Spieler-Route
+        if ($this->jokerRepository->hasAnySwapForGame($game->getId())) {
+            $this->addFlash('error', 'Für dieses Spiel wurde bereits ein Punkte-Tausch eingesetzt (nur einer pro Spiel möglich)');
             return $this->redirectToRoute('app_game_admin', ['id' => $olympix->getId()]);
         }
 

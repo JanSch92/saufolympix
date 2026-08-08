@@ -33,6 +33,14 @@ class GameResult
     #[ORM\Column]
     private ?bool $jokerDoubleApplied = null;
 
+    // Vom Admin vergebene Extrapunkte (mit Begründung) — zählen in die
+    // Endpunkte und bleiben beim Spieler (werden NICHT mitgetauscht)
+    #[ORM\Column(options: ['default' => 0])]
+    private int $bonusPoints = 0;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $bonusReason = null;
+
     public function __construct()
     {
         $this->jokerDoubleApplied = false;
@@ -115,15 +123,39 @@ class GameResult
         return $this;
     }
 
+    public function getBonusPoints(): int
+    {
+        return $this->bonusPoints;
+    }
+
+    public function setBonusPoints(int $bonusPoints): static
+    {
+        $this->bonusPoints = $bonusPoints;
+
+        return $this;
+    }
+
+    public function getBonusReason(): ?string
+    {
+        return $this->bonusReason;
+    }
+
+    public function setBonusReason(?string $bonusReason): static
+    {
+        $this->bonusReason = $bonusReason;
+
+        return $this;
+    }
+
     public function getFinalPoints(): int
     {
         $basePoints = $this->points;
-        
+
         if ($this->jokerDoubleApplied) {
             $basePoints *= 2;
         }
 
-        return $basePoints;
+        return $basePoints + $this->bonusPoints;
     }
 
     public function applyDoubleJoker(): static

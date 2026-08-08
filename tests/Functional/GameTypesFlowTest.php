@@ -66,6 +66,88 @@ class GameTypesFlowTest extends FunctionalTestCase
         $this->assertSame(1, $pointsByPlayer[$m2->getPlayer2()->getId()], 'Bestohlener (0 Beute) = Platz 4 = 1 Punkt');
     }
 
+    public function testSplitOrStealPairsEveryPlayerExactlyOnce(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 8);
+        $game = $this->createGame($olympix, 'split_or_steal');
+
+        $this->client->request('POST', '/split-or-steal/setup/' . $game->getId(), ['points_at_stake' => 50]);
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        // Zufällige Paarungen: 8 Spieler -> 4 Duelle, JEDER genau einmal, nie gegen sich selbst
+        $matches = $game->getSplitOrStealMatches();
+        $this->assertCount(4, $matches);
+
+        $seen = [];
+        foreach ($matches as $match) {
+            $this->assertNotSame(
+                $match->getPlayer1()->getId(),
+                $match->getPlayer2()->getId(),
+                'Niemand spielt gegen sich selbst'
+            );
+            $seen[] = $match->getPlayer1()->getId();
+            $seen[] = $match->getPlayer2()->getId();
+        }
+        sort($seen);
+        $expected = array_map(fn ($p) => $p->getId(), $players);
+        sort($expected);
+        $this->assertSame($expected, $seen, 'Jeder Spieler ist in GENAU einem Duell');
+    }
+
+    public function testSplitOrStealWithOddPlayerCountStillScoresEveryone(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 5);
+        $game = $this->createGame($olympix, 'split_or_steal');
+
+        $this->client->request('POST', '/split-or-steal/setup/' . $game->getId(), ['points_at_stake' => 50]);
+        $this->client->request('GET', '/game/start/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+
+        // 5 Spieler -> 2 Duelle, einer bleibt ohne Duell
+        $this->assertCount(2, $game->getSplitOrStealMatches());
+
+        foreach ($game->getSplitOrStealMatches() as $match) {
+            foreach ([$match->getPlayer1(), $match->getPlayer2()] as $matchPlayer) {
+                $this->client->request('POST', '/split-or-steal/player-choice/' . $match->getId(), [
+                    'player_id' => $matchPlayer->getId(),
+                    'choice' => 'split',
+                ]);
+            }
+        }
+        $this->client->request('GET', '/split-or-steal/evaluate/' . $game->getId());
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertTrue($game->isCompleted());
+
+        // AUCH der Spieler ohne Duell bekommt ein Ergebnis (Beute 0 -> letzter Platz)
+        $this->assertCount(5, $game->getGameResults(), 'Jeder der 5 Spieler braucht ein Ergebnis');
+
+        $byPosition = [];
+        foreach ($game->getGameResults() as $result) {
+            $byPosition[$result->getPosition()][] = $result->getPoints();
+        }
+        // 4 Splitter mit je 25 Beute teilen sich Platz 1 (je 5 Punkte),
+        // der Spieler ohne Duell (0 Beute) ist Platz 5 (1 Punkt)
+        $this->assertCount(4, $byPosition[1]);
+        $this->assertSame([5, 5, 5, 5], $byPosition[1]);
+        $this->assertSame([1], $byPosition[5]);
+
+        foreach ($game->getOlympix()->getPlayers() as $player) {
+            $sum = 0;
+            foreach ($player->getGameResults() as $result) {
+                $sum += $result->getFinalPoints();
+            }
+            $this->assertSame($sum, $player->getTotalPoints());
+        }
+    }
+
     public function testGamechangerFullFlow(): void
     {
         $olympix = $this->createOlympix();

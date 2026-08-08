@@ -373,6 +373,13 @@ class QuizStepFlowTest extends FunctionalTestCase
             $this->assertResponseStatusCodeSame(400);
         }
 
+        // Zu große Zahlen (über 99.999.999) werden abgelehnt — die DB-Spalte würde sie kappen
+        foreach (['123456789', '390000000000', '-123456789'] as $tooBig) {
+            $result = $this->answer($game, $players[0]->getId(), $qid, $tooBig);
+            $this->assertFalse($result['success'], "Antwort '$tooBig' muss abgelehnt werden — über dem Maximum");
+            $this->assertResponseStatusCodeSame(400);
+        }
+
         // Ganze Zahlen (auch negativ) sind gültig
         $result = $this->answer($game, $players[0]->getId(), $qid, '-40');
         $this->assertTrue($result['success'], 'Negative ganze Zahlen (z.B. Temperaturen) müssen gültig sein');
@@ -397,7 +404,17 @@ class QuizStepFlowTest extends FunctionalTestCase
         $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
         $this->assertCount(0, $game->getQuizQuestions(), 'Dezimale korrekte Antwort darf keine Frage anlegen');
 
-        // Ganzzahlige korrekte Antwort funktioniert
+        // Zu große korrekte Antwort wird abgelehnt (DB-Spalte würde sie kappen)
+        $this->client->request('POST', '/quiz/questions/' . $game->getId(), [
+            'question' => 'Wie viele Bäume gibt es im Amazonas?',
+            'correct_answer' => '390000000000',
+        ]);
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(Game::class)->find($game->getId());
+        $this->assertCount(0, $game->getQuizQuestions(), 'Korrekte Antwort über 99.999.999 darf keine Frage anlegen');
+
+        // Ganzzahlige korrekte Antwort im gültigen Bereich funktioniert
         $this->client->request('POST', '/quiz/questions/' . $game->getId(), [
             'question' => 'Wie viel wiegt ein Blauwal in Tonnen?',
             'correct_answer' => '140',

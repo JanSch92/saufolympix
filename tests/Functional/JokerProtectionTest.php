@@ -126,6 +126,99 @@ class JokerProtectionTest extends FunctionalTestCase
         $this->assertTrue($player->hasJokerSwapAvailable(), 'Abgelehnter Joker darf nicht verbraucht sein');
     }
 
+    public function testAdminRouteAlsoEnforcesOneSwapPerGame(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 4);
+        $game = $this->createGame($olympix, 'free_for_all');
+
+        // Spieler 1 legt den Tausch über die SPIELER-Route
+        $this->client->request('POST', '/player-joker-swap/' . $olympix->getId() . '/' . $players[0]->getId(), [
+            'target_player_id' => $players[1]->getId(),
+            'selected_game_id' => $game->getId(),
+        ]);
+
+        // Spieler 3 versucht über die ADMIN-Route einen ZWEITEN Tausch (anderes Ziel)
+        $this->client->request('POST', '/joker/swap/' . $players[2]->getId() . '/' . $game->getId(), [
+            'target_player_id' => $players[3]->getId(),
+        ]);
+
+        $this->entityManager->clear();
+        $jokers = $this->entityManager->getRepository(Joker::class)->findBy([
+            'game' => $game->getId(),
+            'jokerType' => 'swap',
+        ]);
+        $this->assertCount(1, $jokers, 'Auch über die Admin-Verwaltung: nur EIN Tausch pro Spiel');
+
+        $player3 = $this->entityManager->getRepository(Player::class)->find($players[2]->getId());
+        $this->assertTrue($player3->hasJokerSwapAvailable(), 'Abgelehnter Admin-Tausch darf den Joker nicht verbrauchen');
+    }
+
+    public function testAdminRouteRejectsJokersOnCompletedGames(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 2);
+        $game = $this->createGame($olympix, 'free_for_all', 'Fertig', 'completed');
+
+        $this->client->request('GET', '/joker/double/' . $players[0]->getId() . '/' . $game->getId());
+        $this->client->request('POST', '/joker/swap/' . $players[0]->getId() . '/' . $game->getId(), [
+            'target_player_id' => $players[1]->getId(),
+        ]);
+
+        $this->entityManager->clear();
+        $this->assertCount(
+            0,
+            $this->entityManager->getRepository(Joker::class)->findAll(),
+            'Auf abgeschlossene Spiele darf kein Joker mehr gelegt werden'
+        );
+
+        $player = $this->entityManager->getRepository(Player::class)->find($players[0]->getId());
+        $this->assertTrue($player->hasJokerDoubleAvailable());
+        $this->assertTrue($player->hasJokerSwapAvailable());
+    }
+
+    public function testMultipleDoubleJokersOnSameGameAreAllowed(): void
+    {
+        $olympix = $this->createOlympix();
+        $players = $this->createPlayers($olympix, 3);
+        $game = $this->createGame($olympix, 'free_for_all');
+
+        // ALLE Spieler dürfen auf DASSELBE Spiel verdoppeln (kein Pro-Spiel-Limit für Doppelt)
+        foreach ($players as $player) {
+            $this->client->request('POST', '/player-joker-double/' . $olympix->getId() . '/' . $player->getId(), [
+                'selected_game_id' => $game->getId(),
+            ]);
+        }
+
+        $this->entityManager->clear();
+        $jokers = $this->entityManager->getRepository(Joker::class)->findBy([
+            'game' => $game->getId(),
+            'jokerType' => 'double',
+        ]);
+        $this->assertCount(3, $jokers, 'Doppelte Punkte darf JEDER Spieler auf dasselbe Spiel legen');
+
+        // Und beim Abschluss werden ALLE Verdopplungen angewendet
+        $this->client->request('GET', '/game/start/' . $game->getId());
+        $this->client->request('POST', '/game/results/' . $game->getId(), [
+            'positions' => [
+                $players[0]->getId() => 1,
+                $players[1]->getId() => 2,
+                $players[2]->getId() => 3,
+            ],
+        ]);
+
+        $this->entityManager->clear();
+        $game = $this->entityManager->getRepository(\App\Entity\Game::class)->find($game->getId());
+        $finals = [];
+        foreach ($game->getGameResults() as $result) {
+            $this->assertTrue($result->isJokerDoubleApplied());
+            $finals[$result->getPlayer()->getId()] = $result->getFinalPoints();
+        }
+        $this->assertSame(6, $finals[$players[0]->getId()], '3 x 2');
+        $this->assertSame(4, $finals[$players[1]->getId()], '2 x 2');
+        $this->assertSame(2, $finals[$players[2]->getId()], '1 x 2');
+    }
+
     public function testSwapWithYourselfIsRejected(): void
     {
         $olympix = $this->createOlympix();

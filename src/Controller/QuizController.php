@@ -107,6 +107,11 @@ class QuizController extends AbstractController
                 return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
             }
 
+            if ((int) $correctAnswer < 0 || (int) $correctAnswer > \App\Service\QuizQuestionGeneratorService::MAX_ANSWER) {
+                $this->addFlash('error', 'Die korrekte Antwort muss zwischen 0 und 99.999.999 liegen — formuliere die Frage ggf. mit Einheit um (z.B. "in Millionen")');
+                return $this->redirectToRoute('app_quiz_questions', ['gameId' => $gameId]);
+            }
+
             $quizQuestion = new QuizQuestion();
             $quizQuestion->setQuestion($question);
             $quizQuestion->setCorrectAnswer($correctAnswer);
@@ -211,8 +216,8 @@ class QuizController extends AbstractController
                 $answerValue = $request->request->get('answer_' . $question->getId());
 
                 // WICHTIG: "0" ist eine gültige Antwort — nur null/leer zählt als fehlend (empty('0') wäre true!)
-                // Und: NUR ganze Zahlen sind erlaubt — niemals Dezimalzahlen.
-                if ($answerValue === null || !$this->isWholeNumber($answerValue)) {
+                // Und: NUR ganze Zahlen im gültigen Bereich — niemals Dezimalzahlen.
+                if ($answerValue === null || !$this->isValidAnswerNumber($answerValue)) {
                     $allAnswered = false;
                     continue;
                 }
@@ -568,6 +573,10 @@ class QuizController extends AbstractController
             return $this->json(['success' => false, 'error' => 'Nur ganze Zahlen sind erlaubt'], 400);
         }
 
+        if (!$this->isValidAnswerNumber($answerValue)) {
+            return $this->json(['success' => false, 'error' => 'Zahl zu groß — maximal 99.999.999'], 400);
+        }
+
         $player = $this->playerRepository->find($playerId);
         $question = $this->quizQuestionRepository->find($questionId);
 
@@ -817,5 +826,15 @@ class QuizController extends AbstractController
     private function isWholeNumber(mixed $value): bool
     {
         return preg_match('/^-?\d+$/', trim((string) $value)) === 1;
+    }
+
+    /**
+     * Ganze Zahl UND im speicherbaren Bereich (±99.999.999) — größere Werte
+     * würden von der DECIMAL(10,2)-Spalte gekappt (99999999.99-Bug).
+     */
+    private function isValidAnswerNumber(mixed $value): bool
+    {
+        return $this->isWholeNumber($value)
+            && abs((int) trim((string) $value)) <= \App\Service\QuizQuestionGeneratorService::MAX_ANSWER;
     }
 }

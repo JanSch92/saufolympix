@@ -18,6 +18,12 @@ class QuizQuestionPoolTest extends TestCase
             $this->assertArrayHasKey('question', $entry);
             $this->assertArrayHasKey('answer', $entry);
             $this->assertIsInt($entry['answer'], 'Antwort muss ganzzahlig sein: ' . $entry['question']);
+            $this->assertGreaterThanOrEqual(0, $entry['answer'], 'Antwort darf nicht negativ sein: ' . $entry['question']);
+            $this->assertLessThanOrEqual(
+                \App\Service\QuizQuestionGeneratorService::MAX_ANSWER,
+                $entry['answer'],
+                'Antwort muss unter 99.999.999 liegen (DECIMAL-Spaltenlimit): ' . $entry['question']
+            );
             $this->assertNotSame('', trim($entry['question']));
             $this->assertStringEndsWith('?', trim($entry['question']));
         }

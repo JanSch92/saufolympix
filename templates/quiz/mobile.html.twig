@@ -40,7 +40,7 @@
             <div class="bg-night-700/40 border border-gray-700/60 rounded-xl p-4 mb-4">
                 <div class="text-lg font-semibold text-gray-100" id="q-text"></div>
             </div>
-            <input type="number" id="q-answer" step="1" inputmode="numeric" pattern="-?[0-9]*" placeholder="Deine Schätzung (ganze Zahl)" class="w-full text-lg mb-4">
+            <input type="number" id="q-answer" step="1" inputmode="numeric" pattern="-?[0-9]*" min="-99999999" max="99999999" placeholder="Deine Schätzung (ganze Zahl)" class="w-full text-lg mb-4">
             <button type="button" id="q-submit" class="btn-primary w-full text-lg">Antwort abschicken</button>
             <div id="q-error" class="hidden flash-message flash-error mt-4"></div>
         </div>
@@ -208,7 +208,7 @@
         fetch(`/api/quiz/question/${questionId}/result`)
             .then(r => r.json())
             .then(data => {
-                document.getElementById('result-correct').textContent = data.correct_answer.toLocaleString('de-DE');
+                document.getElementById('result-correct').textContent = Math.round(data.correct_answer).toLocaleString('de-DE');
                 const list = document.getElementById('result-list');
                 list.innerHTML = '';
                 data.entries.forEach((entry, i) => {
@@ -218,7 +218,7 @@
                     row.className = 'flex items-center justify-between px-3 py-2 rounded-lg ' +
                         (mine ? 'bg-party-purple/15 border border-party-purple/40' : 'bg-night-700/30');
                     row.innerHTML = `<span class="text-gray-200">${position}. ${entry.name}${mine ? ' (du)' : ''}` +
-                        ` <span class="text-gray-500 text-sm">${entry.answer.toLocaleString('de-DE')}</span></span>` +
+                        ` <span class="text-gray-500 text-sm">${Math.round(entry.answer).toLocaleString('de-DE')}</span></span>` +
                         `<span class="font-bold text-amber-400">+${entry.points}</span>`;
                     list.appendChild(row);
                 });
@@ -289,6 +289,7 @@
         const value = document.getElementById('q-answer').value;
         if (value === '' || value === null) { appAlert('Bitte gib deine Schätzung ein!'); return; }
         if (!/^-?\d+$/.test(value.trim())) { appAlert('Nur ganze Zahlen erlaubt — keine Kommazahlen!'); return; }
+        if (Math.abs(parseInt(value.trim(), 10)) > 99999999) { appAlert('Zahl zu groß — maximal 99.999.999!'); return; }
         document.getElementById('q-submit').disabled = true;
 
         fetch(`/quiz/answer/${gameId}`, {
